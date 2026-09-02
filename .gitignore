@@ -1,0 +1,22 @@
+# Local environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
+# Training data and generated artifacts
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/processed-*/
+data/manifests/*
+!data/manifests/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+artifacts-*/
+
+# Local logs
+*.log

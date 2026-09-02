@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adaptfit-training"
+version = "0.1.0"
+description = "Research-only anatomy-aware temporal movement modeling for AdaptFit"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.0",
+  "PyYAML>=6.0",
+  "scikit-learn>=1.3",
+  "tqdm>=4.66",
+  "torch>=2.1",
+  "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+  "mypy>=1.11",
+]
+
+[project.scripts]
+adaptfit-preflight = "training.preflight:main"
+adaptfit-prepare = "training.prepare_data:main"
+adaptfit-train = "training.train:main"
+adaptfit-evaluate = "training.evaluate:main"
+
+[tool.setuptools.packages.find]
+include = ["training*"]
+
+[tool.pytest.ini_options]
+testpaths = ["training/tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+extend-exclude = ["data", "artifacts"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+ignore_missing_imports = true
