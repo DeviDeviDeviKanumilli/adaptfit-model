@@ -4,7 +4,7 @@
 > - **Status:** research-backlog
 > - **Authority:** research notes and proposed acquisition work
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `f890101`
+> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
 > - **Owner:** AdaptFit data research
 > - **Supersedes or supports:** supports future acquisition decisions; dataset-catalog and current-state override availability and training inclusion
 > - **Review trigger:** source access/license verification, adapter completion, or change in the canonical data protocol
@@ -56,11 +56,12 @@ across ten subjects: 44 sequences for each of S01 through S09 and 43 for S10.
 There are 299 standing and 140 seated sequences, with the source's normal and
 normal/fast/slow recording protocols preserved as metadata.
 
-The one-epoch TCN smoke artifact reaches sequence-level movement-family
+An exploratory, uncommitted one-epoch TCN smoke run reached sequence-level movement-family
 macro-F1 0.814, phase macro-F1 0.551, boundary F1 0.577, and repetition-count
-MAE 0.276 on the held-out test split. These figures are a reproducibility
-baseline for the expanded data, not a final overnight result or clinical
-validation.
+MAE 0.276 on the held-out test split. However, this result has no persisted checkpoint,
+metrics artifact, or reproducible run directory in `artifacts/` and is strictly
+historical/unavailable. It must not be treated as a verified benchmark or evidence of
+model readiness.
 
 ## What the model actually needs
 
@@ -820,7 +821,7 @@ To match AdaptFit's `training/src/features/anatomy.py` normalization:
 - **Mapping**: Apply 3D-to-2D virtual camera projection. Set intact arm $w_c = 1.0$, transradial arm $w_{c, wrist} = 0.0$ (or prosthesis flag).
 - **Target Mapping**:
   - `family`: `forward_reach`.
-  - `quality_logits[:, 3]`: Binary trunk compensation logit. Because `MovementPredictionV1.quality_logits` is a pooled representation per temporal window (shape `[batch, 4]`) rather than per-frame, mapping continuous trunk tilt requires an explicit window aggregation and thresholding contract: compute window-level maximum trunk tilt $\max_{t \in W} \theta_{trunk}(t) \ge \tau_{trunk} = 15^\circ \implies 1$ across active reach windows, or keep masked (`quality_mask[:, 3] = 0.0`). Continuous angle values must never be directly placed into the binary quality logit; continuous regression is reserved for a future schema version.
+  - `quality_logits[:, 3]`: Binary trunk compensation logit. Because `MovementPredictionV1.quality_logits` is a pooled representation per temporal window (shape `[batch, 4]`) rather than per-frame, mapping continuous trunk tilt requires an explicit window aggregation and thresholding contract: compute window-level maximum trunk tilt $\max_{t \in W} \theta_{trunk}(t) \ge \tau_{trunk} \implies 1$ across active reach windows (with $\tau_{trunk} \approx 15^\circ$ treated as an initial tunable heuristic candidate parameter, subject to empirical calibration and clinical review against validation data before locking), or keep masked (`quality_mask[:, 3] = 0.0`). No validation artifact or decision record currently locks this threshold. Continuous angle values must never be directly placed into the binary quality logit; continuous regression is reserved for a future schema version.
   - `boundary`: Reach initiation $\rightarrow$ `rep_start`, target contact $\rightarrow$ `rep_end`.
 - **Masks**: `quality_mask[:, 3]` active (`1.0`) only when window aggregation and thresholded compensation are evaluated; other quality dimensions remain masked (`0.0`).
 

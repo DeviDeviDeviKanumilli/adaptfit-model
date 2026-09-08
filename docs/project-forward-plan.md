@@ -4,12 +4,12 @@
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `f890101`
+> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
 > - **Review trigger:** milestone completion, dependency change, gate result, or empirical evidence
 
-Planning review: September 7, 2026. Audited model checkout: `f890101`.
+Planning review: September 8, 2026. Audited model checkout: `ba8bf1a` (code baseline), `d5362ee` (documentation revision, HEAD).
 
 ---
 
@@ -99,27 +99,27 @@ stateDiagram-v2
 ```
 
 #### 3. Mathematical State Transition Rules
-Let $p_{start}(t)$, $p_{end}(t)$, $p_{phase}(t) \in [0, 1]^5$, and $p_{track}(t) \in [0, 1]$ denote the model outputs at frame $t$:
+Let $p_{start}(t)$, $p_{end}(t)$, $p_{phase}(t) \in [0, 1]^5$, and $p_{track}(t) \in [0, 1]$ denote the model outputs at frame $t$. All threshold and refractory values below represent **initial search defaults / starting heuristic bounds** for Task C1 grid search until Task C1 execution produces a committed, locked `artifacts/calibrated_decoder_v1/fsm_params.json` artifact:
 
 1. **Dual-Threshold Hysteresis for Start Trigger**:
    - Transition from `IDLE_REST` to `CONCENTRIC_DRIVE` requires:
-     $$p_{start}(t) \ge \tau_{start\_high} \quad (0.65) \quad \text{AND} \quad \arg\max p_{phase}(t) \in \{\text{concentric}, \text{hold}\}$$
-   - Hysteresis releases only when $p_{start}(t) < \tau_{start\_low} \quad (0.35)$.
+     $$p_{start}(t) \ge \tau_{start\_high} \quad (\text{initial search default: } 0.65) \quad \text{AND} \quad \arg\max p_{phase}(t) \in \{\text{concentric}, \text{hold}\}$$
+   - Hysteresis releases only when $p_{start}(t) < \tau_{start\_low} \quad (\text{initial search default: } 0.35)$.
 
 2. **Dual-Threshold Hysteresis for End Trigger**:
    - Transition from `ECCENTRIC_RETURN` to `CYCLE_COMPLETE` requires:
-     $$p_{end}(t) \ge \tau_{end\_high} \quad (0.45) \quad \text{AND} \quad \arg\max p_{phase}(t) \in \{\text{eccentric}, \text{rest}\}$$
-   - Hysteresis releases only when $p_{end}(t) < \tau_{end\_low} \quad (0.25)$.
+     $$p_{end}(t) \ge \tau_{end\_high} \quad (\text{initial search default: } 0.45) \quad \text{AND} \quad \arg\max p_{phase}(t) \in \{\text{eccentric}, \text{rest}\}$$
+   - Hysteresis releases only when $p_{end}(t) < \tau_{end\_low} \quad (\text{initial search default: } 0.25)$.
 
 3. **Temporal Refractory Period ($T_{ref}$)**:
-   - A minimum repetition cycle time $T_{ref} = 24\text{ frames}$ ($0.80\text{ seconds}$ at 30 FPS) is strictly enforced. If $t_{end} - t_{start} < T_{ref}$, the event is classified as motion jitter and discarded.
+   - A minimum repetition cycle time $T_{ref} = 24\text{ frames}$ ($0.80\text{ seconds}$ at 30 FPS, initial search default) is evaluated. If $t_{end} - t_{start} < T_{ref}$, the event is classified as motion jitter and discarded.
 
 4. **Local Peak Filter**:
    - The end event is emitted only at the local temporal maximum within a sliding window of radius $W=2$ frames:
      $$p_{end}(t) = \max_{k \in [-2, +2]} p_{end}(t+k)$$
 
 5. **Tracking Observability Gating**:
-   - If tracking confidence $p_{track}(t) < \tau_{track} = 0.60$, the state machine enters `PAUSED`. State transitions are frozen, preventing spurious counts during camera occlusion or framing loss. When tracking recovers, a 5-frame stabilization warmup is enforced before resuming.
+   - If tracking confidence $p_{track}(t) < \tau_{track}$ (initial search default: $0.60$), the state machine enters `PAUSED`. State transitions are frozen, preventing spurious counts during camera occlusion or framing loss. When tracking recovers, a 5-frame stabilization warmup is enforced before resuming.
 
 #### 4. Grid-Search Optimization Protocol
 - **Search Space**:
@@ -127,7 +127,7 @@ Let $p_{start}(t)$, $p_{end}(t)$, $p_{phase}(t) \in [0, 1]^5$, and $p_{track}(t)
   - $\tau_{end\_high} \in [0.30, 0.65]$ (step 0.05)
   - $T_{ref} \in [15, 36]$ frames (step 3 frames / 0.1s)
   - $\tau_{track} \in [0.40, 0.75]$ (step 0.05)
-- **Validation Target**: Replay inference over all 16,483 validation windows prepared in `data/processed-v2-quality/` (`validation/*.npy` memmaps and `validation.jsonl`) using `artifacts/v2-quality-fixed/checkpoints/tcn_best.pt`. (Note: `artifacts/v2-quality-fixed/evaluations/tcn_validation.json` does not exist; existing evaluation artifacts in `artifacts/v2-quality-fixed/metrics/tcn_evaluation.json` represent test split results only). The 7,536-window (1,007-sequence) test split must remain strictly locked and unpeeked during decoder calibration to prevent evaluation leakage and protect test set integrity.
+- **Validation Target**: Replay inference over all 16,483 validation windows prepared in `data/processed-v2-quality/` (`validation/*.npy` memmaps and `validation.jsonl`) using `artifacts/v2-quality-fixed/checkpoints/tcn_best.pt`. (Note: `artifacts/v2-quality-fixed/evaluations/tcn_validation.json` does not exist; existing evaluation artifacts in `artifacts/v2-quality-fixed/metrics/tcn_evaluation.json` represent test split results only). The 7,536-window (1,007-sequence) test split must remain strictly locked and unpeeked during decoder calibration to prevent evaluation leakage and protect test set integrity. Calibration outputs will be locked to `artifacts/calibrated_decoder_v1/fsm_params.json`.
 - **Exit Gate**: Repetition Count MAE $\le 0.40$ (reducing validation count error by $>80\%$) and Sequence-Level Repetition End F1 $\ge 60.0\%$ evaluated on the validation split.
 
 ---
@@ -223,7 +223,7 @@ graph LR
 
 4. **ROAG (Priority 1, Sprint 1)**:
    - Propose ingesting 2 transradial amputee reaching trajectories (2,450 trials).
-   - Maps reach geometry and torso lean to single-arm capability profiles and thresholded binary trunk compensation quality (applying an explicit biomechanical threshold $\theta_{trunk} \ge \tau_{trunk} = 15^\circ$ and temporal window aggregation contract to prevent a schema mismatch with the binary classification head `quality_logits[:, 3]`).
+   - Maps reach geometry and torso lean to single-arm capability profiles and thresholded binary trunk compensation quality (applying an initial tunable candidate threshold $\theta_{trunk} \ge \tau_{trunk} \approx 15^\circ$ (subject to empirical calibration) and a temporal window aggregation contract to prevent a schema mismatch with the binary classification head `quality_logits[:, 3]`).
 
 5. **Ottobock #DearAI Community Library (Priority 1, Sprint 1)**:
    - Propose ingesting community imagery of upper-limb and lower-limb amputees.

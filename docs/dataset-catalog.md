@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** dataset registry, adapter code, manifests, and license/access evidence
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `f890101`
+> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
 > - **Owner:** AdaptFit data engineering
 > - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in [dataset-expansion-plan.md](dataset-expansion-plan.md)
 > - **Review trigger:** adapter or checksum change, license/access update, or label-role change
@@ -523,4 +523,4 @@ To maximize model performance while strictly observing licensing boundaries, dat
 
 No discovered public dataset covers the full first-release population of individuals with missing limbs, one-arm use, lower-limb absence, and wheelchair use performing the same five AdaptFit launch exercises under consented product-testing conditions.
 
-Public data bootstraps the pose front end, the causal TCN representation, and the initial quality scoring heads. However, the safety-critical adaptation layer still requires consented, participant-reviewed pilot recordings and trained-expert labeling, as detailed in Phase 6 of the [implementation plan toward the Congressional App Challenge](project-forward-plan.md).
+Public data bootstraps the pose front end and the causal TCN movement-family and phase representations. While output heads for the four quality dimensions (ROM, tempo, smoothness, trunk compensation) exist architecturally in `MovementPredictionV1`, they currently have zero label coverage in existing public data and remain unsupervised. Enabling and supervising these heads and the safety-critical adaptation layer requires dedicated expert-labeled quality data and consented, participant-reviewed pilot recordings, as detailed in Phase 6 of the [implementation plan toward the Congressional App Challenge](project-forward-plan.md).

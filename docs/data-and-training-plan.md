@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** preparation code, dataset manifests, training configuration, and approved label policy
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `f890101`
+> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
 > - **Owner:** AdaptFit data and training engineering
 > - **Supersedes or supports:** canonical data/label protocol; supports dataset-catalog, efficient-training-strategy, and contracts-and-schemas
 > - **Review trigger:** adapter, label mask, split, normalization, license, or retention change

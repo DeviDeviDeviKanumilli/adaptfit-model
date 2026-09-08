@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** decision ledger with evidence links
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `f890101`
+> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** converts the earlier prose log into a source for roadmap and contract decisions
 > - **Review trigger:** any decision, evidence change, or revisit trigger firing
