@@ -285,7 +285,7 @@ $$\text{Count}(T) = \left\lfloor \int_0^T \hat{d}(t) \, dt + 0.5 \right\rfloor$$
 ### Phase 5: Mobile Runtime Export & Golden Parity Verification
 
 **Owner: Mobile & Runtime Team | Priority: High (Sprint 3–4)**  
-**Status: Ready for Export Pipeline | Target Devices: Android (Pixel 7 / Galaxy A54), iOS (iPhone 13+)**
+**Status: Pending (Planned Export Pipeline) | Target Devices: Android (Pixel 7 / Galaxy A54), iOS (iPhone 13+)**
 
 #### 1. Export Pipeline & Quantization Architecture
 ```mermaid
@@ -299,7 +299,7 @@ flowchart LR
 - **Export Script (Planned)**: Planned script `training/src/export/export_mobile.py` (planned; not yet implemented in repository) will export the causal TCN with a fixed streaming state buffer:
   - Input: Current frame features $[1, 1, 283]$ + internal causal buffer $[1, 96, 125]$.
   - Output: Multi-task predictions + updated buffer $[1, 96, 125]$.
-- **Post-Training Quantization (PTQ)**: Calibrated using 1,000 representative validation windows.
+- **Post-Training Quantization (PTQ, Planned)**: Planned calibration using 1,000 representative validation windows (planned procedure; not yet executed).
 - **Mobile Client Integration (Planned)**: Mobile application shell and native runtime bindings will be integrated under `apps/mobile/` (planned module in external repository; currently unavailable in this model repository).
 
 #### 2. Golden Fixture Test Matrix (Planned)
@@ -311,16 +311,18 @@ Six canonical test vectors will be serialized to `training/tests/fixtures/golden
 5. **Vector 5: Seated Wheelchair Forward Reach** (Trunk flexion and shoulder elevation).
 6. **Vector 6: Camera Occlusion / Dropped Frames** (Tracking loss and recovery).
 
-#### 3. Parity Tolerances & Runtime Benchmarks
+#### 3. Planned Parity Tolerances & Runtime Acceptance Criteria
 
-| Metric / Dimension | Target Tolerance Gate | Failure Condition |
+All calibration, parity, latency, memory, and thermal numbers below represent **planned acceptance criteria and target quality gates**, not measured benchmark results. No mobile export, native bridge, or on-device benchmark has been executed yet in this repository.
+
+| Dimension / Metric | Planned Acceptance Criterion (Target Gate) | Rejection / Failure Condition |
 |---|---|---|
-| **Float32 Parity** | $\max |\hat{y}_{py} - \hat{y}_{onnx}| < 1 \times 10^{-4}$ | Any logit divergence $> 1 \times 10^{-3}$ |
-| **INT8 Quantized Parity** | $\max |\hat{y}_{py} - \hat{y}_{int8}| < 0.05$ | FSM event trigger mismatch on golden fixtures (planned) |
-| **Event Alignment** | 100% agreement on Repetition Start and End timestamps | $\ge 1$ skipped or extraneous repetition event |
-| **Camera-to-Display Latency** | $\mathbf{p50 < 45\text{ms}}, \quad \mathbf{p95 < 95\text{ms}}$ | p95 latency $> 150\text{ms}$ at 30 FPS |
-| **Memory Footprint** | Peak RAM consumption $\mathbf{< 25\text{MB}}$ | Peak RAM $> 50\text{MB}$ |
-| **Thermal & Battery** | $< 15\%$ single-core CPU utilization; no thermal throttling over 30-min workout | Battery drain $> 8\%$ per 30 minutes |
+| **Float32 Parity (Planned)** | Target tolerance: $\max |\hat{y}_{py} - \hat{y}_{onnx}| < 1 \times 10^{-4}$ | Any logit divergence $> 1 \times 10^{-3}$ |
+| **INT8 Quantized Parity (Planned)** | Target tolerance: $\max |\hat{y}_{py} - \hat{y}_{int8}| < 0.05$ | FSM event trigger mismatch on golden fixtures (planned) |
+| **Event Alignment (Planned)** | Target: 100% agreement on Repetition Start and End timestamps | $\ge 1$ skipped or extraneous repetition event |
+| **Camera-to-Display Latency (Planned Budget)** | Target budget: $\mathbf{p50 < 45\text{ms}}, \quad \mathbf{p95 < 95\text{ms}}$ | p95 latency $> 150\text{ms}$ at 30 FPS |
+| **Memory Footprint (Planned Budget)** | Target budget: Peak RAM consumption $\mathbf{< 25\text{MB}}$ | Peak RAM $> 50\text{MB}$ |
+| **Thermal & Battery (Planned Budget)** | Target budget: $< 15\%$ single-core CPU utilization; no thermal throttling over 30-min workout | Battery drain $> 8\%$ per 30 minutes |
 
 ---
 
@@ -385,7 +387,7 @@ The table below defines the formal acceptance gates across all work packages. Lu
 | **Phase 2: Fast Runner** | ML Team | `training/src/runner.py`<br>`training/src/data/samplers.py` (planned) | `training/configs/experiments/warmstart.yaml` (planned) | Hypothesized $4.4\times$ speedup verified via benchmark artifact; clean checkpoint resumption | Unlocks Phase 3 & 4 fine-tuning runs |
 | **Phase 3: Dataset Ingestion** | Data Team | `training/src/data/adapters.py`<br>`docs/dataset-catalog.md` | `data/raw/{dyntherapy, roag, uiprmd}` (planned/candidate staging) | Checksums verified; 100% split isolation; 0 participant overlap | Unlocks expanded supervised training |
 | **Phase 4: Distillation** | ML Research | `training/src/models/heads.py`<br>`training/src/distill/` (planned) | `data/teacher_cache/*.npz` (planned) | Distilled student beats supervised baseline on RepCount-pose | Unlocks final student model checkpoint |
-| **Phase 5: Mobile Export** | Mobile Team | `training/src/export/` (planned)<br>`apps/mobile/` (planned / external repository) | `artifacts/mobile/adaptfit_tcn_int8.tflite` (planned) | 100% parity on 6 golden fixtures (planned); p95 latency $<95\text{ms}$ | Unlocks pilot app deployment |
+| **Phase 5: Mobile Export** | Mobile Team | `training/src/export/` (planned)<br>`apps/mobile/` (planned / external repository) | `artifacts/mobile/adaptfit_tcn_int8.tflite` (planned) | Target: 100% parity on 6 golden fixtures (planned); target budget: p95 latency $<95\text{ms}$ | Unlocks pilot app deployment |
 | **Phase 6: Pilot & Submission** | Product Lead | `docs/pilot-findings.md` (planned)<br>`submission/` (planned) | Final CAC Video & Application Package (planned) | Signed consent; 0 privacy violations; 100% CAC rubric compliance | Final Public Release & Submission |
 
 ---
