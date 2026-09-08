@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** research-backlog
 > - **Authority:** research notes and proposed acquisition work
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `ba8bf1a`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit data research
 > - **Supersedes or supports:** supports future acquisition decisions; dataset-catalog and current-state override availability and training inclusion
 > - **Review trigger:** source access/license verification, adapter completion, or change in the canonical data protocol

@@ -3,13 +3,13 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `ba8bf1a`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
 > - **Review trigger:** milestone completion, dependency change, gate result, or empirical evidence
 
-Planning review: September 7, 2026. Audited model checkout: `ba8bf1a`.
+Planning review: September 7, 2026. Audited model checkout: `f890101`.
 
 ---
 

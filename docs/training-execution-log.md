@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** training execution ledger, checkpoint provenance, and audit record
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `ba8bf1a`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** satisfies the execution log requirement from [documentation-validation.md](documentation-validation.md) and [efficient-training-strategy.md](efficient-training-strategy.md)
 > - **Review trigger:** after every experiment run, checkpoint evaluation, data preparation, or task transition
@@ -66,5 +66,5 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | Date | Commit | Action | Result | Notes |
 |---|---|---|---|---|
 | 2026-09-01 | `e75ba65` | Initial training & corrected-v1 benchmark | Completed | Full TCN/GRU trained; 123 tests passing. |
-| 2026-09-07 | `b6ac20c` | Documentation contracts and runbooks refined | Completed | Unified metadata, schemas, and roadmap across 23 files. |
-| 2026-09-07 | `ba8bf1a` | Repository-wide audit & TCN v2 evaluation | Passed (124 tests) | Evaluated `v2-quality-fixed` TCN; fixed TCN streaming expert head; added CLI scripts and execution log. |
+| 2026-09-07 | `f890101` | Documentation contracts and runbooks refined | Completed | Unified metadata, schemas, and roadmap across 23 files. |
+| 2026-09-07 | `f890101` | Repository-wide audit & TCN v2 evaluation | Passed (124 tests) | Evaluated `v2-quality-fixed` TCN; fixed TCN streaming expert head; added CLI scripts and execution log. |

@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `ba8bf1a`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -19,7 +19,7 @@ an update here and a source artifact.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Commit | `ba8bf1a` | Re-verify with `git rev-parse HEAD` before reproducing a run. |
+| Commit | `f890101` | Re-verify with `git rev-parse HEAD` before reproducing a run. |
 | Branch state | Clean except the documentation files being refined | Do not treat uncommitted documentation as model implementation. |
 | Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
