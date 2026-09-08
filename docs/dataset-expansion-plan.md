@@ -1,10 +1,26 @@
 # AdaptFit dataset expansion and ingestion plan
 
+> **Documentation metadata**
+> - **Status:** research-backlog
+> - **Authority:** research notes and proposed acquisition work
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit data research
+> - **Supersedes or supports:** supports future acquisition decisions; dataset-catalog and current-state override availability and training inclusion
+> - **Review trigger:** source access/license verification, adapter completion, or change in the canonical data protocol
+
 This document is the working plan for expanding AdaptFit's training data. It
 records the additional datasets researched after the initial MM-Fit integration,
 what each source can teach the system, the access and licensing blockers, and
 the implementation work needed to make the data useful without contaminating
 the labels or participant-level splits.
+
+> **Non-authoritative research note:** this file records proposals and dated
+> ingestion observations. It must not be used to decide whether a source is
+> currently available, licensed, integrated, or included in a benchmark. Use
+> [dataset-catalog.md](dataset-catalog.md) for the current registry and
+> [current-state.md](current-state.md) for artifact status. Any count below is
+> valid only for the run/date and source commit named with it.
 
 The central rule is that a large dataset is not automatically useful for the
 temporal model. AdaptFit consumes a sequence of camera-pose-like observations,

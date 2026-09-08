@@ -1,5 +1,19 @@
 # Audit fixes and overnight run
 
+> **Documentation metadata**
+> - **Status:** historical
+> - **Authority:** dated audit and artifact record
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** supports current-state artifact interpretation; does not override current contracts or release gates
+> - **Review trigger:** rerun, artifact replacement, or discovery that changes the interpretation of the recorded run
+
+> **Historical interpretation:** This report describes one audit/run snapshot.
+> Use [current-state.md](current-state.md) for current artifact status. The
+> report cannot prove target-population validation, production deployment, or
+> quality-head coverage.
+
 This document records the fixes made after the training hot-path audit. The
 changes preserve the existing v2 prepared data and artifacts while making the
 next run more honest, faster, and reproducible.
@@ -153,6 +167,14 @@ training-only tests intentionally deselected by the verification script.
 
 ## Overnight training
 
+The commands in this historical section describe how the fixed run was
+designed; they are not a current release command. As of the last verification,
+the TCN training loop completed through 72 epochs (best epoch 42), but the
+artifact has only window-level evidence. The GRU checkpoint is an interrupted
+intermediate run at epoch 52, without final history or evaluation. Consult
+[current-state.md](current-state.md) before deciding whether any rerun is
+eligible, and write a new isolated artifact directory for a future experiment.
+
 After the no-training verification passes, launch the actual run with:
 
 ```bash
@@ -164,7 +186,7 @@ The script optionally performs a two-epoch smoke run first, then starts fresh
 TCN and GRU training. Set `ADAPTFIT_RUN_SMOKE=0` to omit the smoke pass. Set
 `ADAPTFIT_NUM_WORKERS=0` if worker startup causes a local macOS issue.
 
-Expected final files include:
+Expected final files for a *completed future run* include:
 
 - `artifacts/v2-quality-fixed/checkpoints/tcn_best.pt`
 - `artifacts/v2-quality-fixed/checkpoints/gru_baseline.pt`

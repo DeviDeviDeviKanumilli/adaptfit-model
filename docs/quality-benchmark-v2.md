@@ -1,5 +1,19 @@
 # Quality benchmark v2
 
+> **Documentation metadata**
+> - **Status:** historical
+> - **Authority:** dated v2 preparation/training record
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** supports current-state interpretation of v2-quality and v2-quality-fixed; not a complete release benchmark
+> - **Review trigger:** completion of sequence evaluation, new checkpoint, or artifact replacement
+
+> **Historical interpretation:** `v2-quality` is prepared-only and
+> `v2-quality-fixed` is partial. No complete TCN/GRU comparison or release claim
+> follows from this document. Use [current-state.md](current-state.md) for the
+> authoritative status and record any completed evaluation separately.
+
 This document describes the prepared, but not yet trained, v2 run in
 `/Users/devk/AdaptFit`. The run adds UCOPhyRehab++ supervision while keeping
 the existing on-device feature contract and leaving the corrected v1 data and
@@ -152,8 +166,8 @@ roots.
 
 ## Outputs after training
 
-When the overnight training completes, it will write model-specific outputs
-under `artifacts/v2-quality/`:
+The following is the intended output layout for a completed run; it is not an
+assertion that every file exists:
 
 ```text
 checkpoints/tcn_best.pt
@@ -165,14 +179,17 @@ metrics/gru_evaluation.json
 metrics.json
 predictions/
 plots/
-model_card.md
+  model_card.md
 ```
 
-Both model reports use the same corrected test split and include family,
-phase, repetition boundary, repetition-count, tracking, and optional expert
-quality metrics. The four dimension-specific quality metrics remain explicitly
-marked unavailable. All results must be described as public-data research
-benchmarks, not clinical validation.
+At the last verification, `artifacts/v2-quality/` contains preparation
+artifacts only. `artifacts/v2-quality-fixed/` contains a completed TCN training
+loop with window-level evidence and an interrupted GRU checkpoint, but no
+complete merged sequence comparison. Therefore no v2 model report is a
+complete TCN/GRU benchmark. The four dimension-specific quality metrics remain
+unavailable in every recorded v2 state. Any future completed report must name
+its own commit, split, checkpoint, and artifact paths and remain a public-data
+research result, not clinical validation.
 
 ## What this still cannot prove
 

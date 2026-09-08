@@ -1,5 +1,19 @@
 # Verified Research and Run Findings
 
+> **Documentation metadata**
+> - **Status:** historical
+> - **Authority:** dated research and run evidence
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** supports current-state, dataset-catalog, and roadmap rationale; cannot override current artifacts
+> - **Review trigger:** rerun, source/license verification, or corrected interpretation
+
+> **Historical interpretation:** Findings are tied to the source/date/run named
+> in this report. They support rationale and provenance checks only; current
+> contracts, artifact state, and unsupported claims are defined in
+> [current-state.md](current-state.md).
+
 This document consolidates the AdaptFit decisions, data research, training
 pipeline findings, and the corrected analysis of the latest saved run.
 

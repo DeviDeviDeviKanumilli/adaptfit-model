@@ -1,5 +1,19 @@
 # Corrected benchmark rerun
 
+> **Documentation metadata**
+> - **Status:** historical
+> - **Authority:** dated corrected-v1 benchmark report
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** supports the corrected-v1 baseline in current-state and evaluation-protocol
+> - **Review trigger:** benchmark rerun, split/config correction, or artifact replacement
+
+> **Historical interpretation:** corrected-v1 is the complete benchmark for the
+> recorded commit and split. Its metrics are public-data research evidence, not
+> mobile, clinical, quality, or target-population validation. See the artifact
+> paths and limitations before reusing a number.
+
 ## Purpose
 
 This document records the corrected identity, participant split, training, and
@@ -169,8 +183,11 @@ The final reports and traceable predictions are saved at:
 - `/Users/devk/AdaptFit/artifacts/corrected-v1/metrics.json`
 - `/Users/devk/AdaptFit/artifacts/corrected-v1/predictions/`
 
-The full test suite passes with `110` tests. The legacy audit still reproduces
-`745` corrected logical entries and `700 / 745` correct family predictions.
+The historical run reported a full suite of `110` passing tests. The current
+repository's later verification reports `123` tests; do not use the historical
+count as the current test count. The legacy audit still reproduces `745`
+corrected logical entries and `700 / 745` correct family predictions for this
+run.
 
 ## Acceptance interpretation
 

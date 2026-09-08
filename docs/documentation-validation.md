@@ -1,0 +1,120 @@
+# Documentation validation workflow
+
+> **Documentation metadata**
+> - **Status:** canonical-active
+> - **Authority:** documentation review procedure
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** supports the validation checklist in `docs/README.md`
+> - **Review trigger:** canonical document, contract, artifact, or repository-layout change
+
+This is a lightweight, read-only validation workflow. It is deliberately a
+documentation procedure rather than a model/code change. Run it from
+`/Users/devk/AdaptFit` before merging a documentation update or asking Luna to
+implement a training/deployment task.
+
+## 1. Inventory and metadata
+
+```bash
+find docs -type f -name '*.md' -print | sort
+test -f training/README.md
+for f in docs/*.md training/README.md; do
+  rg -q 'Documentation metadata' "$f" || echo "missing metadata: $f"
+done
+git rev-parse HEAD
+git status --short
+```
+
+Every Markdown file under `docs/` and `training/README.md` must have the seven
+metadata fields. The source commit in a document is a verification point, not a
+substitute for checking the current checkout.
+
+## 2. Relative-link and path checks
+
+Review every relative Markdown link from the directory containing its source.
+Links to historical or unavailable paths must say so in nearby text. Code,
+config, checkpoint, and artifact references must resolve or be marked
+`historical`, `unavailable`, or `not staged`.
+
+```bash
+rg -n '\]\([^https:#][^)]*\)' docs training/README.md
+rg -n '`(/Users/devk/AdaptFit|training/|artifacts/|data/)[^`]*`' docs training/README.md
+```
+
+When a link contains an anchor, validate the file first and then verify the
+heading anchor manually. Do not turn an unavailable artifact into a placeholder
+file merely to make a link pass.
+
+## 3. Current-contract checks
+
+Compare [current-state.md](current-state.md) and
+[contracts-and-schemas.md](contracts-and-schemas.md) against:
+
+- `training/src/data/schema.py`;
+- `training/src/features/anatomy.py`;
+- `training/src/models/tcn.py`, `gru.py`, and `heads.py`;
+- `training/configs/`;
+- `artifacts/*/feature_schema.json` and `training_config.yaml`.
+
+The review must confirm 283 inputs, 128-frame windows, the configured stride,
+96 TCN channels, five dilations, the 125-frame receptive field, head dimensions,
+and normalization/version semantics. If any value differs, update the source
+code/config and the canonical docs together; label the old value historical.
+
+## 4. Artifact and metric traceability
+
+For each published metric, record dataset manifest/split, source and participant
+scope, Git commit, config hash, checkpoint, schema/normalization/decoder versions,
+and artifact path. Check that:
+
+- corrected-v1 is complete;
+- v2-quality is prepared-only;
+- v2-quality-fixed is partial;
+- quality-head coverage is zero unless a new manifest proves otherwise;
+- no target-population claim lacks real participant evidence;
+- sequence metrics are primary when offsets exist and window fallback is stated
+  when they do not.
+
+## 5. Dataset and license checks
+
+For every dataset marked integrated in [dataset-catalog.md](dataset-catalog.md),
+verify an adapter, raw/prepared path, checksum or an explicit pending checksum,
+participant/session identity handling, label masks, and license/access state.
+Move a source back to candidate/research-backlog when any of these is unknown.
+
+## 6. Command and experiment checks
+
+Do not launch training as a documentation check. Read each command in
+[training/README.md](../training/README.md) and the runbook and confirm:
+
+- prerequisites and input paths exist;
+- output directories are isolated;
+- current commands are fresh-training commands, not implied resume commands;
+- preflight, validation cadence, stopping rule, and artifact manifest are
+  specified;
+- the command does not overwrite a historical benchmark.
+
+If a command needs a code/config change before it can run, label it planned and
+record the missing interface in the decision ledger.
+
+## 7. Terminology and safety review
+
+Search for inconsistent or unsafe claims:
+
+```bash
+rg -n -i 'clinical|diagnos|safe for|validated amput|wheelchair validation|muscle activation|force|joint loading|quality coverage|production ready' docs training/README.md
+```
+
+Have a human review safety wording, capability-focused language, privacy and
+consent, exercise approval, challenge claims, and any sentence that could be
+read as medical validation. A passing link/path check cannot approve those
+claims.
+
+## Completion record
+
+Record the validation date, checkout commit, reviewer, changed documents,
+missing/unavailable paths, metric/artifact checks, and unresolved questions in
+the pull request or `docs/training-execution-log.md`. The docs are complete only
+when Luna can answer an engineering question by following one canonical link
+without inferring critical behavior from a historical report.

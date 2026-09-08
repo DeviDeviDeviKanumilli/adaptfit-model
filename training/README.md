@@ -1,7 +1,28 @@
 # AdaptFit training
 
+> **Documentation metadata**
+> - **Status:** canonical-active
+> - **Authority:** training entry point; [the full runbook](../docs/efficient-training-strategy.md) and runner/config are authoritative for commands
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit training engineering
+> - **Supersedes or supports:** short operational quickstart; rationale and staged workflow live in the linked runbook
+> - **Review trigger:** command/config/runner change or new artifact layout
+
 This is the training-first rewrite. It is intentionally independent of the
 PeddieHacks application and lives directly in the AdaptFit project root.
+
+Use this file for the shortest operational path. Use
+[the canonical training runbook](../docs/efficient-training-strategy.md) for
+why a run is justified, warm-start versus exact-resume semantics, staged
+fine-tuning, sampler/loss rules, stopping gates, and the Luna TODO list. Read
+[current-state](../docs/current-state.md),
+[contracts](../docs/contracts-and-schemas.md), and
+[evaluation-protocol](../docs/evaluation-protocol.md) before changing a run.
+
+This quickstart does not authorize an overnight run. A command is eligible only
+after preflight passes, the source/license gate passes, a locked comparison
+split exists, and a new artifact directory is selected.
 
 ## Environment
 
@@ -66,6 +87,13 @@ python3 -m training.train --config training/configs/v1.yaml --models tcn,gru --d
 python3 -m training.evaluate --config training/configs/v1.yaml --checkpoint artifacts/checkpoints/tcn_best.pt
 ```
 
+The commands above are the current fresh-training path. They do not implement
+warm-start or exact interrupted-run resume; do not add `--resume` by inference.
+Copy the config and write to an isolated artifact root for every experiment.
+The run must record the Git commit, parent checkpoint (if any), dataset
+manifest, normalization/schema versions, seed, device, stopping reason, and
+metrics required by the evaluation protocol.
+
 The data preparation stage produces fixed windows under `data/processed/` as
 per-array `.npy` memmaps and saves normalization statistics and the feature
 schema under `artifacts/`. `PreparedWindowDataset` still reads legacy split
@@ -98,6 +126,16 @@ effective phase-label policy at runtime, and writes isolated outputs under
 `ADAPTFIT_RUN_TRAINING=0 ./run_v2_quality_fixed_overnight.sh` for verification
 without training. See `docs/audit-fixes-and-overnight.md` for the full run
 contract.
+
+## Stop conditions
+
+Stop before training when feature width, labels, masks, normalization, split
+identity, license/access, or checkpoint compatibility does not match the
+selected manifest. Stop during training on non-finite values, leakage,
+unexpected missing/unexpected keys, validation degradation beyond the declared
+patience, exhausted compute budget, or writes into an existing artifact.
+Record the failure and next eligible task in
+`docs/training-execution-log.md`; do not hide it by extending the run.
 
 ## Verification
 

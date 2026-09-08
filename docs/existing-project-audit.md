@@ -1,6 +1,24 @@
 # PeddieHacks26 Project Audit
 
+> **Documentation metadata**
+> - **Status:** supporting
+> - **Authority:** reference application source audit
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65` for AdaptFit; reference app commit is recorded below where available
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** supports migration and parity planning only; does not describe the active AdaptFit implementation
+> - **Review trigger:** reference app audit or discovery of an active integration
+
+> **Reference-only boundary:** PeddieHacks is an earlier application used to
+> understand UI, camera, and catalog assumptions. It is not the active AdaptFit
+> implementation, does not define the current model contract, and must not be
+> cited as evidence of mobile parity or target-population support.
+
 Source repository: [DeviDeviDeviKanumilli/PeddieHacks26](https://github.com/DeviDeviDeviKanumilli/PeddieHacks26)
+
+The relative paths in this audit resolve under the reference checkout
+`/Users/devk/Downloads/PeddieHacks`, not under `/Users/devk/AdaptFit`. They are
+included to explain migration and parity gaps only.
 
 This audit reflects the repository state examined during the planning session.
 
@@ -113,3 +131,15 @@ This metadata should become the anatomy and safety constraint layer around the l
 
 Before training, unify the exercise recipe format and define a canonical pose-feature contract. This prevents the neural model, native bridge, and adaptation rules from developing incompatible representations.
 
+## Historical interpretation
+
+- **True for the reference audit:** the PeddieHacks app had a bilateral-first
+  tracker, a small native angle/confidence signal, and multiple domain catalogs.
+- **Still useful:** those files identify migration and parity risks for a future
+  mobile implementation.
+- **Superseded:** none of its schemas, recipes, counters, or app behavior is the
+  active AdaptFit contract; use the canonical docs in `/Users/devk/AdaptFit/docs/`.
+- **Evidence:** the linked PeddieHacks source repository and the local reference
+  checkout named above.
+- **Cannot prove:** AdaptFit model accuracy, target-population validation,
+  native parity, production deployment, or exercise safety.

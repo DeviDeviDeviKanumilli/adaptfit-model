@@ -1,5 +1,14 @@
 # On-Device Deployment Plan
 
+> **Documentation metadata**
+> - **Status:** canonical-active
+> - **Authority:** model/runtime contracts and future export/parity acceptance criteria
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit runtime engineering
+> - **Supersedes or supports:** canonical deployment contract; current-state records that deployment is not yet available
+> - **Review trigger:** exporter, native bridge, schema, device target, privacy behavior, or quantization change
+
 ## Privacy requirement
 
 Camera frames, raw video, audio, and raw pose streams should remain on the device. Training data should be collected only under explicit consent and stored separately from the production runtime.
@@ -37,7 +46,11 @@ timestamp checks, and feature width before model conversion.
 
 ## Model format
 
-Android should be the first deployment target because the repository already contains an Android MediaPipe path. Export an int8 mobile model through a runtime supported by the native module, with TFLite as the initial practical option.
+Android is the first proposed deployment target because the PeddieHacks
+reference app has an Android MediaPipe path. The active AdaptFit model
+repository does not yet contain that bridge. Export a float model first, then
+an int8 mobile model through a runtime supported by the native module, with
+TFLite as an initial candidate rather than an available artifact.
 
 The model interface should remain independent of the runtime so that the same canonical weights can later be converted or adapted for iOS.
 
@@ -68,3 +81,91 @@ against the same golden sequences.
 - Produces a confidence value with every movement-quality output.
 - Supports one-sided inputs without requiring a bilateral completion.
 - Has a versioned model and feature schema.
+
+## Model bundle contract
+
+No bundle currently passes this contract. A future release artifact should be
+an immutable directory or archive with:
+
+```text
+adaptfit-bundle/
+  manifest.json                 # ModelArtifactManifestV1
+  model.float32.<runtime>       # reference/exported float model
+  model.int8.<runtime>           # optional post-training quantized model
+  normalization.npz             # training-only fitted statistics
+  feature_schema.json            # FeatureSchemaV1 and ordering
+  decoder.json                   # thresholds, tolerance, reset/gap policy
+  recipe_compatibility.json     # supported exercise/variant IDs and versions
+  golden-fixtures/              # input/output/event traces and hashes
+  model-card.md                 # limits, licenses, and claim boundary
+```
+
+The manifest must include model, feature, normalization, decoder, recipe, and
+bundle versions; input/output shapes; frame rate/window/stride/receptive field;
+parameter count; source commit/config hash; checkpoint parent; export runtime;
+quantization/calibration provenance; artifact checksums; and known limitations.
+The loader rejects an incompatible schema, normalization version, decoder, or
+recipe version. It must not silently pad, reorder, or reinterpret 283 inputs.
+
+## Native boundary and golden parity
+
+The native pose estimator may produce a full 33-joint canonical pose internally.
+Only the allowlisted, versioned 283-feature vector crosses into the temporal
+model, or the complete temporal model runs inside the native process. Raw frames,
+raw pose, and unreviewed debug traces do not cross into JavaScript or a network
+service.
+
+Golden fixtures must cover bilateral, unilateral, declared-absent capability,
+occluded joints, dropped frames, slow/partial reps, non-monotonic timestamps,
+session reset, exercise change, pause, and duplicate overlapping windows. For
+each fixture compare feature values, every prediction head, confidence,
+abstention, reason code, and emitted `WorkoutEventV1` sequence against Python
+within a versioned numeric tolerance. Store fixture hashes in the bundle
+manifest.
+
+## Export and quantization sequence
+
+1. Validate the float model in Python and test operator/export coverage with a
+   small existing checkpoint.
+2. Export the selected float checkpoint and compare outputs on validation
+   fixtures before running a device session.
+3. Apply post-training quantization using a representative validation/calibration
+   subset, never the locked test set. Re-run head, event, and abstention parity.
+4. Use quantization-aware fine-tuning only if post-training quantization fails a
+   declared gate and the extra compute is justified.
+5. Select float or quantized deployment before final test reporting. Record
+   calibration data, runtime version, tolerances, and rollback artifact.
+
+## Runtime failure and fallback behavior
+
+- **Camera denied/unavailable:** show a manual workout or safe-stop path; never
+  claim that no movement occurred.
+- **Pose estimator unavailable:** return `abstained=true` with a reason code and
+  keep the profile unchanged.
+- **Dropped frames:** follow the manifest gap policy; bridge only permitted
+  gaps, otherwise abstain/reset. A timestamp gap must not create extra reps.
+- **Out-of-order timestamp:** reject the frame and log a local diagnostic; do
+  not rewind state.
+- **Session/exercise/variant change:** flush the temporal buffer and decoder
+  before accepting new predictions.
+- **Model load/schema mismatch:** refuse to run the model and use a versioned
+  fallback/manual path. Never load a “close enough” bundle.
+- **Thermal/memory pressure:** use an explicitly tested smaller fallback model or
+  stop feedback; disclose that fallback in the event and diagnostics.
+
+## Device validation and platform parity
+
+Android is first for end-to-end validation. Measure cold/warm startup, per-frame
+and p95 latency, memory, dropped-frame rate, thermal throttling, battery impact,
+and complete-session event traces on each minimum device. Repeat the same golden
+fixtures and acceptance thresholds on iOS before claiming iOS support; shared
+weights do not prove shared preprocessing or runtime behavior.
+
+## Privacy acceptance
+
+The release checklist must verify permission denial, local-only processing,
+temporary-buffer lifetime, deletion, crash/log redaction, offline behavior, and
+that model bundles contain no raw frames, raw pose, or participant identifiers.
+Derived features and event histories remain sensitive and follow the consent
+and retention settings in `CapabilityProfileV1`. A design intention is not a
+passed privacy gate until a device test and review record exist.

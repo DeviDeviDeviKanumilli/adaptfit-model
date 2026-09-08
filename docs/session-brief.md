@@ -1,5 +1,18 @@
 # Complete Session Brief
 
+> **Documentation metadata**
+> - **Status:** historical
+> - **Authority:** dated planning/session record
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** historical context only; current-state and project-forward-plan override its stale status statements
+> - **Review trigger:** none for current behavior; update only when preserving a new dated session record
+
+> **Historical interpretation:** This brief preserves planning context from a
+> prior session. It may explain why work was proposed, but it cannot establish
+> current code, data, artifact, safety, or deployment behavior.
+
 ## Original product idea
 
 Many fitness applications assume that people can stand, run, jump, or use both arms. AdaptFit should automatically adapt routines around the movements a person can safely perform.
@@ -73,3 +86,17 @@ All future AdaptFit work belongs in:
 
 `/Users/devk/AdaptFit/`
 
+## Historical interpretation
+
+- **True for the session:** this brief records the product scope, initial
+  exercise idea, and public-data bootstrap assumption at the session date.
+- **Still current:** capability-focused onboarding, on-device intent, and the
+  prohibition on medical/clinical claims remain reflected in the canonical
+  product and contract documents.
+- **Superseded:** its unversioned roadmap and model assumptions are replaced by
+  [current-state.md](current-state.md), [contracts-and-schemas.md](contracts-and-schemas.md),
+  and [project-forward-plan.md](project-forward-plan.md).
+- **Evidence:** this is a planning record and contains no checkpoint or
+  participant-evaluation artifact.
+- **Cannot prove:** implementation, model accuracy, target-population support,
+  mobile parity, safety, or deployment readiness.

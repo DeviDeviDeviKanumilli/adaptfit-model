@@ -1,5 +1,14 @@
 # AdaptFit public dataset catalog
 
+> **Documentation metadata**
+> - **Status:** canonical-active
+> - **Authority:** dataset registry, adapter code, manifests, and license/access evidence
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `e75ba65`
+> - **Owner:** AdaptFit data engineering
+> - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in dataset-expansion-plan
+> - **Review trigger:** adapter or checksum change, license/access update, or label-role change
+
 This catalog records public datasets that can help AdaptFit learn movement
 recognition, temporal structure, observable movement quality, pose robustness,
 and capability-aware adaptation. It was researched on 2026-08-31. A dataset
@@ -31,6 +40,38 @@ Participant or subject identifiers must stay intact so all splits remain
 participant-level. Synthetic limb masking is useful for engineering tests, but
 it is not evidence that a model works for a real limb difference or wheelchair
 user.
+
+## Canonical registry
+
+The registry below is the source of truth for current role and availability.
+`Integrated` means an adapter exists and a prepared path can be audited; it
+does not mean every label or task is valid. `Pending` and `restricted` sources
+must not enter a release artifact until the access gate passes. Checksums are
+recorded in `data/manifests/` when present; “manifest pending” is an explicit
+provenance gap.
+
+| Dataset | Status / adapter | Modality and participant profile | Labels and usable tasks | Prohibited interpretation | License/access | Checksum/path | Next action |
+|---|---|---|---|---|---|---|---|
+| REHAB24-6 | Integrated / `rehab24_6` | 2D pose; general rehabilitation participants | Exercise family, repetition spans; family/phase/boundary experiments where source labels exist | Not target-population validation; no unprovided quality dimensions | Verify source terms before redistribution | `data/raw/rehab24_6/`; manifest pending | Record source checksum and task masks |
+| IntelliRehabDS | Integrated / `intellirehabds` | Skeleton; seated, wheelchair, standing contexts | Gesture/family and clip boundaries; robustness/context | Not a repetition-quality or clinical outcome label | Verify access and redistribution | `data/raw/intellirehabds/`; manifest pending | Complete license review and participant split audit |
+| MM-Fit | Integrated / `mmfit` | 2D/3D pose and RGB-D; general exercise participants | Family and set-level count; temporal context | No per-repetition boundaries or phase from released set CSV | Terms pending for product use | `data/raw/mmfit/`; manifest pending | Preserve count/set provenance; do not invent boundaries |
+| UL-RED | Integrated / `ul_red` | Marker-less/mocap; general rehabilitation participants | Exercise, speed, sequence structure; phase/tempo pretraining | Not limb-difference or wheelchair evidence; no clinical safety claim | CC BY 4.0 as recorded; verify archive terms | `data/raw/ul_red/`; `data/manifests/ul_red.sha256` | Audit archive checksum and label map |
+| UCOPhyRehab++ | Integrated / `ucophyrehabpp` | 3D pose; controlled healthy participants | Exact repetition spans and composite 1–5 expert score | Composite score is not four dimension-specific quality labels or target-population evidence | License review pending | `data/raw/ucophyrehabpp/`; `data/manifests/ucophyrehabpp.md5` | Finish v2 sequence evaluation and license decision |
+| ROAG | Candidate / no adapter | Motion capture; seven able-bodied and two transradial prosthesis users | Reach geometry, asymmetry, trunk compensation | Not camera-pose or AdaptFit repetition labels without conversion | CC BY 4.0 reported; verify record | Not staged; manifest pending | Build a dedicated coordinate/participant adapter |
+| InclusiveVidPose | Candidate / no adapter | Video/keypoints; amputations, limb differences, prostheses | Pose-front-end robustness and absent/unobserved distinction | Not temporal repetition or exercise-quality supervision | Data-use agreement/restrictions | Not staged; manifest pending | Obtain custodian approval before access |
+| KIMORE | Candidate / no adapter | RGB-D/skeleton; healthy and motor-dysfunction participants | Physician features and clinical-context research | Not amputee/wheelchair validation; no commercial use assumption | Access/license pending | Not staged; manifest pending | Verify terms and label mapping |
+| KERAAL | Candidate / no adapter | RGB-D/video/pose; healthy and low-back-pain participants | Expert correctness, error type/time, trunk compensation | Not clinical safety or target-profile validation | CC BY-NC-SA reported | Not staged; manifest pending | Research-only access review and adapter design |
+| Toronto Rehab Stroke Pose | Candidate / no adapter | Kinect pose; stroke survivors and controls | Frame-level compensation/context | Not generic exercise correctness or AdaptFit capability support | Kaggle/access terms pending | Not staged; manifest pending | Verify release terms and source labels |
+| StrokeRehab | Candidate / no adapter | Video features/IMU/kinematics; stroke and healthy participants | Functional primitives, upper-body representation | Not canonical 2D camera-pose or repetition labels | SimTK account/access required | Not staged; manifest pending | Decide whether feature modality is useful |
+| SAFER-Activities | Candidate / no adapter | 2D/3D pose and images; normal/wheelchair recordings | Pose robustness, action segments, held-out subject/view tests | Not exercise-quality, clinical, or fall-safety labels | CC BY-NC-SA reported; access gate pending | Not staged; manifest pending | Verify terms and create wheelchair robustness split |
+| WheelPose / Users in Wheelchairs | Candidate / no adapter | RGB images/keypoints; 84 public-video subjects | Pose detection and wheelchair robustness | Not temporal count or quality supervision | Code MIT; images have separate restrictions | Not staged; manifest pending | Obtain image-data permission |
+| WheelPoser-IMU | Candidate / no adapter | IMU/mocap; wheelchair users | Sensor-fusion/motion priors | Not camera-pose or exercise feedback labels | CC BY-NC reported; request/access pending | Not staged; manifest pending | Keep separate from pose-only training |
+| MM-Fi | Candidate / no adapter | Multimodal keypoints; 40 subjects | Representation/action pretraining | Taxonomy does not equal AdaptFit families; no target-profile claim | Access/license pending | Not staged; manifest pending | Verify download and source mapping |
+| QEVD/FIT-300K | Candidate / no adapter | Video; many exercise variants | Video-first form/feedback pretraining after pose extraction | Not clinical judgment or direct pose labels | Qualcomm research license | Not staged; manifest pending | Request terms; estimate pose extraction cost |
+| Fitness-AQA | Candidate / no adapter | In-the-wild video; squat/press/row | Fine-grained quality pretraining | Non-commercial and taxonomy cannot be copied as clinical labels | Access request/non-commercial | Not staged; manifest pending | Request access and map quality dimensions |
+| WLU Rehabilitation Posture | Candidate / no adapter | Privacy-blurred video; post-stroke exercises | Verification/counting research | Terms and canonical pose format unclear | Access/license pending | Not staged; manifest pending | Do not download until terms are recorded |
+
+The detailed research backlog remains in [dataset-expansion-plan.md](dataset-expansion-plan.md).
 
 ## Already integrated
 
