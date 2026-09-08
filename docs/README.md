@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** documentation index; source code/config/artifacts remain authoritative for implementation facts
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** replaces the previous undifferentiated document list
 > - **Review trigger:** any new canonical document, status change, schema change, or roadmap change
@@ -46,14 +46,29 @@ commit/config/artifact that supports it. If evidence is missing, write
 
 ## Start here
 
+For a fast implementation orientation, read [system context and data flow](system-context-and-dataflow.md),
+then [repository and implementation map](repository-and-implementation-map.md),
+[current state](current-state.md), and [model registry](model-registry.md).
+
 | Question | Canonical answer |
 |---|---|
+| How does a user request become a workout event? | [System context and data flow](system-context-and-dataflow.md) |
+| Which source file, command, test, and artifact own a subsystem? | [Repository and implementation map](repository-and-implementation-map.md) |
 | What is implemented right now? | [Current state](current-state.md) |
+| Which models are current, planned, or research-only? | [Model registry](model-registry.md) |
 | What fields, tensors, masks, and event semantics must agree? | [Contracts and schemas](contracts-and-schemas.md) |
+| Which recipes may be offered and who approves them? | [Recipe catalog and review](recipe-catalog-and-review.md) |
+| What do labels mean and when are they masked? | [Annotation handbook](annotation-handbook.md) |
 | How should data and labels be ingested? | [Data and training plan](data-and-training-plan.md) and [dataset catalog](dataset-catalog.md) |
+| Which checkpoint and metric prove a result? | [Artifact registry](artifact-registry.md) and [requirements traceability](requirements-traceability.md) |
 | How should a training run be prepared and stopped? | [Efficient training strategy](efficient-training-strategy.md) and [training quickstart](../training/README.md) |
+| How should workouts be selected and personalized? | [Recommendation model plan](recommendation-model-plan.md) |
+| What is the proposed offline movement world-model path? | [Capability-conditioned Motion-JEPA plan](motion-jepa-world-model-plan.md) |
 | How is a model evaluated and released? | [Evaluation protocol](evaluation-protocol.md) |
 | How does a future mobile bundle work? | [On-device deployment](on-device-deployment.md) |
+| What happens when input, data, or a bundle fails? | [Failure and recovery matrix](failure-and-recovery-matrix.md) |
+| Which behavior is covered by tests or still missing? | [Test and fixture matrix](test-and-fixture-matrix.md) |
+| How are local data and consent handled? | [Privacy and data lifecycle](privacy-and-data-lifecycle.md) |
 | What is the dependency-ordered delivery plan? | [Project forward plan](project-forward-plan.md) |
 | What is the training execution state and checkpoint inventory? | [Training execution log](training-execution-log.md) |
 | Why was a decision made? | [Decision ledger](decisions-and-open-questions.md) |
@@ -65,18 +80,28 @@ commit/config/artifact that supports it. If evidence is missing, write
 
 - [Product scope and safety boundaries](product-scope.md)
 - [Exercise and capability schema](exercise-and-capability-schema.md)
+- [Recipe catalog and review protocol](recipe-catalog-and-review.md)
+- [Privacy and data lifecycle](privacy-and-data-lifecycle.md)
 
 ### Model, data, and training
 
+- [System context and data flow](system-context-and-dataflow.md)
+- [Repository and implementation map](repository-and-implementation-map.md)
+- [Model registry](model-registry.md)
 - [Scalable ML architecture](scalable-ml-architecture.md)
 - [Data and training plan](data-and-training-plan.md)
+- [Annotation handbook](annotation-handbook.md)
 - [Public dataset catalog](dataset-catalog.md)
+- [Artifact registry](artifact-registry.md)
 - [Efficient training strategy and Luna TODO](efficient-training-strategy.md)
 
 ### Runtime and delivery
 
 - [Evaluation protocol](evaluation-protocol.md)
 - [On-device deployment plan](on-device-deployment.md)
+- [Failure and recovery matrix](failure-and-recovery-matrix.md)
+- [Test and fixture matrix](test-and-fixture-matrix.md)
+- [Requirements and evidence traceability](requirements-traceability.md)
 - [Project forward plan](project-forward-plan.md)
 - [Training execution log and run inventory](training-execution-log.md)
 - [Decision ledger](decisions-and-open-questions.md)
@@ -86,6 +111,12 @@ commit/config/artifact that supports it. If evidence is missing, write
 
 - [Dataset expansion and ingestion backlog](dataset-expansion-plan.md) —
   proposed sources and adapters; not the current availability registry.
+- [Capability-conditioned Motion-JEPA plan](motion-jepa-world-model-plan.md) —
+  proposed offline pose pretraining and teacher distillation; no implementation
+  or checkpoint exists.
+- [Recommendation model plan](recommendation-model-plan.md) — proposed
+  capability/equipment-filtered workout ranking and personalization; no neural
+  recommender or behavioral dataset exists.
 - [PeddieHacks reference audit](existing-project-audit.md) — supporting
   reference application context, not the active AdaptFit implementation.
 
@@ -119,8 +150,16 @@ source metadata, and interpretation limits:
 - **Prediction confidence:** calibrated model/decoder confidence for an output.
 - **Abstention:** an explicit decision to withhold feedback because evidence is
   insufficient or incompatible.
+- **Feasibility mask:** deterministic eligibility decisions over reviewed
+  recipes using capability, posture, equipment, avoid-list, camera, and review
+  status; ranking cannot override it.
+- **Recommendation score:** a versioned ranking signal over eligible recipes;
+  it is not a safety, medical-benefit, or clinical score.
 - **Composite quality:** a source-provided overall label; it is not automatically
   ROM, tempo, smoothness, or compensation supervision.
+- **Motion-JEPA / AF-MJEPA:** proposed training-only joint-embedding predictive
+  architecture that predicts future or masked pose representations; it is not
+  the current TCN, a product contract, or a mobile runtime.
 - **Target-population validation:** evaluation on consented people in the
   intended population. Public seated data and synthetic masks do not satisfy it.
 
@@ -129,6 +168,12 @@ source metadata, and interpretation limits:
 Follow the [documentation validation workflow](documentation-validation.md)
 for the read-only inventory, path, contract, artifact, metric, dataset,
 command, and terminology checks below.
+
+The machine-readable contract source is the versioned fixture set under
+[`schemas/`](schemas/) with valid and intentionally invalid examples under
+[`examples/contracts/`](examples/contracts/). The validator checks both the
+fixtures and the prose/index links; human review remains required for safety,
+privacy, capability, recipe approval, and challenge claims.
 
 Before merging a documentation change, verify:
 

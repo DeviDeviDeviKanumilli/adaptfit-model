@@ -1,0 +1,18 @@
+{
+  "camera_mode": "front",
+  "catalog_hash": "sha256:catalog-demo",
+  "equipment_available": [
+    "none"
+  ],
+  "goal_ids": [
+    "upper_limb_strength"
+  ],
+  "history_summary": null,
+  "preference_ids": [],
+  "profile": {
+    "position": "seated",
+    "schema_version": "capability.v1"
+  },
+  "schema_version": "recommendation-request.v1",
+  "session_constraints": null
+}

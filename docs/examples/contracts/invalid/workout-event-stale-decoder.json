@@ -1,0 +1,15 @@
+{
+  "abstention": false,
+  "count_delta": 1,
+  "decoder_version": "decoder-unknown",
+  "end_timestamp_ms": 20,
+  "event_confidence": 0.5,
+  "exercise_id": "e",
+  "model_version": "movement-tcn-v1",
+  "reason_code": "decoded_rep",
+  "schema_version": "workout-event.v1",
+  "session_id": "s",
+  "start_timestamp_ms": 10,
+  "tracking_confidence": 0.5,
+  "variant_id": "v"
+}

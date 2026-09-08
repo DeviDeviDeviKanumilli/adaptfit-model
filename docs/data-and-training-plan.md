@@ -4,10 +4,16 @@
 > - **Status:** canonical-active
 > - **Authority:** preparation code, dataset manifests, training configuration, and approved label policy
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit data and training engineering
 > - **Supersedes or supports:** canonical data/label protocol; supports dataset-catalog, efficient-training-strategy, and contracts-and-schemas
 > - **Review trigger:** adapter, label mask, split, normalization, license, or retention change
+
+Use [the annotation handbook](annotation-handbook.md) for label semantics and
+masking, [the dataset catalog](dataset-catalog.md) for source status, and [the
+artifact registry](artifact-registry.md) for run/checkpoint provenance. This
+document owns the ingestion and training protocol; it does not approve recipes
+or target-population claims.
 
 ## Current data constraint
 
@@ -105,6 +111,54 @@ exercises, and 50–100 repetitions per exercise if a consented dataset becomes
 available. This is a recruitment planning estimate, not a validated sample-size
 or release gate. Diversity of participants matters more than collecting many
 clips from the same person.
+
+## Self-supervised Motion-JEPA pretraining (planned)
+
+The optional [AF-MJEPA plan](motion-jepa-world-model-plan.md) adds a training-only
+latent-prediction path. It can consume eligible temporal pose sequences even
+when repetition, phase, or quality labels are missing; downstream losses remain
+masked by label role. The proposed teacher uses structured canonical joint/time
+tokens plus global posture, exercise, equipment, and capability context, while
+the deployed student continues to use the exact 283-feature contract.
+
+The first objective is past-to-future latent prediction. Temporal interval
+masking, joint/anatomy masking, confidence degradation, and paired-view
+consistency are optional experiments. Masks must preserve the distinction
+between an occluded available limb and a declared absent or assisted limb.
+Source-held-out or participant-held-out evaluation rules still apply to
+self-supervised pretraining; unlabeled exposure to a held-out test participant
+invalidates a downstream generalization claim.
+
+Every pretraining run records the source checksum, participant/session split,
+canonical joint map, frame rate, observed/capability masks, augmentation and
+mask lineage, target-encoder version, model/config hashes, and teacher-cache
+provenance. JEPA pretraining does not create quality labels, clinical evidence,
+or target-population validation. Start with a bounded 10M/20M/40M teacher-size
+comparison only after decoder calibration and the supervised baseline establish
+a measured need; reject the path if it does not improve a held-out product
+metric at a matched student budget.
+
+## Recommendation data and training (planned)
+
+Recommendation training is a separate data track from pose windows and movement
+labels. Begin with the reviewed recipe catalog and deterministic feasibility
+mask; a neural ranker is optional and must not be trained until eligible
+candidate exposure is logged.
+
+Each `WorkoutFeedbackEventV1` should retain the request context, eligible
+candidate set, exposure position, selected recipe/variant, outcome, user-stated
+reason, profile/equipment/catalog versions, consent scope, and timestamp. A
+skip is not automatically a negative preference: it may mean pain, fatigue,
+equipment loss, time pressure, or an unavailable camera. Do not train on
+recipes the hard filter would have rejected.
+
+Use user-level and time-aware splits, including cold-start users and a future
+period holdout. Start with a content/rules baseline, then compare a small
+pointwise, pairwise, or two-tower ranker against it. Listwise ranking or a
+contextual bandit is deferred until exposure bias and feedback semantics are
+understood. Recommendation logs contain no raw frames or raw pose; any use of
+movement summaries such as completed count or tracking confidence is a separate
+experiment with its own provenance and privacy review.
 
 ## Evaluation
 

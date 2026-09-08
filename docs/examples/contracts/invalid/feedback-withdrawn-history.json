@@ -1,0 +1,11 @@
+{
+  "catalog_hash": "sha256:c",
+  "consent_state": "withdrawn",
+  "event_id": "f",
+  "event_type": "completed",
+  "exercise_id": "e",
+  "recommendation_id": "r",
+  "schema_version": "workout-feedback.v1",
+  "timestamp_ms": 1,
+  "variant_id": "v"
+}

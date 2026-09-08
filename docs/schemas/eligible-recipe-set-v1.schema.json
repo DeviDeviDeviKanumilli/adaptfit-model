@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/eligible-recipe-set-v1.json",
+  "title": "EligibleRecipeSetV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "catalog_hash", "recipe_ids", "empty", "reason_code"],
+  "properties": {
+    "schema_version": {"const": "eligible-recipe-set.v1"},
+    "catalog_hash": {"type": "string"},
+    "profile_schema_version": {"type": "string"},
+    "recipe_ids": {"type": "array", "items": {"type": "string"}},
+    "empty": {"type": "boolean"},
+    "reason_code": {"type": "string"},
+    "filtered_rules": {"type": "array", "items": {"type": "string"}}
+  }
+}

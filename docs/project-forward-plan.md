@@ -4,12 +4,12 @@
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
 > - **Review trigger:** milestone completion, dependency change, gate result, or empirical evidence
 
-Planning review: September 8, 2026. Audited model checkout: `ba8bf1a` (code baseline), `d5362ee` (documentation revision, HEAD).
+Planning review: September 8, 2026. Audited model checkout: `ba8bf1a` (code baseline), `1a46f38` (documentation revision base and repository HEAD before this working-tree update).
 
 ---
 
@@ -32,6 +32,44 @@ The first-release scope covers **five seated, unilateral-friendly rehabilitation
 
 ---
 
+## Documentation context pass (current prerequisite)
+
+Before changing the movement model, recommendation code, or deployment path,
+complete the documentation context work in this order:
+
+| Work package | Objective | Prerequisites | Expected artifact | Acceptance/stop condition |
+|---|---|---|---|---|
+| D0: freeze facts | Reconcile code, configs, manifests, checkpoints, and reports | clean read-only inventory | dated current-state and artifact entries | stop when any metric/path lacks evidence |
+| D1: navigation maps | Connect runtime flow, source files, tests, owners, and model lifecycle | D0 | system context, repository map, model registry | no subsystem has two active authorities |
+| D2: executable contracts | Make interfaces versioned with valid/invalid fixtures | D1 | JSON schemas, examples, compatibility matrix | reject mismatched versions and invalid edge cases |
+| D3: recipe and label protocol | Lock approval states, launch recipes, labels, masks, and adjudication | D2 | recipe registry and annotation handbook | no recipe/label is promoted without human review |
+| D4: evidence and operations | Trace artifacts, privacy, failures, and test coverage | D0–D3 | artifact, privacy, failure, and test matrices | missing evidence remains unavailable; no claim inflation |
+| D5: traceability and QA | Map requirements to gates and automate structural checks | D1–D4 | requirements ledger plus docs validator/CI job | validator passes and human safety/privacy review signs off |
+
+The implementation priority after this pass remains **movement baseline and
+deployment facts → recommendation foundation → AF-MJEPA research**. A research
+proposal cannot unlock downstream implementation merely because its document
+exists.
+
+```mermaid
+flowchart LR
+    D0[Freeze current facts] --> D1[Maps and ownership]
+    D1 --> D2[Versioned schemas and fixtures]
+    D2 --> D3[Recipes and labels]
+    D0 --> D4[Artifacts and privacy]
+    D3 --> D4
+    D4 --> D5[Traceability and automated QA]
+    D5 --> B[Movement baseline/deployment]
+    B --> R[Recommendation foundation]
+    R --> J[AF-MJEPA research]
+```
+
+The detailed cross-subsystem references live in [system context and data
+flow](system-context-and-dataflow.md), [repository and implementation map](repository-and-implementation-map.md),
+and [requirements traceability](requirements-traceability.md).
+
+---
+
 ## What Exists vs. What Remains Unproven
 
 | Subsystem | Verified Current State | Identified Empirical Bottleneck | Master Plan Solution & Next Action |
@@ -42,7 +80,8 @@ The first-release scope covers **five seated, unilateral-friendly rehabilitation
 | **Repetition Counting** | Repetition Start F1: **66.96%–99.54%**; Repetition End F1: **12.26%–18.47%** | Naive per-frame accumulation $\sum p_{end}(t)$ causes severe overcounting | **Phase 1**: Phase-Coupled Finite State Machine with dual hysteresis |
 | **Training Pipeline** | Overnight 72-epoch TCN trained; GRU interrupted at epoch 52 | Full retraining requires 18 hrs across 267k windows; no warm-start | **Phase 2**: Event-weighted sampler (hypothesized $\sim 4.4\times$ speedup) + warm-start runner |
 | **Quality Supervision** | 4-dimensional quality heads (`quality_logits`) have **0% labeled coverage** in v1/v2 | UCO composite score is 1-5 scalar, not dimension-specific | **Phase 3**: Ingest SERE, TRSPD, and KERAAL clinical compensation labels (UI-PRMD correctness remains masked from dimension-specific quality heads; frame-level annotations require window aggregation contracts to align with pooled `quality_logits`) |
-| **Teacher Distillation** | Supervised baseline only; no teacher models integrated | Boundary jitter on variable-cadence repetitions | **Phase 4**: SSTRAC repetition density + PoseRAC salient-state distillation |
+| **Workout Recommendation** | Capability profile and recipe schema exist; no complete selector or history model | No eligible-candidate service, feedback dataset, or neural ranker | **Cross-cutting track**: hard feasibility mask → content/rules baseline → consented feedback logging → optional neural personalization |
+| **Teacher / World Model** | Supervised baseline only; no teacher or JEPA checkpoint integrated | Boundary jitter and possible representation transfer gap | **Phase 4**: optional AF-MJEPA latent pretraining or one task-specific teacher, selected by measured failure |
 | **Mobile Deployment** | Python causal streaming runtime (`CausalStreamingRuntime`) passing unit tests | Native Android/iOS MediaPipe feature bridge and on-device runtime unbuilt | **Phase 5**: Planned ONNX / TFLite INT8 export + 6 golden fixture parity tests (planned) |
 | **Target Validation** | Tested on public datasets (REHAB24-6, IntelliRehabDS, MM-Fit, UL-RED, UCO) | Zero validation on real amputee, wheelchair, or stroke participants | **Phase 6**: Consented $N=10\text{–}15$ pilot study + Congressional App Challenge delivery |
 
@@ -54,7 +93,7 @@ The first-release scope covers **five seated, unilateral-friendly rehabilitation
 flowchart TD
     P1[Phase 1: Decoder Calibration & Event Debouncing] --> P2[Phase 2: Warm-Start & Fast Training Runner]
     P2 --> P3[Phase 3: Clinical & Target-Population Dataset Ingestion]
-    P3 --> P4[Phase 4: Repetition Density & Teacher Distillation]
+    P3 --> P4[Phase 4: Motion-JEPA, Density & Distillation]
     P4 --> P5[Phase 5: Mobile Runtime Export & Golden Parity]
     P5 --> P6[Phase 6: Consented Pilot Validation & CAC Submission]
 
@@ -235,10 +274,60 @@ graph LR
 
 ---
 
-### Phase 4: Repetition Density & Teacher Distillation
+### Cross-cutting Product Track: Recommendation & Routine Assembly
+
+**Owner: Product, data, and ML engineering | Priority: High for workout selection, independent of the movement-model training path**
+**Status: Rules and recipe foundation required; neural ranker not implemented**
+
+The recommendation system is separate from the TCN/GRU movement model. It must
+run the hard feasibility mask over reviewed `ExerciseRecipeV1` records before
+any ranking. Its dependency order is:
+
+1. Add reviewed goal, difficulty, movement-pattern, duration, and substitution
+   metadata to the recipe catalog.
+2. Implement `EligibleRecipeSetV1` with capability, posture, equipment,
+   movement-avoidance, camera-mode, and recipe-approval checks.
+3. Ship a transparent content/rules ranking baseline with empty-candidate,
+   manual-selection, and explicit-confirmation behavior.
+4. Add consented, local-first `WorkoutFeedbackEventV1` logging with user/time
+   splits and reason codes.
+5. Compare a small user/context-to-exercise ranker against the rules baseline.
+   Add personalization only if the held-out behavior and constraint gates pass.
+
+Expected artifacts are a recipe catalog hash, feasibility fixtures, ranked
+recommendation fixtures, feedback-event manifest, and a recommendation
+experiment record. A neural ranker is blocked until eligible exposure data,
+recipe versions, and a future-period holdout exist. Stop and use rules/manual
+fallback if the ranker increases constraint violations, unexplained swaps,
+subgroup disparity, or repetitive routines. Full contracts and metrics are in
+[recommendation-model-plan.md](recommendation-model-plan.md).
+
+### Phase 4: Motion-JEPA Pretraining, Repetition Density & Teacher Distillation
 
 **Owner: Machine Learning Research | Priority: Medium (Sprint 3)**  
-**Status: Architecture Designed | Candidates: SSTRAC, PoseRAC, RACNet, MotionBERT**
+**Status: Research backlog | No JEPA, density, or teacher implementation exists**
+
+#### 0. Capability-Conditioned Motion-JEPA (AF-MJEPA) proposal
+
+AF-MJEPA is an optional, offline pose representation/world-model experiment.
+It predicts future or masked **latent movement states** from canonical 33-joint
+pose, confidence/observed masks, capability profile, posture, exercise, and
+equipment context. It does not reconstruct pixels, replace the 283-feature
+causal TCN, infer disability, or run on the phone.
+
+The first pilot should compare approximately 10M, 20M, and 40M total training
+models, with past-to-future latent prediction as the primary objective. Temporal
+interval masking, joint/anatomy masking, and paired-view consistency are
+optional ablations. The target encoder must use an explicit EMA or
+stop-gradient rule, and the run must include collapse/finite-value checks.
+
+Prerequisites are a reproducible C1 decoder/baseline result, a licensed and
+participant-split pretraining manifest, and a versioned masking/loss/compute
+configuration. The student keeps the existing 283-feature input and reliable
+supervised losses. Accept AF-MJEPA only if a matched held-out sequence or
+robustness metric improves without count, phase, abstention, subgroup, or
+causal-streaming regressions. The detailed research contract is in
+[motion-jepa-world-model-plan.md](motion-jepa-world-model-plan.md).
 
 #### 1. Student Repetition Density Head Architecture
 Extend `MultiTaskHeads` in `training/src/models/heads.py`:
@@ -261,6 +350,7 @@ $$\text{Count}(T) = \left\lfloor \int_0^T \hat{d}(t) \, dt + 0.5 \right\rfloor$$
 
 | Teacher Candidate | Reference & Repository | Input Modality & Joints | Distilled Target & Loss Function | Stage & Selection Gate |
 |---|---|---|---|---|
+| **AF-MJEPA (planned)** | [Motion-JEPA plan](motion-jepa-world-model-plan.md) | Canonical 33-joint pose/time tokens plus capability, posture, exercise, and equipment context | Future/masked latent states and optional soft task targets; latent distance and task losses are experiment-configured | **Representation candidate**: matched student improves a held-out product metric without collapse or streaming/subgroup regression |
 | **SSTRAC** | Lim et al., *IEEE Access* (2025)<br>`imjjun/SSTRAC_public` | 2D/3D skeleton sequences (17 joints) | **Continuous Repetition Density Map**: Distills frame-level density $\hat{d}_{teacher}(t)$ via L1 loss | **First Candidate**: Gate: Count MAE improves over supervised baseline on RepCount-pose |
 | **PoseRAC** | Yao et al., *CVPR* (2023)<br>`MiracleDance/PoseRAC` | BlazePose 33-joint sequences | **Salient-State Apex Logits**: Distills inflection point probabilities via KL-divergence | **Second Candidate**: Gate: End F1 improves without increasing count MAE |
 | **RACNet** | Luo et al., *ECCV* (2024)<br>`Luoadore/RACnet` | Video feature sequences | **Cycle-Start Probabilities**: Distills full-resolution start-logit probabilities | **Third Candidate**: Optional ablation for cycle initialization |
@@ -271,6 +361,9 @@ $$\text{Count}(T) = \left\lfloor \int_0^T \hat{d}(t) \, dt + 0.5 \right\rfloor$$
 - Teachers are evaluated offline over training sequences. Outputs are stored in `.npz` files indexed by `sequence_id` under `data/teacher_cache/` (planned cache directory; currently unavailable in repository):
   ```text
   data/teacher_cache/
+  ├── af_mjepa/
+  │   ├── manifest.json (model/config/split/mask hashes)
+  │   └── seq_{sequence_id}.npz (latent or soft targets)
   ├── sstrac_density/
   │   ├── manifest.json (model hash, git commit, timestamp)
   │   └── seq_{sequence_id}.npz (density: float32 [T])
@@ -353,7 +446,7 @@ gantt
     Fast Warm-Start Runner (B1-B4)    :2026-09-12, 2026-09-18
     section Phase 3-4: Data & Teachers
     Tier 1 Dataset Ingestion          :2026-09-18, 2026-09-26
-    SSTRAC/PoseRAC Distillation       :2026-09-26, 2026-10-04
+    Motion-JEPA / teacher experiments :2026-09-26, 2026-10-04
     section Phase 5: Mobile Runtime
     ONNX/TFLite Parity & Mobile App   :2026-09-28, 2026-10-08
     On-Device Profiling               :2026-10-08, 2026-10-14
@@ -386,7 +479,8 @@ The table below defines the formal acceptance gates across all work packages. Lu
 | **Phase 1: Decoder Calibration** | ML Team | `training/src/metrics.py`<br>`training/src/evaluation.py` | `artifacts/calibrated_decoder_v1/fsm_params.json` (planned) | Count MAE $\le 0.40$; Rep End F1 $\ge 60.0\%$ on validation split (test split held locked for final reporting) | Unlocks Phase 2 training and Phase 5 runtime |
 | **Phase 2: Fast Runner** | ML Team | `training/src/runner.py`<br>`training/src/data/samplers.py` (planned) | `training/configs/experiments/warmstart.yaml` (planned) | Hypothesized $4.4\times$ speedup verified via benchmark artifact; clean checkpoint resumption | Unlocks Phase 3 & 4 fine-tuning runs |
 | **Phase 3: Dataset Ingestion** | Data Team | `training/src/data/adapters.py`<br>`docs/dataset-catalog.md` | `data/raw/{dyntherapy, roag, uiprmd}` (planned/candidate staging) | Checksums verified; 100% split isolation; 0 participant overlap | Unlocks expanded supervised training |
-| **Phase 4: Distillation** | ML Research | `training/src/models/heads.py`<br>`training/src/distill/` (planned) | `data/teacher_cache/*.npz` (planned) | Distilled student beats supervised baseline on RepCount-pose | Unlocks final student model checkpoint |
+| **Recommendation Foundation** | Product/Data/ML | `docs/recommendation-model-plan.md`<br>`contracts-and-schemas.md`<br>`exercise-and-capability-schema.md` | `EligibleRecipeSetV1` fixtures, catalog hash, and feedback-event manifest (planned) | Zero hard-rule violations; empty-candidate/manual fallback; approved recipe/version parity | Unlocks content ranking and later neural personalization |
+| **Phase 4: Motion-JEPA & Distillation** | ML Research | `docs/motion-jepa-world-model-plan.md`<br>`training/src/models/heads.py`<br>`training/src/distill/` (planned) | `data/teacher_cache/{af_mjepa,sstrac_density,poserac_salient}/` (planned) | One selected teacher improves a matched held-out student metric without collapse, subgroup regression, or causal-streaming regression; otherwise defer | Unlocks final student-model comparison |
 | **Phase 5: Mobile Export** | Mobile Team | `training/src/export/` (planned)<br>`apps/mobile/` (planned / external repository) | `artifacts/mobile/adaptfit_tcn_int8.tflite` (planned) | Target: 100% parity on 6 golden fixtures (planned); target budget: p95 latency $<95\text{ms}$ | Unlocks pilot app deployment |
 | **Phase 6: Pilot & Submission** | Product Lead | `docs/pilot-findings.md` (planned)<br>`submission/` (planned) | Final CAC Video & Application Package (planned) | Signed consent; 0 privacy violations; 100% CAC rubric compliance | Final Public Release & Submission |
 
@@ -397,4 +491,5 @@ The table below defines the formal acceptance gates across all work packages. Lu
 1. **SERE and TULE Institutional Access**: Submit institutional DUA to VisLab Lisbon (`ana.coias@tecnico.ulisboa.pt`) immediately to secure frame-level stroke compensation annotations.
 2. **Android Test Device Designation**: Designate a standard test device (e.g. Google Pixel 7 or Samsung Galaxy A54) for all Phase 5 latency and thermal profiling.
 3. **Consented Pilot Recruitment**: Partner with local adaptive sports programs and physical therapy clinics to recruit $N=10\text{–}15$ participants across the target profiles.
-4. **Offline Teacher Verification**: Verify SSTRAC and PoseRAC inference scripts on the 5 launch exercises before initiating large-scale teacher caching.
+4. **Offline Teacher Verification**: Verify the selected task teacher or AF-MJEPA pilot on the 5 launch exercises and the declared pretraining split before initiating large-scale teacher caching.
+5. **Recommendation Feedback Policy**: Define which workout-selection events may be stored locally, their retention/deletion behavior, approved reason codes, and the minimum future-period holdout before training a neural ranker.

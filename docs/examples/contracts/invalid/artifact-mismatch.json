@@ -1,0 +1,13 @@
+{
+  "checkpoint_path": "missing.pt",
+  "config_hash": "x",
+  "decoder_version": "decoder.v1",
+  "feature_schema_version": "feature.v2",
+  "known_limitations": [],
+  "model_id": "movement-tcn-v1",
+  "model_version": "v1",
+  "normalization_version": "normalization.v1",
+  "schema_version": "model-artifact-manifest.v1",
+  "source_commit": "x",
+  "status": "release-candidate"
+}

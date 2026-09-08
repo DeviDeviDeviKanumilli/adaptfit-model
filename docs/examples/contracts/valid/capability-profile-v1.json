@@ -1,0 +1,23 @@
+{
+  "consent": {
+    "local_history": true
+  },
+  "equipment": [
+    "none",
+    "resistance_band"
+  ],
+  "limbs": {
+    "left_arm": "available",
+    "left_leg": "limited",
+    "right_arm": "absent",
+    "right_leg": "available"
+  },
+  "mobility_context": "wheelchair",
+  "position": "seated",
+  "profile_id": "profile-demo-001",
+  "schema_version": "capability.v1",
+  "user_limits": {
+    "movements_to_avoid": [],
+    "range_of_motion": "self_reported"
+  }
+}

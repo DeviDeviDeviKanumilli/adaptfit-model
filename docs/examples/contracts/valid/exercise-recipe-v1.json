@@ -1,0 +1,49 @@
+{
+  "allowed_feedback_dimensions": [
+    "count",
+    "phase",
+    "tracking_confidence"
+  ],
+  "bilateral_support": false,
+  "camera_requirements": {
+    "min_visibility": 0.75,
+    "view": "front_or_oblique"
+  },
+  "confidence_floor": 0.7,
+  "dose_constraints": {
+    "max_reps": 30,
+    "min_reps": 1,
+    "rest_seconds": 30
+  },
+  "exercise_id": "seated_one_arm_biceps_curl",
+  "expected_phase_sequence": [
+    "rest",
+    "concentric",
+    "hold",
+    "eccentric"
+  ],
+  "movement_family": "upper_limb_flexion",
+  "optional_equipment": [],
+  "optional_limbs": [],
+  "recipe_version": "1.0.0",
+  "relevant_joints": [
+    "left_shoulder",
+    "left_elbow",
+    "left_wrist"
+  ],
+  "required_equipment": [],
+  "required_limbs": [
+    "left_arm"
+  ],
+  "required_position": [
+    "seated",
+    "wheelchair"
+  ],
+  "review_status": "draft",
+  "reviewed_at": null,
+  "reviewer": null,
+  "schema_version": "recipe.v1",
+  "substitution_group": "seated_elbow_flexion",
+  "unilateral_support": true,
+  "variant_id": "left_no_equipment"
+}

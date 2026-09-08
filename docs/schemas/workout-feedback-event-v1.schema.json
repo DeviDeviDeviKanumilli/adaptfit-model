@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/workout-feedback-event-v1.json",
+  "title": "WorkoutFeedbackEventV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "recommendation_id", "exercise_id", "variant_id", "event_type", "timestamp_ms", "consent_state", "catalog_hash"],
+  "properties": {
+    "schema_version": {"const": "workout-feedback.v1"},
+    "event_id": {"type": "string"},
+    "recommendation_id": {"type": "string"},
+    "exercise_id": {"type": "string"},
+    "variant_id": {"type": "string"},
+    "event_type": {"type": "string", "enum": ["exposed", "selected", "started", "completed", "paused", "skipped", "swapped", "rejected"]},
+    "reason_code": {"type": ["string", "null"]},
+    "timestamp_ms": {"type": "integer", "minimum": 0},
+    "profile_schema_version": {"type": ["string", "null"]},
+    "consent_state": {"type": "string", "enum": ["local_history", "withdrawn", "none"]},
+    "catalog_hash": {"type": "string"}
+  }
+}

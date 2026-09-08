@@ -1,0 +1,11 @@
+{
+  "catalog_hash": "sha256:old",
+  "fallback": false,
+  "model_version": "ranker-catalog-new",
+  "recipe_ids": [
+    "recipe"
+  ],
+  "recommendation_id": "rec",
+  "schema_version": "workout-recommendation.v1",
+  "source": "ranker"
+}

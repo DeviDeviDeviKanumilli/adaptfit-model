@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** documentation review procedure
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports the validation checklist in `docs/README.md`
 > - **Review trigger:** canonical document, contract, artifact, or repository-layout change
@@ -14,6 +14,12 @@ documentation procedure rather than a model/code change. Run it from
 `/Users/devk/AdaptFit` before merging a documentation update or asking Luna to
 implement a training/deployment task.
 
+The executable structural check is `python3 scripts/validate_docs.py`. It uses
+only the standard library, reads source/config/artifact paths, validates the
+versioned JSON fixtures, and never prepares data, trains, exports, or edits a
+file. The repository CI job runs this command; human review is still required
+for safety, privacy, capability, recipe-approval, and challenge language.
+
 ## 1. Inventory and metadata
 
 ```bash
@@ -22,6 +28,7 @@ test -f training/README.md
 for f in docs/*.md training/README.md; do
   rg -q 'Documentation metadata' "$f" || echo "missing metadata: $f"
 done
+python3 scripts/validate_docs.py
 git rev-parse HEAD
 git status --short
 ```
@@ -42,6 +49,10 @@ rg -n '\]\([^https:#][^)]*\)' docs training/README.md
 rg -n '`(/Users/devk/AdaptFit|training/|artifacts/|data/)[^`]*`' docs training/README.md
 ```
 
+The validator checks links and the existence of canonical artifact directories;
+planned or historical paths must be labeled nearby rather than represented by
+placeholder files.
+
 When a link contains an anchor, validate the file first and then verify the
 heading anchor manually. Do not turn an unavailable artifact into a placeholder
 file merely to make a link pass.
@@ -56,6 +67,11 @@ Compare [current-state.md](current-state.md) and
 - `training/src/models/tcn.py`, `gru.py`, and `heads.py`;
 - `training/configs/`;
 - `artifacts/*/feature_schema.json` and `training_config.yaml`.
+- `docs/motion-jepa-world-model-plan.md` for the explicitly planned, training-only
+  AF-MJEPA path. Confirm it has no current checkpoint, export, or mobile claim.
+- `docs/recommendation-model-plan.md` for the explicitly planned recommendation
+  path. Confirm hard feasibility precedes ranking and no neural recommender is
+  claimed as implemented.
 
 The review must confirm 283 inputs, 128-frame windows, the configured stride,
 96 TCN channels, five dilations, the 125-frame receptive field, head dimensions,
@@ -75,6 +91,12 @@ and artifact path. Check that:
 - no target-population claim lacks real participant evidence;
 - sequence metrics are primary when offsets exist and window fallback is stated
   when they do not.
+- any Motion-JEPA experiment records target-encoder/mask/horizon settings,
+  participant/source split isolation, collapse diagnostics, and teacher-cache
+  provenance; a latent loss alone is not a product result.
+- any recommendation claim identifies the eligible candidate set, recipe/catalog
+  version, exposure policy, user/time split, fallback behavior, and hard-rule
+  audit; ranking metrics alone do not establish safety or clinical benefit.
 
 ## 5. Dataset and license checks
 
@@ -91,6 +113,8 @@ Do not launch training as a documentation check. Read each command in
 - prerequisites and input paths exist;
 - output directories are isolated;
 - current commands are fresh-training commands, not implied resume commands;
+- the Motion-JEPA document is a research contract only and does not imply a
+  runnable pretraining command or authorize a training launch;
 - preflight, validation cadence, stopping rule, and artifact manifest are
   specified;
 - the command does not overwrite a historical benchmark.
@@ -110,6 +134,14 @@ Have a human review safety wording, capability-focused language, privacy and
 consent, exercise approval, challenge claims, and any sentence that could be
 read as medical validation. A passing link/path check cannot approve those
 claims.
+
+## 8. Machine-readable contract fixtures
+
+Schemas under `docs/schemas/` use `schema_version` and valid/invalid examples
+under `docs/examples/contracts/` are checked by the validator. Invalid fixtures
+must fail either structural schema validation or an explicit cross-field policy
+such as empty-candidate consistency, catalog compatibility, consent state, or
+model/feature compatibility.
 
 ## Completion record
 

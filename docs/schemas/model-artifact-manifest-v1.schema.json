@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/model-artifact-manifest-v1.json",
+  "title": "ModelArtifactManifestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "model_id", "model_version", "source_commit", "config_hash", "feature_schema_version", "normalization_version", "decoder_version", "checkpoint_path", "status", "known_limitations"],
+  "properties": {
+    "schema_version": {"const": "model-artifact-manifest.v1"},
+    "model_id": {"type": "string"},
+    "model_version": {"type": "string"},
+    "source_commit": {"type": "string"},
+    "config_hash": {"type": "string"},
+    "feature_schema_version": {"type": "string"},
+    "normalization_version": {"type": "string"},
+    "decoder_version": {"type": "string"},
+    "checkpoint_path": {"type": "string"},
+    "status": {"type": "string", "enum": ["prepared", "trained", "evaluated", "release-candidate", "released", "blocked", "unavailable"]},
+    "known_limitations": {"type": "array", "items": {"type": "string"}},
+    "quantization": {"type": ["string", "null"]},
+    "metrics": {"type": "object"}
+  }
+}

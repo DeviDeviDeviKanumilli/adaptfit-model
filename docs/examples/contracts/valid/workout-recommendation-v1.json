@@ -1,0 +1,12 @@
+{
+  "catalog_hash": "sha256:catalog-demo",
+  "confidence": null,
+  "fallback": false,
+  "model_version": "recommendation-rules-v1",
+  "recipe_ids": [
+    "seated_one_arm_biceps_curl:left_no_equipment"
+  ],
+  "recommendation_id": "rec-demo-001",
+  "schema_version": "workout-recommendation.v1",
+  "source": "rules"
+}

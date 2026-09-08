@@ -1,0 +1,17 @@
+{
+  "artifact_path": "artifacts/doc-fixture",
+  "config_hash": "sha256:config-example",
+  "dataset_manifest_ids": [
+    "corrected-v1"
+  ],
+  "experiment_id": "exp-doc-fixture-001",
+  "git_commit": "ba8bf1a",
+  "metrics": {},
+  "parent_checkpoint": null,
+  "schema_version": "experiment-record.v1",
+  "seed": 42,
+  "status": "planned",
+  "trainable_layers": [
+    "all"
+  ]
+}

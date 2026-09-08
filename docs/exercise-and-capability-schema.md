@@ -4,10 +4,15 @@
 > - **Status:** canonical-active
 > - **Authority:** product recipe schema, capability rules, and reviewed exercise catalog
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit product and safety review
 > - **Supersedes or supports:** canonical product-facing schema; contracts-and-schemas defines serialized compatibility fields
 > - **Review trigger:** recipe, capability enum, equipment rule, safety review, or feedback-dimension change
+
+The catalog lifecycle, approval states, catalog hash, and required edge-case
+fixtures are canonical in [recipe catalog and review](recipe-catalog-and-review.md).
+Machine-readable payloads are under [`schemas/`](schemas/); this document keeps
+the product-facing examples and capability language.
 
 ## Initial exercise set
 
@@ -92,6 +97,7 @@ must contain:
 
 ```json
 {
+  "schema_version": "recipe.v1",
   "exercise_id": "seated_one_arm_biceps_curl",
   "variant_id": "left_no_equipment",
   "recipe_version": "1.0.0",
@@ -122,6 +128,30 @@ names can change. Enum changes require a schema version and migration note.
 Numeric values carry units and inclusive bounds. Missing optional fields are
 `null` or an empty list according to the contract; an omitted field is invalid.
 
+## Recommendation metadata (planned)
+
+Recipes may carry additional reviewed metadata for candidate generation and
+ranking:
+
+```json
+{
+  "goal_tags": ["upper_limb_strength", "mobility"],
+  "movement_patterns": ["elbow_flexion"],
+  "difficulty": "introductory|moderate|advanced",
+  "estimated_duration_seconds": 90,
+  "body_demand_tags": ["seated", "single_arm"],
+  "recommendation_eligibility": "approved|draft|retired"
+}
+```
+
+These fields describe a reviewed recipe and session fit. They are not claims
+about muscle activation, force, clinical benefit, or medical suitability. The
+hard capability/equipment/posture filter runs before any neural ranking. The
+ranker may order eligible recipes but cannot promote `draft` content, waive a
+required limb/equipment rule, or silently change a variant. See
+[recommendation-model-plan.md](recommendation-model-plan.md) for the planned
+request, candidate, ranking, substitution, and feedback flow.
+
 ## Required examples and edge cases
 
 | Profile/input | Expected catalog and runtime behavior |
@@ -140,5 +170,7 @@ The Python catalog is the reference during model development. A generated or
 checked TypeScript/mobile/database representation must preserve IDs, versions,
 enums, required joints, and review status. CI or a release checklist should
 compare catalog hashes and reject a mobile recipe whose schema version is newer
-than the model/runtime it invokes. Human safety review owns recipe approval;
-ML training cannot promote a recipe to `approved`.
+than the model/runtime it invokes. Recommendation requests and feedback must
+carry the same catalog hash so a ranker cannot select against stale recipe
+requirements. Human safety review owns recipe approval; ML training cannot
+promote a recipe to `approved`.

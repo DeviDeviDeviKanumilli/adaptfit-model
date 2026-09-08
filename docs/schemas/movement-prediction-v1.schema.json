@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/movement-prediction-v1.json",
+  "title": "MovementPredictionV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "model_id", "family_logits", "phase_logits", "rep_start_logit", "rep_end_logit", "tracking_confidence"],
+  "properties": {
+    "schema_version": {"const": "prediction.v1"},
+    "model_id": {"type": "string"},
+    "family_logits": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"type": "number"}},
+    "phase_logits": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "number"}},
+    "rep_start_logit": {"type": "number"},
+    "rep_end_logit": {"type": "number"},
+    "quality_logits": {"type": "array", "maxItems": 4, "items": {"type": ["number", "null"]}},
+    "expert_quality_logits": {"type": "array", "maxItems": 5, "items": {"type": "number"}},
+    "tracking_confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}

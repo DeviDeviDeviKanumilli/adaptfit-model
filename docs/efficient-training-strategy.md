@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training runbook; commands must still be verified against the runner and config
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** canonical staged-training workflow; supports current-state, data-and-training-plan, and evaluation-protocol
 > - **Review trigger:** runner/config/schema change, new checkpoint, or changed compute/evaluation budget
@@ -86,9 +86,17 @@ Initially use the selected exercise as session context instead of requiring fine
 
 ## 5. Use distillation selectively
 
-Do not begin by training or running all four teachers. Teacher inference, pose-format conversion and tuning are part of the compute budget. First establish whether supervised fine-tuning already solves the problem.
+Do not begin by training or running multiple teachers. Teacher inference, pose-format conversion and tuning are part of the compute budget. First establish whether supervised fine-tuning already solves the problem. The proposed [AF-MJEPA plan](motion-jepa-world-model-plan.md) is a separate offline representation/pretraining experiment, not an automatic replacement for a task-specific teacher.
 
 If counting remains weak, **SSTRAC density/count supervision is the first task-specific teacher experiment I would try**, after verifying that its predictions improve on existing labels for the relevant recordings. Use released compatible weights where available, freeze the teacher, and cache its aligned outputs once. Reliable human/source labels remain the anchor. [SSTRAC implementation](https://github.com/imjjun/SSTRAC_public).
+
+If the measured failure is broader representation transfer and there is enough
+eligible unlabeled pose data, evaluate AF-MJEPA instead of adding another task
+teacher. Start with one bounded 10M/20M/40M size comparison, future-latent
+prediction as the primary objective, and the existing TCN as the student. Do
+not run SSTRAC and AF-MJEPA together in the first experiment; the extra cost and
+different targets would make the result hard to attribute. The full gate and
+masking rules are in [the Motion-JEPA plan](motion-jepa-world-model-plan.md).
 
 MotionBERT is a later representation experiment if the main failure is transfer to unfamiliar motion or incomplete pose. Its 17-joint format needs an explicit adapter; it does not supply repetition or quality labels. RACNet's RGB-derived action-start signals and PoseRAC's salient-pose events introduce additional adaptation work, so defer them unless they address a measured gap. None directly supplies AdaptFit's biomechanical phase labels. [Teacher details and sources](project-forward-plan.md).
 
@@ -124,6 +132,31 @@ Add density supervision only after the simpler experiment warrants it. Keep arti
 The practical priority is: **clean supervision → reuse learned features → targeted fine-tuning → selective distillation**. For AdaptFit's current state, this is my strongest hypothesis for improving useful accuracy with the least wasted training; the staged comparisons will establish whether it holds.
 
 ## Operational runbook
+
+## Reproducibility and command/output contract
+
+Record the following before each run in `ExperimentRecordV1`: repository
+checkout and dirty paths, Python/PyTorch/NumPy versions, operating system and
+device (`cpu`, CUDA, or MPS), available disk, config hash, dataset-manifest
+IDs/checksums, feature/normalization versions, seed, parent checkpoint, and
+declared wall-time/update budget. The current baseline was verified on Python
+3.13 with PyTorch MPS support; this is an environment observation, not a
+portable hardware guarantee.
+
+| Command | Prerequisites | Expected output | Stop condition |
+|---|---|---|---|
+| `python3 -m training.preflight --config <cfg>` | raw paths, manifest, license/access state | preflight report and resolved config | any missing path, checksum, schema, or split failure |
+| `python3 -m training.prepare_data --config <cfg>` | passing preflight and isolated output root | prepared windows, manifest, normalization, feature schema, audit | identity collision, non-finite features, or unmasked label error |
+| `python3 -m training.train ...` | prepared data, new artifact root, selected seed/device | checkpoints, histories, model card, experiment record | non-finite loss, leakage, incompatible keys, budget/patience stop |
+| `python3 -m training.evaluate ...` | immutable checkpoint and locked split | sequence/window metrics, predictions, provenance report | missing offsets, split mismatch, or untraceable metric |
+| `python3 scripts/validate_docs.py` | repository paths and JSON fixtures | read-only documentation/fixture report | any link, metadata, schema, status, or claim-trace failure |
+
+Warm-start and exact resume remain different contracts. A warm-start restores
+weights only and records a parent checkpoint; an exact resume additionally
+restores optimizer, scheduler/scaler, sampler position, update count, RNG, and
+the compatible data/code environment. Neither is implied by the current fresh
+training command. Every run writes to a new artifact root and updates the
+[artifact registry](artifact-registry.md) after evaluation.
 
 This section turns the strategy into a repeatable gate sequence. A Luna agent
 must stop at the first failed gate, record the evidence, and avoid spending
@@ -214,6 +247,24 @@ subgroup or causal-streaming regressions.
 Before final test reporting, freeze preprocessing, decoder, calibration,
 architecture, checkpoint, and deployment variant. Run the golden Python/native
 fixtures and float/quantized parity checks in [evaluation-protocol.md](evaluation-protocol.md).
+
+### Motion-JEPA gate (planned)
+
+Treat AF-MJEPA as a research backlog item until C1 and the supervised baseline
+are reproducible. Before any run, create a versioned manifest and config that
+fixes the participant/source split, target-encoder update rule, prediction
+horizons, masking policy, loss weights, model size, and wall-time budget. Add a
+finite-value/collapse check and a frozen-probe evaluation before scaling the
+run.
+
+Use only canonical pose sequences and explicit capability/observed masks. Keep
+the 283-feature student and all reliable supervised losses unchanged. Cache
+teacher latents or soft targets with model, preprocessing, split, timestamp,
+and generation-commit hashes. Accept the teacher only when a matched held-out
+student improves a predeclared sequence or robustness metric without regressions
+in count, phase, abstention, subgroup, or causal streaming behavior. If the
+representation collapses, split provenance is incomplete, or the student does
+not improve at the declared budget, stop and retain the supervised baseline.
 
 ## Luna execution TODO list
 
@@ -378,6 +429,7 @@ This TODO list is a handoff specification, not an instruction to start training 
 #### D2. Try one teacher only if supervised improvement is insufficient
 
 - [ ] Pick a teacher for the remaining task; SSTRAC is the first density/count candidate, not a source of phase labels.
+- [ ] If the remaining gap is representation transfer rather than density, evaluate one bounded AF-MJEPA pilot instead of adding another task teacher. Read `docs/motion-jepa-world-model-plan.md` first.
 - [ ] Verify access/terms, checkpoint, pose mapping, time alignment and teacher behavior on relevant examples.
 - [ ] Cache frozen teacher targets with model/preprocessing hashes, timestamps, masks and split provenance. Do not optimize on test data.
 - [ ] Add one separately weighted distillation loss while retaining reliable supervised labels.
@@ -385,7 +437,7 @@ This TODO list is a handoff specification, not an instruction to start training 
 
 **Depends on:** C3 and the appropriate target contract; D1 for density distillation.
 
-**Done when:** the teacher's total cost buys a measurable benefit without subgroup or causal-streaming regressions. Otherwise defer it. MotionBERT, RACNet and PoseRAC remain separate optional experiments; do not implement all four together.
+**Done when:** the teacher's total cost buys a measurable benefit without subgroup or causal-streaming regressions. Otherwise defer it. MotionBERT, RACNet, PoseRAC, SSTRAC, and AF-MJEPA remain separate optional experiments; do not implement multiple teachers together in the first comparison.
 
 #### D3. Defer unsupported outputs and unrelated learning tasks
 

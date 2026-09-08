@@ -1,0 +1,13 @@
+{
+  "catalog_hash": "sha256:catalog-demo",
+  "consent_state": "local_history",
+  "event_id": "feedback-demo-001",
+  "event_type": "completed",
+  "exercise_id": "seated_one_arm_biceps_curl",
+  "profile_schema_version": "capability.v1",
+  "reason_code": null,
+  "recommendation_id": "rec-demo-001",
+  "schema_version": "workout-feedback.v1",
+  "timestamp_ms": 3000,
+  "variant_id": "left_no_equipment"
+}

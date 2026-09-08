@@ -1,0 +1,64 @@
+# AdaptFit model registry
+
+> **Documentation metadata**
+> - **Status:** canonical-active
+> - **Authority:** model lifecycle, artifact ownership, deployment status, and release gates
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Owner:** AdaptFit ML engineering
+> - **Supersedes or supports:** consolidates model status from `current-state.md`, `scalable-ml-architecture.md`, `recommendation-model-plan.md`, and `motion-jepa-world-model-plan.md`
+> - **Review trigger:** new model family, checkpoint, head, export, evaluation, or deployment target
+
+This registry distinguishes model families, artifact variants, and deterministic
+components. A row is current only when its source code/config and artifact
+evidence exist. Planned and research rows are design contracts, not available
+models.
+
+## Model and component inventory
+
+| ID | Kind | Inputs | Outputs | Status | Artifact owner | Deployment | Release gate |
+|---|---|---|---|---|---|---|---|
+| `movement-tcn-v1` | Neural movement model | `FeatureSchemaV1` 283 features, 128-frame causal window | family, phase, boundaries, pooled quality, tracking confidence | Current primary; corrected-v1 complete | ML/training engineering | Python reference; mobile unavailable | sequence metrics, decoder calibration, parity, latency |
+| `movement-gru-v1` | Neural movement baseline | same 283-feature contract | same head family | Current comparison baseline; corrected-v1 complete | ML/training engineering | Python reference; mobile unavailable | matched participant split and sequence metrics |
+| `movement-tcn-quality-v2` | Neural movement variant | 283 features plus quality-label configuration | expert-quality head plus movement heads | Partial; v2-quality-fixed TCN evaluated, quality-4 coverage zero | ML/training engineering | Not released | valid quality labels, complete comparison, calibration |
+| `recommendation-rules-v1` | Deterministic selector | capability, equipment, reviewed recipes, goals | eligible candidates and fallback | Planned | Product/safety engineering | Product/runtime target | exhaustive zero-rule-violation fixtures |
+| `recommendation-ranker-v1` | Planned neural ranker | eligible recipes plus consented profile/history features | ranked candidates and confidence | Research backlog; no checkpoint | Product/ML engineering | Future service or local runtime | user/time-held-out ranking, privacy, hard-mask audit |
+| `af-mjepa-v1` | Research-only teacher/world model | masked/contextual canonical pose sequences | latent predictions or distillation targets | Research backlog; no code/checkpoint | ML research | Never directly on mobile | collapse checks and matched student improvement |
+
+The pose estimator is an external runtime dependency, not an AdaptFit model
+row. The decoder, feasibility mask, abstention logic, and recipe approval are
+deterministic components and cannot be replaced by a model score.
+
+## Artifact requirements
+
+Every model artifact must carry `ModelArtifactManifestV1` with:
+
+- model ID and variant;
+- model/schema/normalization/decoder versions;
+- source commit and config hash;
+- dataset manifest and participant/source split;
+- seed, parent checkpoint, trainable layers, and loss weights;
+- checkpoint hash and artifact paths;
+- validation/test metrics with split and source scope;
+- export/runtime/quantization state;
+- known limitations and prohibited interpretations.
+
+The authoritative inventory is [artifact registry](artifact-registry.md).
+`best.pt` without this manifest is not a releasable model bundle.
+
+## Non-claims
+
+No row currently establishes clinical validity, medical safety, muscle force,
+muscle activation, joint loading, or target-population performance. Quality
+head availability requires valid reviewed labels; model architecture alone does
+not create quality supervision. The recommendation ranker cannot bypass the
+hard feasibility mask, and AF-MJEPA cannot be described as a shipped model.
+
+## Promotion states
+
+`research-backlog → prepared → trained → evaluated → parity-checked →
+release-candidate → released`.
+
+Promotion requires the evidence in the applicable release gate. A failed or
+missing gate moves the row to `blocked` or `unavailable`; it does not get
+silently treated as an earlier successful state.

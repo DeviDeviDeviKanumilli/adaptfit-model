@@ -1,0 +1,22 @@
+{
+  "adapter_version": "adapter.v1",
+  "checksum": "sha256:pending-example",
+  "dataset_id": "corrected-v1",
+  "label_roles": [
+    "movement_family",
+    "phase",
+    "rep_start",
+    "rep_end"
+  ],
+  "license_status": "documented-review-required",
+  "participant_ids": [
+    "P001",
+    "P002"
+  ],
+  "prohibited_interpretations": [
+    "target-population-validation"
+  ],
+  "schema_version": "dataset-manifest.v1",
+  "source_version": "repository-baseline",
+  "split_policy": "participant-and-source-held-out"
+}

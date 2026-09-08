@@ -1,0 +1,9 @@
+{
+  "catalog_hash": "sha256:catalog-demo",
+  "empty": true,
+  "reason_code": "no_eligible_candidate",
+  "recipe_ids": [
+    "recipe-that-violates-profile"
+  ],
+  "schema_version": "eligible-recipe-set.v1"
+}

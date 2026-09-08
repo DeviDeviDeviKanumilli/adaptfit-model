@@ -1,0 +1,19 @@
+{
+  "allowed_feedback_dimensions": [],
+  "camera_requirements": {},
+  "dose_constraints": {},
+  "exercise_id": "draft",
+  "expected_phase_sequence": [],
+  "movement_family": "x",
+  "recipe_version": "1",
+  "relevant_joints": [],
+  "required_equipment": [],
+  "required_limbs": [],
+  "required_position": [
+    "seated"
+  ],
+  "review_status": "approved",
+  "schema_version": "recipe.v1",
+  "unilateral_support": true,
+  "variant_id": "x"
+}

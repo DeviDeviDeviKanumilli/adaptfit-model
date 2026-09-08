@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/feature-schema-v1.json",
+  "title": "FeatureSchemaV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "feature_count", "joint_count", "frame_rate_hz", "window_frames", "stride_frames", "receptive_field_frames", "normalization_version", "features"],
+  "properties": {
+    "schema_version": {"const": "feature.v1"},
+    "feature_count": {"const": 283},
+    "joint_count": {"const": 33},
+    "frame_rate_hz": {"type": "number", "exclusiveMinimum": 0},
+    "window_frames": {"const": 128},
+    "stride_frames": {"type": "integer", "minimum": 1},
+    "receptive_field_frames": {"const": 125},
+    "normalization_version": {"type": "string"},
+    "features": {"type": "array", "minItems": 283, "maxItems": 283, "items": {"type": "object"}}
+  }
+}

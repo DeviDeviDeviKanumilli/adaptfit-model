@@ -4,10 +4,15 @@
 > - **Status:** canonical-active
 > - **Authority:** implemented model code plus explicitly labeled future architecture
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit ML engineering
 > - **Supersedes or supports:** canonical model/data-flow explanation; contracts-and-schemas owns exact serialized interfaces
 > - **Review trigger:** architecture, feature schema, head, runtime, or deployment change
+
+Use [system context and data flow](system-context-and-dataflow.md) for the
+complete product/offline pipeline and [model registry](model-registry.md) for
+model-family status. This document explains architecture; it does not promote
+planned recommendation or JEPA components to implemented behavior.
 
 ## Model choice
 
@@ -98,6 +103,30 @@ are not valid substitutes for the current contract.
   teacher-distillation experiment.
 - Add reviewed quality targets and calibration before enabling quality feedback.
 - Define export, quantization, native parity, and recipe integration.
+- Evaluate the optional [capability-conditioned Motion-JEPA plan](motion-jepa-world-model-plan.md)
+  as an offline pretraining/teacher path only after the supervised baseline and
+  decoder gates pass.
+
+### Planned research: capability-conditioned Motion-JEPA
+
+The proposed AF-MJEPA is a larger training-only context encoder, target
+encoder, and predictor over canonical pose sequences. It predicts future or
+masked **latent movement states**, not pixels or exact future landmark
+coordinates. It may use joint/time tokens plus global posture, exercise,
+equipment, and capability tokens, while preserving the same 33-joint mapping
+and the distinction between camera occlusion and declared limb state.
+
+Its primary experiment is past-to-future latent prediction. Contiguous temporal
+masking, joint/anatomy masking, and paired-view consistency are optional
+ablations with explicit manifests. An EMA or stop-gradient target encoder and
+collapse checks are required. The proposed model is not implemented, has no
+checkpoint or cache, and must not be described as a current model or deployment
+dependency.
+
+If a matched held-out experiment shows a useful gain, the teacher may provide
+latent or soft task targets to the existing 283-feature causal TCN. The TCN,
+deterministic capability/safety rules, decoder, and `WorkoutEventV1` remain the
+product boundary; the JEPA teacher never ships to the phone.
 
 ### Deferred research
 
@@ -200,7 +229,11 @@ Use the same encoder with explicit masks and capability embeddings. Do not creat
 
 ### More data
 
-Pretrain the motion encoder on unlabeled pose sequences, then fine-tune with labels for phase, repetitions, and quality. This reduces dependence on manually labeled clips.
+The research plan allows pretraining a motion encoder on eligible unlabeled
+pose sequences, then fine-tuning with labels for phase, repetitions, and
+quality. This can reduce dependence on manually labeled clips, but it does not
+create target-population or quality evidence and must respect participant/source
+held-out evaluation splits.
 
 ### More devices
 
@@ -212,7 +245,13 @@ Personalization should begin with local calibration values such as comfortable R
 
 ## Teacher-student option
 
-As the dataset grows, a larger offline teacher model can learn richer temporal representations. Its predictions can be distilled into a compact causal TCN student for on-device use. This provides a path to improve accuracy without shipping a large model to the phone.
+As the dataset grows, the proposed Motion-JEPA or one narrowly selected temporal
+teacher can learn richer offline representations. Its predictions can be
+distilled into a compact causal TCN student for on-device use. Teacher
+pretraining, cache generation, and distillation are separate experiments and
+must pass the gates in [the Motion-JEPA plan](motion-jepa-world-model-plan.md)
+and the training runbook. This provides a path to improve accuracy without
+shipping a large model to the phone.
 
 ## Model limitations
 

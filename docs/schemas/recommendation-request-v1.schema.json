@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/recommendation-request-v1.json",
+  "title": "RecommendationRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile", "catalog_hash", "goal_ids", "equipment_available"],
+  "properties": {
+    "schema_version": {"const": "recommendation-request.v1"},
+    "profile": {"type": "object"},
+    "catalog_hash": {"type": "string"},
+    "goal_ids": {"type": "array", "items": {"type": "string"}},
+    "preference_ids": {"type": "array", "items": {"type": "string"}},
+    "equipment_available": {"type": "array", "items": {"type": "string"}},
+    "session_constraints": {"type": ["object", "null"]},
+    "history_summary": {"type": ["object", "null"]},
+    "camera_mode": {"type": ["string", "null"]}
+  }
+}

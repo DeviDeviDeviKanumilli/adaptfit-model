@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/workout-recommendation-v1.json",
+  "title": "WorkoutRecommendationV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "catalog_hash", "recommendation_id", "recipe_ids", "source", "fallback", "model_version"],
+  "properties": {
+    "schema_version": {"const": "workout-recommendation.v1"},
+    "catalog_hash": {"type": "string"},
+    "recommendation_id": {"type": "string"},
+    "recipe_ids": {"type": "array", "items": {"type": "string"}},
+    "selection_reason_codes": {"type": "array", "items": {"type": "string"}},
+    "source": {"type": "string", "enum": ["rules", "ranker", "fallback"]},
+    "fallback": {"type": "boolean"},
+    "model_version": {"type": "string"},
+    "requires_confirmation": {"type": "boolean"},
+    "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+  }
+}

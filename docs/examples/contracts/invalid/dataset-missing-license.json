@@ -1,0 +1,9 @@
+{
+  "adapter_version": "a",
+  "checksum": null,
+  "dataset_id": "x",
+  "label_roles": [],
+  "schema_version": "dataset-manifest.v1",
+  "source_version": "x",
+  "split_policy": "participant"
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/capability-profile-v1.json",
+  "title": "CapabilityProfileV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "position", "mobility_context", "limbs", "equipment", "user_limits"],
+  "properties": {
+    "schema_version": {"const": "capability.v1"},
+    "profile_id": {"type": "string"},
+    "position": {"type": "string", "enum": ["seated", "wheelchair", "standing", "supported", "unknown"]},
+    "mobility_context": {"type": "string", "enum": ["wheelchair", "chair", "standing", "unknown"]},
+    "limbs": {
+      "type": "object", "additionalProperties": false,
+      "required": ["left_arm", "right_arm", "left_leg", "right_leg"],
+      "properties": {
+        "left_arm": {"type": "string", "enum": ["available", "limited", "absent", "assisted", "unknown"]},
+        "right_arm": {"type": "string", "enum": ["available", "limited", "absent", "assisted", "unknown"]},
+        "left_leg": {"type": "string", "enum": ["available", "limited", "absent", "assisted", "unknown"]},
+        "right_leg": {"type": "string", "enum": ["available", "limited", "absent", "assisted", "unknown"]}
+      }
+    },
+    "equipment": {"type": "array", "items": {"type": "string"}},
+    "user_limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["range_of_motion", "movements_to_avoid"],
+      "properties": {
+        "range_of_motion": {"type": "string", "enum": ["none_declared", "self_reported", "reviewed", "unknown"]},
+        "movements_to_avoid": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "consent": {"type": "object"}
+  }
+}

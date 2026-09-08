@@ -4,10 +4,15 @@
 > - **Status:** canonical-active
 > - **Authority:** approved product scope and safety review
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit product and safety review
 > - **Supersedes or supports:** canonical user journeys, claim boundaries, and fallback behavior
 > - **Review trigger:** new user profile, exercise, feedback claim, data behavior, or safety review
+
+The runtime lifecycle is diagrammed in [system context and data flow](system-context-and-dataflow.md).
+Recipe approval and empty-candidate behavior are owned by [recipe catalog and
+review](recipe-catalog-and-review.md); privacy requirements are in [privacy and
+data lifecycle](privacy-and-data-lifecycle.md).
 
 ## Problem
 
@@ -46,10 +51,29 @@ AdaptFit should:
 
 - Filter out exercises that require unavailable capabilities.
 - Offer unilateral or seated alternatives when supported.
+- Rank only the recipes that pass the deterministic capability, posture,
+  equipment, movement-avoidance, and approval checks.
+- Preserve candidate explanations and offer manual/profile-edit fallback when
+  no approved candidate remains.
 - Calibrate expected range and tempo to the individual.
 - Track only the joints and limbs relevant to the selected exercise.
 - Show low-confidence feedback when pose quality is poor.
 - Allow the user to stop, skip, or manually mark an exercise.
+
+## Recommendation model boundary
+
+The current repository does not contain a neural workout recommender or a
+workout-history model. The first selection path should be a reviewed recipe
+catalog plus a deterministic feasibility mask. A separate content/rules score
+or neural user/exercise ranker may be added later using explicit goals,
+preferences, difficulty, equipment, and consented workout-history events. It
+must never replace the hard mask or infer disability, safety, pain, or clinical
+benefit from camera data.
+
+Exercise substitution uses the same boundary: restrict candidates to an
+approved substitution group, re-run feasibility, request confirmation, and
+record the original and replacement recipe. A recommendation score is not a
+safety or medical score.
 
 ## Safety boundaries
 
@@ -124,7 +148,7 @@ The model can detect observable movement properties such as approximate joint an
 
 ## Exercise review workflow
 
-Recipes move through `draft → safety_review → approved → retired`. A reviewer
+Recipes move through `draft → safety-review → catalog-approved → camera-validated → retired`. A reviewer
 must confirm required capabilities, equipment, posture, camera view, allowed
 feedback dimensions, stop conditions, and prohibited claims. A catalog entry may
 be visible as “planned” while `draft`, but it is not camera-validated support.

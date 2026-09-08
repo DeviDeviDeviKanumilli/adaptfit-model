@@ -4,10 +4,15 @@
 > - **Status:** canonical-active
 > - **Authority:** model/runtime contracts and future export/parity acceptance criteria
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit runtime engineering
 > - **Supersedes or supports:** canonical deployment contract; current-state records that deployment is not yet available
 > - **Review trigger:** exporter, native bridge, schema, device target, privacy behavior, or quantization change
+
+The end-to-end boundary is in [system context and data flow](system-context-and-dataflow.md).
+Use the [failure and recovery matrix](failure-and-recovery-matrix.md), [privacy
+and data lifecycle](privacy-and-data-lifecycle.md), and [artifact registry](artifact-registry.md)
+for acceptance evidence that is still unavailable until a native bridge exists.
 
 ## Privacy requirement
 
@@ -44,6 +49,13 @@ future native bridge so Python can be used as a golden causal-parity harness.
 The mobile implementation should match its chunk semantics, state reset events,
 timestamp checks, and feature width before model conversion.
 
+Workout recommendation runs before this camera pipeline. The planned
+recommendation model consumes the local capability profile, equipment, goals,
+recipe catalog, and consented history; it does not require raw frames or raw
+pose. Its hard feasibility rules and catalog version must be validated before a
+ranker result is shown. A future local ranker would need its own versioned
+manifest and fallback behavior; it is not part of the current TCN runtime.
+
 ## Model format
 
 Android is the first proposed deployment target because the PeddieHacks
@@ -53,6 +65,12 @@ an int8 mobile model through a runtime supported by the native module, with
 TFLite as an initial candidate rather than an available artifact.
 
 The model interface should remain independent of the runtime so that the same canonical weights can later be converted or adapted for iOS.
+
+The proposed AF-MJEPA is training-only. It is not part of the mobile bundle,
+native inference path, latency budget, or privacy release claim. Only a selected
+student checkpoint derived from the canonical 283-feature contract may proceed
+to export, and distillation does not waive any float/native/quantized parity
+gate.
 
 ## Streaming behavior
 
@@ -140,7 +158,7 @@ manifest.
 
 - **Camera denied/unavailable:** show a manual workout or safe-stop path; never
   claim that no movement occurred.
-- **Pose estimator unavailable:** return `abstained=true` with a reason code and
+- **Pose estimator unavailable:** return `abstention=true` with a reason code and
   keep the profile unchanged.
 - **Dropped frames:** follow the manifest gap policy; bridge only permitted
   gaps, otherwise abstain/reset. A timestamp gap must not create extra reps.

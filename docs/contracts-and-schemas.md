@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source schemas, model heads, config, and runtime interfaces
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** resolves contract detail previously scattered across product, architecture, and data plans
 > - **Review trigger:** any field, enum, tensor shape, unit, mask, decoder, or cross-platform interface change
@@ -25,6 +25,10 @@ it must have a producer, consumer, validation rule, and version.
 - A schema/model/normalization/decoder mismatch is a load error, not a best-effort
   conversion.
 - Python is the reference implementation until native parity fixtures pass.
+- The machine-readable fixtures in `docs/schemas/` use `schema_version` as the
+  serialized version field. Older prose aliases such as `profile_version` or
+  `request_version` are descriptive names only and must be normalized to
+  `schema_version` in a new payload.
 
 ## `CapabilityProfileV1`
 
@@ -33,7 +37,7 @@ not a disability classifier.
 
 | Field | Type / allowed values | Semantics |
 |---|---|---|
-| `profile_version` | string, `capability.v1` | Version of this JSON contract. |
+| `schema_version` | string, `capability.v1` | Version of this JSON contract. |
 | `position` | `seated`, `wheelchair`, `standing`, `supported`, `unknown` | Preferred or permitted starting context. |
 | `mobility_context` | controlled string | Product context; never a clinical diagnosis. |
 | `left_arm`, `right_arm`, `left_leg`, `right_leg` | `available`, `limited`, `absent`, `assisted`, `unknown` | Declared capability. `absent` is not camera failure. |
@@ -66,12 +70,95 @@ output. Required fields:
 | `allowed_feedback_dimensions` | Only dimensions with reviewed labels and product approval. |
 | `camera_requirements` | View, minimum visibility, and relevant-joint rules. |
 | `confidence_floor` | Versioned threshold plus abstention behavior. |
-| `review_status`, `reviewer`, `reviewed_at` | `draft`, `safety_review`, `approved`, `retired`; approval is human-owned. |
+| `review_status`, `reviewer`, `reviewed_at` | `draft`, `safety-review`, `catalog-approved`, `camera-validated`, `retired`; approval is human-owned. |
 
 Catalog support means a recipe can be displayed after capability filtering.
 Camera-validated support additionally requires an evaluated tracking/decoding
 path for that variant. Empty candidate sets must produce a clear manual-fallback
 state; the product must never silently substitute an unsafe exercise.
+
+## Recommendation contracts (planned)
+
+The recommender is separate from `MovementPredictionV1`. It ranks reviewed
+recipes after deterministic feasibility filtering; it does not infer capability
+or override safety rules.
+
+### `RecommendationRequestV1`
+
+Minimum fields:
+
+| Field | Semantics |
+|---|---|
+| `schema_version` | `recommendation-request.v1`; changes require a migration. |
+| `profile` | A versioned `CapabilityProfileV1`; declared capability is not inferred from pose. |
+| `goal_ids` | Controlled goals such as mobility, strength, endurance, or routine completion; product-owned vocabulary. |
+| `preference_ids` | Explicit preferences, disliked movements, difficulty, time, and variety settings. |
+| `equipment_available` | Session-time equipment inventory, revalidated before selection. |
+| `session_constraints` | Position, duration, dose, rest, and workout-state constraints with units. |
+| `history_summary` | Optional consented local aggregates or event IDs; absent for cold start. |
+| `camera_mode` | `camera_tracked`, `manual`, or `unknown`; used to filter camera-dependent recipes. |
+
+### `EligibleRecipeSetV1`
+
+The deterministic filter emits the catalog hash, profile/schema versions, and
+one record per considered recipe:
+
+```json
+{
+  "schema_version": "eligible-recipe-set.v1",
+  "catalog_hash": "sha256:…",
+  "recipe_ids": ["seated_one_arm_biceps_curl:left_no_equipment"],
+  "empty": false,
+  "reason_code": "eligible_candidates",
+  "filtered_rules": ["right_arm_absent"]
+}
+```
+
+An ineligible record must explain the failed rule (`required_limb_missing`,
+`unknown_capability`, `posture_mismatch`, `equipment_missing`,
+`movement_avoided`, `camera_unsupported`, `recipe_not_approved`, or a versioned
+equivalent). The neural ranker receives only eligible records.
+
+### `WorkoutRecommendationV1`
+
+The ranker/planner emits a versioned, reviewable result:
+
+| Field | Requirement |
+|---|---|
+| `recommendation_id` | Stable ID for replay and feedback joins. |
+| `recipe_ids` | Ordered recipe/variant IDs. Scores remain internal ranking signals. |
+| `selection_reason_codes` | Goal, preference, variety, history, or cold-start reasons; never “safe” unless it means rule eligibility. |
+| `catalog_hash` | Exact catalog used for ranking. |
+| `model_version` | Ranker/rules version; include rules version in the model manifest when needed. |
+| `source`, `fallback` | `rules`, `ranker`, or `fallback`; boolean indicates fallback behavior. |
+| `requires_confirmation` | Add to a future version for substitutions, profile changes, or equipment changes. |
+
+No score is a probability of safety, medical benefit, or clinical outcome.
+`empty_candidates` must preserve failed-rule explanations and provide the
+manual/profile-edit path.
+
+### `WorkoutFeedbackEventV1`
+
+Feedback is an exposure/outcome record, not an automatic preference label:
+
+```json
+{
+  "schema_version": "workout-feedback.v1",
+  "recommendation_id": "…",
+  "exercise_id": "…",
+  "variant_id": "…",
+  "event_type": "exposed|selected|started|completed|paused|skipped|swapped|rejected",
+  "reason_code": "user_choice|equipment_unavailable|too_difficult|pain_reported|time_limit|unknown",
+  "timestamp_ms": 0,
+  "profile_schema_version": "capability.v1",
+  "catalog_hash": "sha256:…",
+  "consent_state": "local_history"
+}
+```
+
+The product must preserve user-provided reasons and distinguish an unexposed
+recipe from a rejected or unavailable one. Raw frames and raw pose are never
+required inputs to this contract.
 
 ## `FeatureSchemaV1`
 
@@ -130,7 +217,7 @@ overlapping windows and runtime state:
 
 ```json
 {
-  "event_version": "workout-event.v1",
+  "schema_version": "workout-event.v1",
   "session_id": "…",
   "exercise_id": "…",
   "variant_id": "…",
@@ -140,7 +227,7 @@ overlapping windows and runtime state:
   "count_delta": 1,
   "event_confidence": 0.0,
   "tracking_confidence": 0.0,
-  "abstained": false,
+  "abstention": false,
   "reason_code": "accepted|low_tracking|ambiguous_boundary|paused|reset|manual",
   "model_version": "…",
   "feature_schema_version": "feature.v1",
@@ -161,6 +248,26 @@ The decoder must define, in versioned configuration:
 No event is emitted for an unavailable capability. Camera occlusion should
 produce abstention or a reason code rather than an inferred failed repetition.
 
+## Machine-readable fixtures and compatibility matrix
+
+The normative JSON Schema fixtures and examples live under
+[`schemas/`](schemas/) and [`examples/contracts/`](examples/contracts/). Valid
+examples must pass their schema; invalid examples intentionally exercise a
+failure or policy rule and must remain rejected by the documentation validator.
+
+| Contract | Schema fixture | Compatibility inputs that must match |
+|---|---|---|
+| Capability and recipe | `capability-profile-v1.schema.json`, `exercise-recipe-v1.schema.json` | profile/recipe version, catalog hash, approval state |
+| Features and predictions | `feature-schema-v1.schema.json`, `movement-prediction-v1.schema.json` | model ID, feature width/order, normalization, frame rate/window |
+| Events | `workout-event-v1.schema.json` | model, feature, normalization, decoder, timestamp/reset policy |
+| Recommendation | `recommendation-request-v1.schema.json`, `eligible-recipe-set-v1.schema.json`, `workout-recommendation-v1.schema.json`, `workout-feedback-event-v1.schema.json` | profile, catalog hash, rules/model version, consent state |
+| Provenance | `dataset-manifest-v1.schema.json`, `experiment-record-v1.schema.json`, `model-artifact-manifest-v1.schema.json` | source commit, config/manifest/checkpoint/schema hashes |
+
+A runtime must reject a payload or bundle when any required compatibility input
+is missing or differs. It may use an explicitly declared older fallback only
+when the manifest contains a migration and the fallback itself passes its own
+contract checks.
+
 ## Provenance contracts
 
 ### `DatasetManifestV1`
@@ -177,6 +284,17 @@ Minimum fields: experiment ID, Git commit, config hash, dataset-manifest IDs,
 split policy, seed, parent checkpoint, trainable layers, optimizer and loss
 weights, effective labeled frames/windows, validation cadence, stopping reason,
 wall time, peak memory, metrics by source/profile/exercise, and failure notes.
+
+#### Planned Motion-JEPA experiment extension
+
+AF-MJEPA does not add a product inference contract. A JEPA experiment record
+must additionally capture the target-encoder update rule/version, context and
+target horizons, mask type and parameters, conditioning fields, latent loss and
+weights, teacher parameter count, collapse/finite-value diagnostics, teacher
+cache hash/path, and whether pretraining used only the declared training split.
+The resulting latent representation or soft targets are versioned artifacts for
+distillation; they must not be serialized as `MovementPredictionV1` or placed
+in a mobile bundle without a separately reviewed student contract.
 
 ### `ModelArtifactManifestV1`
 

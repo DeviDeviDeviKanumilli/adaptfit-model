@@ -1,0 +1,10 @@
+{
+  "artifact_path": "",
+  "config_hash": "",
+  "dataset_manifest_ids": [],
+  "experiment_id": "x",
+  "git_commit": "",
+  "schema_version": "experiment-record.v1",
+  "seed": 1,
+  "status": "complete"
+}

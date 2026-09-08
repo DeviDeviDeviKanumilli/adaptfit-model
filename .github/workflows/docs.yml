@@ -1,0 +1,26 @@
+name: documentation-validation
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "training/README.md"
+      - "scripts/validate_docs.py"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "training/README.md"
+      - "scripts/validate_docs.py"
+      - ".github/workflows/docs.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate documentation and contract fixtures
+        run: python3 scripts/validate_docs.py

@@ -1,0 +1,15 @@
+{
+  "abstention": false,
+  "count_delta": 1,
+  "decoder_version": "decoder.pending-v1",
+  "end_timestamp_ms": 2500,
+  "event_confidence": 0.88,
+  "exercise_id": "seated_one_arm_biceps_curl",
+  "model_version": "movement-tcn-v1",
+  "reason_code": "decoded_rep",
+  "schema_version": "workout-event.v1",
+  "session_id": "session-demo-001",
+  "start_timestamp_ms": 1000,
+  "tracking_confidence": 0.92,
+  "variant_id": "left_no_equipment"
+}

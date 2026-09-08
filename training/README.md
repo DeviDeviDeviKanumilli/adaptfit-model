@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training entry point; [the full runbook](../docs/efficient-training-strategy.md) and runner/config are authoritative for commands
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** short operational quickstart; rationale and staged workflow live in the linked runbook
 > - **Review trigger:** command/config/runner change or new artifact layout
@@ -19,6 +19,12 @@ fine-tuning, sampler/loss rules, stopping gates, and the Luna TODO list. Read
 [current-state](../docs/current-state.md),
 [contracts](../docs/contracts-and-schemas.md), and
 [evaluation-protocol](../docs/evaluation-protocol.md) before changing a run.
+Use the [repository and implementation map](../docs/repository-and-implementation-map.md)
+to locate the source entrypoint and the [artifact registry](../docs/artifact-registry.md)
+to record its output.
+The proposed [Motion-JEPA plan](../docs/motion-jepa-world-model-plan.md) is a
+training-only research backlog; it does not add a current command or authorize
+pretraining.
 
 This quickstart does not authorize an overnight run. A command is eligible only
 after preflight passes, the source/license gate passes, a locked comparison
@@ -94,6 +100,12 @@ The run must record the Git commit, parent checkpoint (if any), dataset
 manifest, normalization/schema versions, seed, device, stopping reason, and
 metrics required by the evaluation protocol.
 
+For reproducibility, also record Python/PyTorch/NumPy versions, available
+device and disk, config/manifest/checkpoint hashes, effective labeled
+frames/windows, wall time, peak memory, and the artifact registry ID. A
+weight-only warm start is not an exact resume; the latter requires optimizer,
+scheduler/scaler, sampler, update-count, and RNG state.
+
 The data preparation stage produces fixed windows under `data/processed/` as
 per-array `.npy` memmaps and saves normalization statistics and the feature
 schema under `artifacts/`. `PreparedWindowDataset` still reads legacy split
@@ -147,7 +159,13 @@ python3 -m unittest discover -s training/tests -p 'test_*.py'
 python3 -m compileall -q training
 bash -n run_overnight.sh
 bash -n run_v2_quality_fixed_overnight.sh
+python3 scripts/validate_docs.py
 ```
+
+`validate_docs.py` is read-only. It checks Markdown metadata and links,
+versioned contract fixtures, current model dimensions, artifact status, and
+claim/source markers; it does not prepare data, train, export, or modify an
+artifact.
 
 The tests cover canonical data validation, participant-level split behavior,
 normalization leakage, missing-joint and occlusion handling, memmap integrity,

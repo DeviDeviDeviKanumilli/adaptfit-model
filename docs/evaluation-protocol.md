@@ -4,10 +4,15 @@
 > - **Status:** canonical-active
 > - **Authority:** evaluation code/configuration, artifact manifests, and this protocol
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering and evaluation reviewer
 > - **Supersedes or supports:** establishes the common protocol for corrected-v1, v2-quality, and future experiments
 > - **Review trigger:** metric/code/config changes, new labels, new target population, new runtime, or a release decision
+
+Use the [requirements traceability ledger](requirements-traceability.md) to
+connect each metric to a product claim and the [test and fixture matrix](test-and-fixture-matrix.md)
+to distinguish Python invariants from missing native, privacy, recommender, and
+target-population evidence.
 
 This protocol prevents window-level scores, weak labels, or selective abstention
 from being presented as product evidence. Every report must identify the source,
@@ -81,6 +86,55 @@ uncertainty method for:
 
 If a subgroup has no real participants, state “not evaluated.” Synthetic limb
 masking is an engineering robustness test, not target-population validation.
+
+## Planned Motion-JEPA evaluation
+
+AF-MJEPA is evaluated as a training-only representation/teacher candidate, not
+as a deployable model. Pretraining must obey the declared participant/source
+split; exposure to held-out test participants invalidates a downstream
+generalization claim even when no task labels were used.
+
+Before distillation, report:
+
+- finite-value and target-encoder/collapse diagnostics;
+- frozen-probe performance for exercise, phase, repetition, and supported
+  robustness tasks, with label coverage and split provenance;
+- future-horizon or temporal-mask performance using the exact horizons and mask
+  manifest, without interpreting latent loss as physical prediction accuracy;
+- matched supervised-only versus JEPA-assisted student sequence metrics,
+  abstention, subgroup, and causal-streaming behavior;
+- teacher preparation/inference time, model size, memory, and total compute.
+
+Do not accept a JEPA result because its latent loss decreases alone. The release
+decision is based on a predeclared held-out product or robustness metric and the
+full cost/limitations report. No JEPA score creates quality, clinical, or
+target-population evidence.
+
+## Planned recommendation evaluation
+
+Evaluate recommendation in layers. First exhaustively test the deterministic
+feasibility mask and candidate explanations; then evaluate ranking only over
+eligible candidates. Report candidate-set size, exposure policy, user/time
+split, recipe/catalog version, cold-start coverage, and whether an item was
+actually shown to the user.
+
+Required measures include:
+
+- zero capability, posture, equipment, avoid-list, or approval-state violations;
+- empty-candidate fallback success and no-silent-substitution rate;
+- Recall@k, NDCG@k, or an explicitly justified alternative against the
+  content/rules baseline;
+- completion, pause, skip, swap, and user-reason rates on future user periods;
+- approved substitution acceptance and failure reasons;
+- routine dose/time/rest constraint satisfaction, variety, and user-edit
+  preservation;
+- score calibration, recipe coverage, and repetition/novelty concentration;
+- breakdowns for capability profile, seated/wheelchair context, equipment,
+  new versus returning users, exercise family, and empty candidate cases.
+
+Behavioral ranking metrics do not establish exercise safety, medical benefit, or
+clinical improvement. A neural ranker cannot pass release if it worsens hard
+constraint behavior or removes the rules/manual fallback path.
 
 ## Runtime parity protocol
 

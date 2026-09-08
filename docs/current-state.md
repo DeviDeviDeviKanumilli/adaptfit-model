@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -14,15 +14,21 @@ canonical repository at `/Users/devk/AdaptFit`. A statement in another
 document may propose or explain work, but it cannot override this file without
 an update here and a source artifact.
 
+Read [system context and data flow](system-context-and-dataflow.md) for the
+end-to-end boundary, [repository and implementation map](repository-and-implementation-map.md)
+for source/test ownership, and [model registry](model-registry.md) for the
+current-versus-planned model roster. The [artifact registry](artifact-registry.md)
+is the canonical path inventory; this file remains the current-state snapshot.
+
 ## Repository and verification
 
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Repository HEAD | `d5362ee` | Current commit on `main`; re-verify with `git rev-parse HEAD` before reproducing a run. |
+| Repository HEAD | `1a46f38` | Current commit on `main`; re-verify with `git rev-parse HEAD` before reproducing a run. |
 | Code baseline | `ba8bf1a` | Last commit modifying model code, streaming runtime, tests, or shell scripts (124/124 tests passing). |
-| Documentation revision | `d5362ee` | Documentation-only commit aligning provenance, metadata, and evidence labeling. |
-| Branch state | Clean | Working tree is clean at HEAD; do not treat uncommitted documentation as model implementation. |
+| Documentation revision | `1a46f38` | Latest committed documentation revision before the current working-tree edits. |
+| Branch state | Documentation changes pending | Current edits are documentation-only; re-check `git status --short` after this pass and do not treat them as model implementation until committed. |
 | Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
 
@@ -108,6 +114,10 @@ the required split and metric provenance.
   not been demonstrated by a production mobile build.
 - No mobile latency, memory, thermal, battery, Python/native parity, or
   float/quantized parity gate has passed.
+- No neural workout recommender, workout-history model, learned substitution
+  ranker, or production exercise-selection service exists. The capability and
+  equipment fields are available for contracts, but the complete selection
+  system remains planned.
 
 ## Known blockers and unsupported claims
 
@@ -121,7 +131,12 @@ the required split and metric provenance.
 5. A production model bundle and native runtime contract do not exist.
 6. No document may claim medical, clinical, force, muscle-activation, joint-load,
    or safety certification from the current evidence.
-7. Demo and marketing language must never outpace empirical evidence: claims of
+7. No Motion-JEPA or other world-model teacher is implemented, cached, evaluated,
+   or available as a checkpoint. The proposal is training-only and must not be
+   treated as current model behavior.
+8. Recommendation ranking has no behavioral dataset or validated neural model;
+   only reviewed recipes and future deterministic filtering are specified.
+9. Demo and marketing language must never outpace empirical evidence: claims of
    “rock-solid repetition counting,” real-time trunk compensation feedback,
    “100% on-device privacy,” or target-population pilot validation are ahead of
    current evidence and strictly prohibited until mobile export, privacy audit,
@@ -139,11 +154,19 @@ the required split and metric provenance.
 4. Obtain reviewed quality labels and consented target-population recordings.
 5. Define and test the model bundle, Python/native golden fixtures, and mobile
    release gates before describing deployment as available.
+6. Treat the [Motion-JEPA plan](motion-jepa-world-model-plan.md) as a gated
+   research backlog. Do not start it until decoder calibration and the
+   supervised comparison establish a measured need and a valid pretraining
+   manifest.
+7. Build the recommendation path in order: reviewed recipe metadata, hard
+   feasibility mask, content/rules baseline, feedback logging, then a neural
+   ranker only after user/time-held-out evaluation data exists.
 
 ## Planned work (not current behavior)
 
-The roadmap may propose a density head, teacher distillation, richer quality
-targets, personalized calibration, quantization, and native mobile inference.
-Those are planned experiments or deliverables. They become current only when
-their code/config, artifact, evaluation, and manifest evidence are recorded
-here.
+The roadmap may propose a density head, Motion-JEPA pretraining, teacher
+distillation, a recommendation model, richer quality targets, personalized
+calibration, quantization, and native mobile inference. Those are planned
+experiments or deliverables.
+They become current only when their code/config, artifact, evaluation, and
+manifest evidence are recorded here.

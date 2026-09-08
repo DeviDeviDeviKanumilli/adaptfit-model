@@ -1,0 +1,12 @@
+{
+  "catalog_hash": "sha256:catalog-demo",
+  "empty": false,
+  "filtered_rules": [
+    "right_arm_absent"
+  ],
+  "reason_code": "eligible_candidates",
+  "recipe_ids": [
+    "seated_one_arm_biceps_curl:left_no_equipment"
+  ],
+  "schema_version": "eligible-recipe-set.v1"
+}

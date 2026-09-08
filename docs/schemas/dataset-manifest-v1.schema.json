@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/dataset-manifest-v1.json",
+  "title": "DatasetManifestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset_id", "source_version", "checksum", "adapter_version", "license_status", "split_policy", "label_roles"],
+  "properties": {
+    "schema_version": {"const": "dataset-manifest.v1"},
+    "dataset_id": {"type": "string"},
+    "source_version": {"type": "string"},
+    "checksum": {"type": ["string", "null"]},
+    "adapter_version": {"type": "string"},
+    "license_status": {"type": "string"},
+    "split_policy": {"type": "string"},
+    "label_roles": {"type": "array", "items": {"type": "string"}},
+    "participant_ids": {"type": "array", "items": {"type": "string"}},
+    "prohibited_interpretations": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -4,7 +4,7 @@
 > - **Status:** research-backlog
 > - **Authority:** research notes and proposed acquisition work
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit data research
 > - **Supersedes or supports:** supports future acquisition decisions; dataset-catalog and current-state override availability and training inclusion
 > - **Review trigger:** source access/license verification, adapter completion, or change in the canonical data protocol
@@ -79,6 +79,18 @@ The highest-value data has several of these properties:
 Data that lacks those properties can still be valuable, but it must be routed
 to the pose front end, self-supervised pretraining, anatomy prior, or evaluation
 track rather than being presented as direct repetition supervision.
+
+### Motion-JEPA representation pretraining (research backlog)
+
+The proposed AF-MJEPA can use clean time-ordered pose sequences without
+repetition or quality labels to learn future and masked latent movement states.
+This is a separate role from direct temporal supervision. A source may be
+eligible for JEPA pretraining while remaining unusable for a supervised head;
+the catalog and experiment manifest must record those roles separately. All
+pretraining sources still require license/access review, participant/source
+split isolation, observed/capability masks, and augmentation lineage. See
+[motion-jepa-world-model-plan.md](motion-jepa-world-model-plan.md) for the
+masking, target-encoder, capacity, and stop-gate contract.
 
 ## Dataset roles
 

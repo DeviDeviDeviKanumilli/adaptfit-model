@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/experiment-record-v1.json",
+  "title": "ExperimentRecordV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "experiment_id", "git_commit", "config_hash", "dataset_manifest_ids", "seed", "status", "artifact_path"],
+  "properties": {
+    "schema_version": {"const": "experiment-record.v1"},
+    "experiment_id": {"type": "string"},
+    "git_commit": {"type": "string"},
+    "config_hash": {"type": "string"},
+    "dataset_manifest_ids": {"type": "array", "items": {"type": "string"}},
+    "seed": {"type": "integer"},
+    "parent_checkpoint": {"type": ["string", "null"]},
+    "trainable_layers": {"type": "array", "items": {"type": "string"}},
+    "status": {"type": "string", "enum": ["planned", "running", "complete", "failed", "blocked"]},
+    "artifact_path": {"type": "string"},
+    "metrics": {"type": "object"}
+  }
+}

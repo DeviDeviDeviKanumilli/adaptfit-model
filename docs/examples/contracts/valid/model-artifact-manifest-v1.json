@@ -1,0 +1,20 @@
+{
+  "checkpoint_path": "artifacts/corrected-v1/checkpoints/tcn_best.pt",
+  "config_hash": "sha256:config-example",
+  "decoder_version": "decoder.pending-v1",
+  "feature_schema_version": "feature.v1",
+  "known_limitations": [
+    "no native bridge",
+    "no target-population validation"
+  ],
+  "metrics": {
+    "split": "test"
+  },
+  "model_id": "movement-tcn-v1",
+  "model_version": "v1",
+  "normalization_version": "normalization.corrected-v1",
+  "quantization": null,
+  "schema_version": "model-artifact-manifest.v1",
+  "source_commit": "ba8bf1a",
+  "status": "evaluated"
+}

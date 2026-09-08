@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** top-level repository index and operational entry point
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** project root README; points to canonical docs/ and training/
 > - **Review trigger:** new run, artifact layout, or entry point change
@@ -37,9 +37,15 @@ remain readable.
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [System context and data flow](docs/system-context-and-dataflow.md)
+- [Repository and implementation map](docs/repository-and-implementation-map.md)
+- [Model registry](docs/model-registry.md)
 - [Training guide](training/README.md)
 - [Scalable ML architecture](docs/scalable-ml-architecture.md)
+- [Motion-JEPA world-model research plan](docs/motion-jepa-world-model-plan.md)
 - [Data and training plan](docs/data-and-training-plan.md)
+- [Recommendation model plan](docs/recommendation-model-plan.md)
+- [Recipe catalog and review](docs/recipe-catalog-and-review.md)
 - [Public dataset catalog](docs/dataset-catalog.md)
 - [On-device deployment plan](docs/on-device-deployment.md)
 - [Quality benchmark v2 and overnight run](docs/quality-benchmark-v2.md)

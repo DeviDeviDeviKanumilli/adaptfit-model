@@ -4,10 +4,15 @@
 > - **Status:** canonical-active
 > - **Authority:** dataset registry, adapter code, manifests, and license/access evidence
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `d5362ee` (documentation revision)
+> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
 > - **Owner:** AdaptFit data engineering
 > - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in [dataset-expansion-plan.md](dataset-expansion-plan.md)
 > - **Review trigger:** adapter or checksum change, license/access update, or label-role change
+
+Use [the annotation handbook](annotation-handbook.md) for per-label semantics
+and [the artifact registry](artifact-registry.md) for the evidence attached to
+an integrated source. A catalog row is not training inclusion until adapter,
+identity, checksum/access, label masks, and split evidence are present.
 
 This catalog records public, academic, and clinical datasets that can help AdaptFit learn movement recognition, temporal structure, observable movement quality, pose robustness, and capability-aware adaptation. It inventories both verified benchmark datasets and prospective candidate sources researched on 2026-09-07 across international biomechanics, computer vision, and rehabilitation repositories (including Zenodo, Figshare, IEEE Dataport, SimTK, Hugging Face, PhysioNet, and university archives).
 
@@ -36,15 +41,21 @@ The current AdaptFit model consumes normalized 2D pose sequences with explicit o
    - Ingests still images, video clips, bounding boxes, or segmentation masks of individuals with amputations, prostheses, residual limbs, and wheelchair frames.
    - Fine-tunes the MediaPipe/YOLOv8-Pose camera front end to prevent phantom joint hallucination and ensure correct distinction between unobserved and absent anatomy.
 
-4. **Biomechanical Priors & Teacher Distillation (`biomechanics_teacher`)**:
-   - Ingests high-fidelity optical motion capture (Vicon/Qualisys), dense 3D kinematics, or unconstrained video representations.
-   - Serves as offline teacher models (SSTRAC, PoseRAC, RACNet, MotionBERT) to distill continuous repetition density maps, salient states, and biomechanical smoothness bounds into the student model.
+4. **Motion Representation Pretraining & Teacher Distillation (`motion_pretraining`)**:
+   - Ingests eligible temporal pose sequences, including unlabeled 2D/3D motion, high-fidelity optical motion capture, or compatible video-derived representations.
+   - May support the proposed capability-conditioned Motion-JEPA (AF-MJEPA) latent pretraining path or one task-specific offline teacher (SSTRAC, PoseRAC, RACNet, MotionBERT). Unlabeled sequences can support representation learning, but they do not create repetition, quality, clinical, or target-population labels.
+   - Requires participant/source split isolation, explicit observed/capability masks, and a manifest record of the target-encoder, mask, and teacher-cache provenance.
 
 5. **Evaluation Challenge Sets (`evaluation_challenge`)**:
    - Strictly held-out test splits from clinical, wheelchair, and limb-difference cohorts.
    - Used to verify that models do not hallucinate missing limbs, misclassify seated users as standing, or penalize limited mobility. Never used during training.
 
 Participant and subject identifiers must stay strictly intact so all splits remain participant-level. Synthetic limb masking is valuable for engineering unit tests, but it is never accepted as clinical validation for real limb difference or wheelchair mobility.
+
+AF-MJEPA is a research-backlog consumer of this role, not an integrated
+dataset status. A source remains `Integrated` only when its adapter, prepared
+manifest, license/access state, and current supervised task roles are verified;
+pretraining eligibility is recorded separately in the experiment manifest.
 
 ---
 

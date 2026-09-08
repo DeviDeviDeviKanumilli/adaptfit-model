@@ -1,0 +1,11 @@
+{
+  "feature_count": 378,
+  "features": [],
+  "frame_rate_hz": 30,
+  "joint_count": 33,
+  "normalization_version": "diagnostic",
+  "receptive_field_frames": 125,
+  "schema_version": "feature.v1",
+  "stride_frames": 8,
+  "window_frames": 128
+}

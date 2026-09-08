@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaptfit.local/schema/exercise-recipe-v1.json",
+  "title": "ExerciseRecipeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "exercise_id", "variant_id", "recipe_version", "movement_family", "required_position", "required_limbs", "relevant_joints", "required_equipment", "unilateral_support", "expected_phase_sequence", "dose_constraints", "allowed_feedback_dimensions", "camera_requirements", "review_status"],
+  "properties": {
+    "schema_version": {"const": "recipe.v1"},
+    "exercise_id": {"type": "string"},
+    "variant_id": {"type": "string"},
+    "recipe_version": {"type": "string"},
+    "movement_family": {"type": "string"},
+    "required_position": {"type": "array", "items": {"type": "string"}},
+    "required_limbs": {"type": "array", "items": {"type": "string"}},
+    "optional_limbs": {"type": "array", "items": {"type": "string"}},
+    "relevant_joints": {"type": "array", "items": {"type": "string"}},
+    "required_equipment": {"type": "array", "items": {"type": "string"}},
+    "optional_equipment": {"type": "array", "items": {"type": "string"}},
+    "unilateral_support": {"type": "boolean"},
+    "bilateral_support": {"type": "boolean"},
+    "substitution_group": {"type": ["string", "null"]},
+    "expected_phase_sequence": {"type": "array", "items": {"type": "string"}},
+    "dose_constraints": {"type": "object"},
+    "allowed_feedback_dimensions": {"type": "array", "items": {"type": "string"}},
+    "camera_requirements": {"type": "object"},
+    "confidence_floor": {"type": "number", "minimum": 0, "maximum": 1},
+    "review_status": {"type": "string", "enum": ["draft", "safety-review", "catalog-approved", "camera-validated", "retired"]},
+    "reviewer": {"type": ["string", "null"]},
+    "reviewed_at": {"type": ["string", "null"]}
+  }
+}
