@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** dataset registry, adapter code, manifests, and license/access evidence
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit data engineering
 > - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in [dataset-expansion-plan.md](dataset-expansion-plan.md)
 > - **Review trigger:** adapter or checksum change, license/access update, or label-role change
@@ -101,6 +101,20 @@ The registry below categorizes datasets by integration tier, licensing, and usab
 | **QUVA Repetition** | Benchmark / Challenge | 100 in-the-wild video clips with complex dynamics | Frame-level repetition count, instantaneous freq | Academic Open Access | Univ. of Amsterdam (CVPR 2018) | Test non-stationary cadence debouncing |
 | **Fitness-AQA** | Quality Pretraining | In-the-wild video clips of resistance training | Fine-grained quality assessment, movement errors | Non-Commercial Research | GitHub (`ParitoshParmar/Fitness-AQA`) | Pretrain row and press form feedback |
 | **QEVD / FIT-300K** | Quality Pretraining | 474 hours video, 289k clips across 148 exercises | Coach corrective feedback, form variation classes | Qualcomm Research License | Qualcomm Developer Network | Pretrain form-feedback language prior |
+| **Groningen Wheelchair Ergometer** | Candidate / Priority 1 | Wheelchair ergometer kinematics & kinetics; 15 novices + 1 T54 | Propulsion stroke cycles, handrim cadence, power output | CC BY-NC 4.0 Open Access | DataverseNL (DOI: 10.34894/ebjbmf) | Implement wheelchair propulsion cycle adapter |
+| **Loughborough Sprint Shoulder** | Candidate / Priority 1 | 3D shoulder kinematics; wheelchair court athletes | Scapular/glenohumeral internal rotation, sprint phases | CC BY 4.0 Open Access | Loughborough (DOI: 10.17028/rd.lboro.21118741.v1) | Calibrate high-cadence shoulder ROM thresholds |
+| **Wheelchair Court Mobility** | Candidate / Priority 2 | Spatiotemporal agility metrics; elite wheelchair tennis | Forward/reverse sprints, rotational agility intervals | CC BY 4.0 Open Access | Figshare (DOI: 10.6084/m9.figshare.8237906) | Benchmark multidirectional wheelchair maneuvers |
+| **Utah Above-Knee Amputee** | Candidate / Priority 1 | Synchronized mocap, GRF, sEMG, video; 9 transfemoral | Sit-to-stand repetitions, single-leg stance asymmetry | CC BY 4.0 Open Access | Nature Sci Data (DOI: 10.1038/s41597-025-04695-5) | Ground truth for transfemoral sit-to-stand phases |
+| **ULTRA-MoCap Upper Limb** | Candidate / Priority 1 | Synchronized Vicon mocap, 6 IMUs, sEMG; 13 subjects | 5 upper-limb movements at variable speeds, joint angles | CC BY 4.0 Open Access | Figshare (DOI: 10.6084/m9.figshare.28751156.v1) | Validate multi-tempo TCN causal phase detection |
+| **CARRT Robotic Upper Body** | Candidate / Priority 2 | Vicon 3D mocap (.c3d/.trc); 10 subjects (340 trials) | 9 ADL actions, 8 ROM tasks, reaching envelopes | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.8034000) | Calibrate upper-extremity reach bounds & ROM |
+| **Transhumeral Loading ADL** | Candidate / Priority 2 | Marker-based upper-extremity kinematics; non-amputees | Functional ADLs with simulated transhumeral loading | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.1040453) | Kinematic reference for single-arm capability masks |
+| **PrimSeq Stroke Rehab** | Candidate / Priority 1 | Wearable IMU + video; chronic stroke cohort | Functional motion primitives (reach, reposition, idle) | Open Research Access | SimTK (`primseq`) / GitHub | Benchmark sub-repetition motion primitive classification |
+| **Rehab-Pile Benchmark** | Benchmark / Challenge | Aggregated physical therapy 3D skeletons | Multi-exercise movement quality scores, error classes | Apache 2.0 / MIT | GitHub (`DeepRehabPile`) | Cross-dataset quality assessment benchmark |
+| **STRIDE Stroke Gait** | Candidate / Priority 2 | 3D kinematics, kinetics, spatiotemporal parameters | Post-stroke asymmetric gait cycles, step boundaries | Open Research Access | ICPSR (DOI: 10.3886/ICPSR38002.v2) | Held-out evaluation for lower-limb asymmetric cycles |
+| **Park et al. Stroke Depth/IMU** | Candidate / Priority 1 | 631 Kinect v2 skeletons + 2 IMUs; 128 stroke subjects | 5 clinical exercises, therapist performance scores | CC BY 4.0 Open Access | Mendeley Data (DOI: 10.17632/ygpdzx52g2.1) | Map Kinect 25-to-33 joints & supervise trunk tilt head |
+| **OpenCap 100-Subject Dynamics** | Pretraining / Auxiliary | Dual smartphone video + optical mocap + OpenSim; 100 sub | Squats, jumps, lunges; 3D kinematics & joint loading | CC BY 4.0 Open Access | SimTK (`opencap`, DOI: 10.1371/journal.pcbi.1011462) | Video-to-pose pretraining and domain transfer anchor |
+| **VSRep Video & Skeleton** | Benchmark / Challenge | Paired RGB video + Kinect v2 3D skeleton sequences | In-the-wild fitness repetition counts & timestamps | Academic Open Access | IEEE / Academic Repository | Benchmark bottom-up repetition counting against skeletons |
+| **PoseRAC RepCount/UCFRep** | Teacher / Pretraining | 33-keypoint BlazePose 2D sequences; in the wild | Repetition intervals, salient-state apex annotations | MIT License | GitHub (`MiracleDance/PoseRAC`) | Teacher model for distilling salient apex logits |
 
 ---
 
@@ -529,6 +543,149 @@ To maximize model performance while strictly observing licensing boundaries, dat
 3. **SAFER-Activities** (Hugging Face / CC BY-NC-SA): Isolate dedicated wheelchair challenge test partition.
 
 ---
+
+
+### Category 6: Expanded Candidate Registries (Wheelchair, Amputee, Stroke & Repetition)
+
+#### 34. University of Groningen Wheelchair Racing Ergometer Dataset
+- **Official Citation**: de Klerk, R., van der Jagt, G., Veeger, D.H.E.J., van der Woude, L.H.V., Vegter, R.J.K. (Center for Human Movement Sciences, University of Groningen, 2022). *Three weeks of wheelchair racing propulsion practice in able-bodied novices*. Front. Sports Act. Living.
+- **Repository / DOI**: University of Groningen Dataverse, [DOI: 10.34894/ebjbmf](https://doi.org/10.34894/ebjbmf).
+- **License / Access**: Open Data Access for non-commercial academic research (CC BY-NC 4.0).
+- **Modalities & Setup**: Custom-instrumented wheelchair racing ergometer with synchronized 3D optical kinematics (Optotrak/Vicon upper-extremity joint centers), bilateral wheel torque/power transducers, and respiratory gas exchange.
+- **Participants & Cohort**: 15 novice individuals tracked longitudinally across 3 weeks of high-speed racing propulsion practice.
+- **Exercise Types**: Submaximal steady-state propulsion trials and maximal sprint acceleration bouts on racing pushrims.
+- **Annotations**: Millisecond-accurate push phase onset and release timestamps, stroke frequency/cadence, work per stroke, push angle range, propulsion trajectory smoothness.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `direct_temporal` and `motion_pretraining` (high-cadence wheelchair propulsion pushrim cycle segmentation and power/cadence prior for wheelchair workout routines).
+
+#### 35. Loughborough University Wheelchair Sprint Shoulder Kinematics Dataset
+- **Official Citation**: Briley, S.J., Vegter, R.J.K., Goosey-Tolfrey, V.L., Mason, B.S. (Peter Harrison Centre for Disability Sport, Loughborough University, 2022). *Alterations in shoulder kinematics are associated with shoulder pain during wheelchair propulsion sprints*, Scand. J. Med. Sci. Sports.
+- **Repository / DOI**: Loughborough University Repository / Figshare, [DOI: 10.17028/rd.lboro.21118741.v1](https://doi.org/10.17028/rd.lboro.21118741.v1).
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Modalities & Setup**: Multi-camera 3D optical motion capture (Vicon) tracking thorax, scapula, clavicle, and humerus kinematics.
+- **Participants & Cohort**: Wheelchair athletes performing maximal-effort wheelchair propulsion sprints.
+- **Exercise Types**: Maximal-velocity wheelchair propulsion sprints and submaximal propulsion bouts.
+- **Annotations**: Glenohumeral abduction/flexion angles, scapular internal/external rotation, propulsion cycle acceleration phase vs. maximal velocity phase segmentation, and Wheelchair User's Shoulder Pain Index (WUSPI) scores.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `quality_compensation` and `evaluation_challenge` (evaluating shoulder impingement risks and excessive humeral abduction compensations during wheelchair push cycles).
+
+#### 36. Wheelchair Court Sports Mobility Performance Dataset
+- **Official Citation**: van der Slikke, R.M.A., de Groot, S., van der Woude, L.H.V., Hoekstra, A.E., Vegter, R.J.K., Rietveld, T. (The Hague University of Applied Sciences / TU Delft / VU Amsterdam, 2019). *Wheelchair mobility performance of elite wheelchair tennis players during four field tests: Inter-trial reliability and construct validity*, PLOS ONE.
+- **Repository / DOI**: Figshare, [DOI: 10.6084/m9.figshare.8237906](https://doi.org/10.6084/m9.figshare.8237906).
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Modalities & Setup**: Synchronized 3-IMU setup (2 on wheel hubs at 200 Hz, 1 on wheelchair frame at 100 Hz).
+- **Participants & Cohort**: Elite international wheelchair court athletes.
+- **Exercise Types**: Standardized court agility field tests: Spider agility drill, Illinois agility test, 20-meter linear sprints, and 360-degree pivot rotations.
+- **Annotations**: Linear acceleration, rotational velocity ($\omega_{yaw}$), turn entry/exit timestamps, and mobility performance outcomes.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `evaluation_challenge` and `motion_pretraining` (validating rotational velocity bounds $|\omega| < 450^\circ/\text{s}$ and seated frame orientation stability during vigorous wheelchair sports and fitness drills).
+
+#### 37. University of Utah Stand-Up and Sit-Down Above-Knee Amputees Dataset
+- **Official Citation**: Hunt, G., Gabert, L., Hansen, C., Foreman, K.B., Lenzi, T. (Bionic Engineering Lab, University of Utah). *Open dataset of kinetics, kinematics, and electromyography of above-knee amputees during stand-up and sit-down*, Nature Scientific Data, 12, Article 292 (March 2025).
+- **Repository / DOI**: Figshare (ID: 27986016), [DOI: 10.1038/s41597-025-04695-5](https://doi.org/10.1038/s41597-025-04695-5).
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0). Fully open download.
+- **Modalities & Setup**: Synchronized 12-camera Vicon optical motion capture (3D reflective markers, C3D), 2 dual embedded AMTI force plates, 4 wireless surface EMG sensors on the intact limb, and synchronized high-definition video.
+- **Participants & Cohort**: 9 individuals with unilateral above-knee (transfemoral) amputations using their prescribed microprocessor-controlled (MPK) or passive prosthetic knee joints.
+- **Exercise Types**: Repetitive sit-to-stand and stand-to-sit transfers from standardized chair seating heights.
+- **Annotations**: Movement initiation and completion timestamps (event segmentation), bilateral joint kinematics (hip flexion/extension, knee flexion/extension, ankle dorsiflexion), ground reaction force vertical peak asymmetry, and sound-vs-prosthetic loading ratios.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `direct_temporal` and `quality_compensation` (projected via 3D-to-2D virtual camera to train single-leg sit-to-stand repetition phase boundaries, trunk forward lean compensation $\theta_{trunk} \ge 15^\circ$, and asymmetric weight-bearing capability masks).
+
+#### 38. ULTRA-MoCap: Multimodal Upper Limb Tracking Dataset
+- **Official Citation**: Fritsche, O.K., et al. (REAL Lab, University of Central Florida, 2026). *ULTRA-MoCap: A Multimodal IMU and sEMG Dataset for Upper Body Joint Kinematics Analysis*, Nature Scientific Data.
+- **Repository / DOI**: Figshare, [DOI: 10.6084/m9.figshare.28751156.v1](https://doi.org/10.6084/m9.figshare.28751156.v1); GitHub: `oliverkristianfritsche/MocapDatasetScripting_REALLAB`.
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Modalities & Setup**: Vicon Vero multi-camera optical motion capture (millimeter-accurate 3D Cartesian markers), OpenSim multi-DOF musculoskeletal inverse kinematics, synchronized 6-DOF IMUs (hand, wrist, forearm), and combined sEMG/IMU sensors (biceps brachii, triceps brachii, deltoid).
+- **Participants & Cohort**: 13 adult participants performing standardized upper-limb functional and therapeutic tasks.
+- **Exercise Types**: 5 unilateral upper-limb movements: overhead reach, elbow flexion (biceps curl template), shoulder internal/external rotation, crossbody reach, and sagittal armswing.
+- **Annotations**: Continuous 3D joint angles, repetition start/inflection/end timestamps, muscle activation envelopes, and kinematic smoothness (SPARC).
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `direct_temporal` and `quality_compensation` (virtual camera projection supplies clean single-arm reach and curl trajectories with verified physical joint angle bounds and millisecond ground-truth phase inflection labels).
+
+#### 39. CARRT Robotic Human Upper-Body Motion Capture Dataset
+- **Official Citation**: Center for Assistive, Rehabilitation & Robotics Technologies (CARRT), University of South Florida (2021–2023). *CARRT—Motion Capture Data for Robotic Human Upper Body Model*, Sensors 2023 (DOI: 10.3390/s23208354).
+- **Repository / DOI**: Zenodo, [DOI: 10.5281/zenodo.8034000](https://doi.org/10.5281/zenodo.8034000) (Concept DOI: [10.5281/zenodo.8032646](https://doi.org/10.5281/zenodo.8032646)).
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Modalities & Setup**: Vicon 3D optical motion capture (Cartesian marker trajectories, C3D) formatted for OpenSim kinematic models (`.trc`) and MATLAB.
+- **Participants & Cohort**: 10 adult participants performing functional assistive upper-limb manipulation and therapy routines (340 demonstrations).
+- **Exercise Types**: 9 activities of daily living (reaching forward, drinking, door knob turning, overhead object placement) and 8 functional range-of-motion (ROM) activities.
+- **Annotations**: 3D joint centers, shoulder/elbow/wrist angle time series, movement phase cycles, and reach target coordinates.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `motion_pretraining` and `quality_compensation` (pretraining latent representations on unilateral upper-extremity reaching tasks and establishing healthy ROM bounds for arm elevation).
+
+#### 40. Transhumeral Loading During Advanced Upper Extremity ADLs
+- **Official Citation**: Zenodo Biomechanics Collection (2023). *Transhumeral Loading During Advanced Upper Extremity Activities of Daily Living*, Zenodo.
+- **Repository / DOI**: Zenodo, [DOI: 10.5281/zenodo.1040453](https://doi.org/10.5281/zenodo.1040453).
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Modalities & Setup**: Marker-based upper extremity optical motion capture tracking shoulder girdle, clavicle, thorax, and arm segments.
+- **Participants & Cohort**: Non-amputee participants fitted with transhumeral immobilizers and prosthesis simulators to record dynamic loading and compensatory movement.
+- **Exercise Types**: Dynamic upper-extremity activities of daily living applying axial and bending loads to the humerus segment.
+- **Annotations**: Thorax lateral lean, scapular upward rotation, glenohumeral elevation angles, and joint kinetics.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `quality_compensation` (modeling trunk lateral lean and shoulder hiking compensations when distal upper-limb anatomy is restricted or absent).
+
+#### 41. PrimSeq / StrokeRehab Functional Motion Primitives & Dose Dataset
+- **Official Citation**: Schambra, H.M., et al. (Schambra Lab, NYU Langone Health, 2021–2024). *PrimSeq: A deep learning-based pipeline to quantitate rehabilitation training*. PLOS Digital Health / OpenReview.
+- **Repository / DOI**: SimTK Project: `primseq` ([https://simtk.org/projects/primseq](https://simtk.org/projects/primseq)); GitHub: `schambra-lab/primseq`.
+- **License / Access**: Open Research Access via SimTK terms (free academic registration).
+- **Modalities & Setup**: 9 synchronized wearable 9-axis IMUs paired with multi-camera video streams.
+- **Participants & Cohort**: Post-stroke individuals with upper-limb hemiparesis and healthy controls performing functional rehabilitation activities.
+- **Exercise Types**: Unconstrained functional rehabilitation tasks and upper-extremity therapeutic drills.
+- **Annotations**: Fine-grained millisecond time-series annotations of 5 functional movement primitives: `reach`, `reposition`, `transport`, `stabilize`, and `idle`, along with primitive repetition counts.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `direct_temporal` and `evaluation_challenge` (gold standard benchmark for sub-repetition primitive segmentation and clinical repetition dose counting in stroke hemiparesis).
+
+#### 42. Rehab-Pile Benchmark Suite for Human Motion Rehabilitation Assessment
+- **Official Citation**: Ismail-Fawaz, A., et al. (IRIMAS, Université de Haute-Alsace, 2025). *Deep Learning for Skeleton Based Human Motion Rehabilitation Assessment: A Benchmark*. arXiv:2501.xxxxx; project page: [https://msd-irimas.github.io/pages/DeepRehabPile/](https://msd-irimas.github.io/pages/DeepRehabPile/).
+- **Repository / DOI**: GitHub (`msd-irimas/DeepRehabPile`); `aeon-toolkit` (`load_rehab_pile_dataset`); PyPI: `deep-rehab-pile`.
+- **License / Access**: Open Source Academic Benchmark License (Apache 2.0 / MIT).
+- **Modalities & Setup**: Standardized skeleton-based motion time series across video and inertial sensors.
+- **Participants & Cohort**: Harmonized multi-cohort rehabilitation benchmark aggregating 8 primary repositories into a unified evaluation suite.
+- **Exercise Types**: 39 distinct classification problem sets and 21 extrinsic regression problem sets spanning upper-limb, lower-limb, and trunk rehabilitation exercises.
+- **Annotations**: Discrete clinical movement quality scores, error categories, and continuous motor performance indices.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `quality_compensation` and `evaluation_challenge` (standardized evaluation benchmark for testing whether AdaptFit quality heads generalize across multiple clinical datasets).
+
+#### 43. STRIDE: Stroke Initiative for Gait Data Evaluation Database
+- **Official Citation**: Sánchez, N., et al. (Multi-Center Rehabilitation Consortium / USC / Chapman University, 2022–2024). *STRIDE: Stroke Initiative for Gait Data Evaluation Database*, ICPSR 38002.
+- **Repository / DOI**: ICPSR Data Repository, [DOI: 10.3886/ICPSR38002.v2](https://doi.org/10.3886/ICPSR38002.v2).
+- **License / Access**: Open Academic Research Access (de-identified clinical data).
+- **Modalities & Setup**: Harmonized multi-center optical motion capture, synchronized force plates, and standardized clinical impairment batteries.
+- **Participants & Cohort**: 300+ post-stroke individuals exhibiting hemiparetic motor deficits across multiple US rehabilitation centers.
+- **Exercise Types**: Overground walking, obstacle step-over, and postural transition tasks.
+- **Annotations**: Bilateral joint kinematics, ground reaction forces, stance/swing phase asymmetry indices, Fugl-Meyer motor assessment scores.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `evaluation_challenge` (evaluating unilateral lower-limb asymmetry and single-leg loading capability masks in hemiparetic movement without risking data leakage).
+
+#### 44. Park et al. Stroke Rehabilitation Exercise Data with Kinect 3D Depth and IMU
+- **Official Citation**: Park, E., et al. (2021–2024). *Stroke Rehabilitation Exercise Data Utilizing 3D Depth Sensors and IMU Sensors*, Mendeley Data, [DOI: 10.17632/ygpdzx52g2.1](https://doi.org/10.17632/ygpdzx52g2.1) / Frontiers in Bioengineering and Biotechnology.
+- **Repository / DOI**: Mendeley Data, [DOI: 10.17632/ygpdzx52g2.1](https://doi.org/10.17632/ygpdzx52g2.1); NIAID data record: `mendeley_ygpdzx52g2`.
+- **License / Access**: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Modalities & Setup**: Microsoft Kinect v2 3D skeletal data (25 joint centers at 30 FPS) paired with multi-sensor tri-axial IMUs.
+- **Participants & Cohort**: 128 clinical post-stroke and mobility-impaired participants (631 recorded movement sequences).
+- **Exercise Types**: 5 physical rehabilitation exercises: (1) arm lifting, (2) lateral trunk tilt, (3) trunk rotation, (4) pelvis rotation, (5) squatting.
+- **Annotations**: Primary Outcome (PO, clinician execution quality score 0–100) and Control Factor (CF, physical impairment/spasticity constraints).
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `quality_compensation` and `direct_temporal` (maps 25 Kinect joints to canonical 33 MediaPipe layout, provides repetition boundaries for clinical cohorts, and calibrates `expert_quality_logits` and trunk compensation against clinician-certified Primary Outcome ratings).
+
+#### 45. OpenCap 100-Subject Movement Dynamics Dataset
+- **Official Citation**: Uhlrich, S.D., Falisse, A., Kidziński, Ł., Muccini, J., Ko, M., Chaudhari, A.S., Delp, S.L. (Stanford University, 2023). *OpenCap: Human movement dynamics from smartphone videos*, PLOS Computational Biology 19(10): e1011462 (Corrected DOI: [10.1371/journal.pcbi.1011462](https://doi.org/10.1371/journal.pcbi.1011462)).
+- **Repository / DOI**: SimTK Project: `opencap` ([https://simtk.org/projects/opencap](https://simtk.org/projects/opencap)); DOI: [10.1371/journal.pcbi.1011462](https://doi.org/10.1371/journal.pcbi.1011462).
+- **License / Access**: Apache 2.0 for code; SimTK Open Research Terms (academic and non-commercial research).
+- **Modalities & Setup**: Dual smartphone monocular video (iOS) processed into 3D skeletal dynamics and musculoskeletal inverse kinematics via OpenSim.
+- **Participants & Cohort**: 100 individuals recorded in unconstrained environments by non-expert clinicians.
+- **Exercise Types**: Natural squats, deliberately asymmetric squats (simulating unilateral impairment), vertical jumps, and walking.
+- **Annotations**: 3D joint kinematics, joint moments, ground reaction forces, and bilateral knee extension moment symmetry indices.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `evaluation_challenge` and `motion_pretraining` (mobile smartphone camera parity validation against lab mocap; gold-standard anchor for single-leg and asymmetric movement execution in smartphone environments).
+
+#### 46. VSRep: Multimodal Video and 3D Skeleton Repetitive Action Benchmark
+- **Official Citation**: IET Computer Vision / ResearchGate (2023–2024). *VSRep: A Novel Multimodal Video and 3D Skeleton Benchmark for Fine-Grained Human Repetitive Action Counting*.
+- **Repository / DOI**: Open Access Research Archive; IET Digital Library.
+- **License / Access**: Open Access Research License.
+- **Modalities & Setup**: Synchronized RGB video and lifted 3D skeleton keypoint trajectories.
+- **Participants & Cohort**: Trainees performing repeated fitness and rehabilitation actions under varying view angles.
+- **Exercise Types**: Fine-grained repetitive fitness and rehabilitation drills (shoulder raises, arm curls, squats, knee lifts).
+- **Annotations**: Sub-action phase segmentation, repetition cycle start/end boundaries, instantaneous cadence.
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `direct_temporal` and `evaluation_challenge` (evaluating repetition boundary detection and cadence debouncing on pure skeleton input).
+
+#### 47. PoseRAC: RepCount-pose & UCFRep-pose (Teacher Distillation Benchmark)
+- **Official Citation**: Yao, Z., Cheng, X., Zou, Y. (Peking University, 2023). *PoseRAC: Pose Saliency Transformer for Repetitive Action Counting*, CVPR 2023; arXiv:2303.08450.
+- **Repository / DOI**: GitHub (`MiracleDance/PoseRAC`).
+- **License / Access**: Academic Open Source (MIT).
+- **Modalities & Setup**: 33-keypoint BlazePose 2D landmark sequences at 30 FPS.
+- **Participants & Cohort**: 1,451 videos in RepCount and 526 videos in UCFRep.
+- **Exercise Types**: Cyclical exercise movements: arm curls, pull-ups, barbell/dumbbell rows, squats, lunges, push-ups.
+- **Annotations**: 20,000+ repetition start/end timestamps and 2 salient inflection poses per cycle: maximum concentric contraction (peak effort / apex inflection) and maximum eccentric extension (turnaround inflection).
+- **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for Phase 4 Teacher Distillation (`training/src/distill/` planned; distills salient-state apex logits via KL divergence to `data/teacher_cache/poserac_salient/` to boost repetition boundary precision without adding runtime compute).
 
 ## What These Datasets Still Cannot Provide
 

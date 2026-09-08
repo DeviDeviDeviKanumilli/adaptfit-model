@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** model lifecycle, artifact ownership, deployment status, and release gates
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit ML engineering
 > - **Supersedes or supports:** consolidates model status from `current-state.md`, `scalable-ml-architecture.md`, `recommendation-model-plan.md`, and `motion-jepa-world-model-plan.md`
 > - **Review trigger:** new model family, checkpoint, head, export, evaluation, or deployment target

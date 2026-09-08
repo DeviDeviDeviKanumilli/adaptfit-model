@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** artifact paths, lineage, status, provenance, and metric evidence
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit training and release engineering
 > - **Supersedes or supports:** consolidates artifact status from `current-state.md`, `training-execution-log.md`, and historical benchmark reports
 > - **Review trigger:** new run, checkpoint, manifest, evaluation, export, or path change

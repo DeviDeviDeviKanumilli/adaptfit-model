@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training execution ledger, checkpoint provenance, and audit record
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** satisfies the execution log requirement from [documentation-validation.md](documentation-validation.md) and [efficient-training-strategy.md](efficient-training-strategy.md)
 > - **Review trigger:** after every experiment run, checkpoint evaluation, data preparation, or task transition
@@ -73,5 +73,6 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | 2026-09-07 | `b6ac20c` | Documentation revision | Documentation contracts and runbooks refined | Completed | Unified metadata, schemas, and roadmap across 23 files. |
 | 2026-09-07 | `ba8bf1a` | **Code baseline** | Repository-wide audit & TCN v2 evaluation | Passed (124 tests) | Evaluated `v2-quality-fixed` TCN; fixed TCN streaming expert head; added CLI scripts and execution log; last commit modifying model/runtime/test code. |
 | 2026-09-08 | `f890101` / `686218a` | Documentation revision | Roadmap alignment & canonical metadata synchronization | Passed (124 tests) | Aligned roadmap statuses, audited dataset mappings, and synchronized canonical documentation metadata. |
-| 2026-09-08 | `d5362ee` | Documentation revision (superseded as latest HEAD) | Execution provenance audit & contract grounding | Passed (124 tests) | Updated prepared-manifest counts, labeled planned paths and candidate datasets, grounded speedup hypotheses. |
-| 2026-09-08 | `1a46f38` | Documentation base / repository HEAD before current working-tree edits | Phase 5 planned-metric labeling | Passed (124 tests) | Marked mobile calibration, parity, latency, memory, and thermal values as planned acceptance criteria; current JEPA documentation edits are pending in the working tree. |
+| 2026-09-08 | `d5362ee` | Documentation revision | Execution provenance audit & contract grounding | Passed (124 tests) | Updated prepared-manifest counts, labeled planned paths and candidate datasets, grounded speedup hypotheses. |
+| 2026-09-08 | `1a46f38` | Documentation revision | Phase 5 planned-metric labeling | Passed (124 tests) | Marked mobile calibration, parity, latency, memory, and thermal values as planned acceptance criteria. |
+| 2026-09-08 | `9fe47fb` | Documentation revision (canonical HEAD) | Expand AdaptFit documentation context | Passed (124 tests) | Expanded context with 66 files, 12 JSON schemas, contract fixtures, validation workflow, and operational matrices. |

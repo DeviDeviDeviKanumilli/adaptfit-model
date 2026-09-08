@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source schemas, model heads, config, and runtime interfaces
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** resolves contract detail previously scattered across product, architecture, and data plans
 > - **Review trigger:** any field, enum, tensor shape, unit, mask, decoder, or cross-platform interface change

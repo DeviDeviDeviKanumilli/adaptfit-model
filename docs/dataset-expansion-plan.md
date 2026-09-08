@@ -4,7 +4,7 @@
 > - **Status:** research-backlog
 > - **Authority:** research notes and proposed acquisition work
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit data research
 > - **Supersedes or supports:** supports future acquisition decisions; dataset-catalog and current-state override availability and training inclusion
 > - **Review trigger:** source access/license verification, adapter completion, or change in the canonical data protocol
@@ -424,6 +424,24 @@ constrained synthetic residual-limb geometries.
 Use it only for anatomy priors, visualization, and synthetic pose/front-end
 stress tests. It cannot validate movement quality or clinical outcomes.
 
+### University of Utah Stand-Up and Sit-Down Above-Knee Amputees Dataset (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Nature Scientific Data 12, Article 292 (2025); Figshare (ID: 27986016), [DOI: 10.1038/s41597-025-04695-5](https://doi.org/10.1038/s41597-025-04695-5).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: 9 individuals with unilateral above-knee (transfemoral) amputations using their prescribed MPK or passive prosthesis.
+- **Modalities**: 12-camera Vicon optical mocap, 2 AMTI force plates, 4 surface EMG channels on intact limb, synchronized video.
+- **Annotations**: Repetitive sit-to-stand and stand-to-sit movement initiation and completion timestamps, joint kinematics, GRF vertical peak asymmetry.
+- **Proposed Ingestion Role**: `direct_temporal` and `quality_compensation`.
+
+### Transhumeral Loading During Advanced Upper Extremity ADLs (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Zenodo, [DOI: 10.5281/zenodo.1040453](https://doi.org/10.5281/zenodo.1040453).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: Non-amputee participants fitted with transhumeral immobilizers and prosthesis simulators.
+- **Modalities**: Marker-based upper extremity optical motion capture tracking shoulder girdle, clavicle, thorax, and arm segments.
+- **Annotations**: Thorax lateral lean, scapular upward rotation, glenohumeral elevation angles, dynamic joint loading.
+- **Proposed Ingestion Role**: `quality_compensation`.
+
 ## Wheelchair and seated movement
 
 ### SAFER-Activities
@@ -462,20 +480,6 @@ data from wheelchair users, including propulsion and pressure relief. It is a
 strong future sensor-fusion and wheelchair-motion-prior source, but it cannot
 be mixed into a camera-pose feature tensor without an explicit sensor branch.
 
-### Stroke rehabilitation exercise data with Kinect and IMU
-
-[NIAID data record](https://data.niaid.nih.gov/resources?id=mendeley_ygpdzx52g2)
-
-This dataset reports 128 participants, 631 Kinect skeleton files, two-IMU
-recordings, performance scores, and five exercises involving arm lifting,
-trunk tilt, trunk rotation, pelvis rotation, and squatting. The portal lists
-the data under CC BY 4.0, but the source package and exact skeleton parser
-must be checked before ingestion.
-
-This is a promising bridge between rehabilitation exercise and sensor fusion.
-It needs a parser for the `.skeleton` format and a careful review of the
-performance-score definitions before its labels enter the quality heads.
-
 ### WheelArm Synchronized Dataset
 
 [Dataset card](https://huggingface.co/datasets/Cordelia/WheelArm_WoZ_Pilot_Dataset)
@@ -488,7 +492,61 @@ Use it for future assistive-task context and camera/robot interaction research,
 not for human exercise labels. It is approximately 47 GB and should remain a
 separate multimodal project.
 
+### University of Groningen Wheelchair Racing Ergometer Dataset (Proposed Candidate / Not Integrated Code)
+
+- **Source**: University of Groningen Dataverse, [DOI: 10.34894/ebjbmf](https://doi.org/10.34894/ebjbmf).
+- **License / Terms**: CC BY-NC 4.0 Open Access for academic research.
+- **Cohort**: 15 novices tracked longitudinally across 3 weeks of high-speed racing propulsion practice.
+- **Modalities**: Custom-instrumented wheelchair racing ergometer with synchronized 3D optical kinematics (Optotrak/Vicon joint centers), bilateral wheel torque/power transducers.
+- **Annotations**: Millisecond push onset and release timestamps, stroke frequency, work per stroke, push angle range.
+- **Proposed Ingestion Role**: `direct_temporal` and `motion_pretraining`.
+
+### Loughborough University Wheelchair Sprint Shoulder Kinematics (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Loughborough University Repository / Figshare, [DOI: 10.17028/rd.lboro.21118741.v1](https://doi.org/10.17028/rd.lboro.21118741.v1).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: Wheelchair athletes performing maximal-effort wheelchair propulsion sprints.
+- **Modalities**: Multi-camera 3D optical motion capture (Vicon) tracking thorax, scapula, clavicle, and humerus.
+- **Annotations**: Glenohumeral abduction/flexion angles, scapular rotation, sprint phase segmentation, WUSPI shoulder pain index.
+- **Proposed Ingestion Role**: `quality_compensation` and `evaluation_challenge`.
+
+### Wheelchair Court Sports Mobility Performance (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Figshare, [DOI: 10.6084/m9.figshare.8237906](https://doi.org/10.6084/m9.figshare.8237906).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: Elite international wheelchair court athletes.
+- **Modalities**: Synchronized 3-IMU setup (2 on wheel hubs at 200 Hz, 1 on wheelchair frame at 100 Hz).
+- **Annotations**: Linear acceleration, rotational velocity (\omega_{yaw}), turn entry/exit timestamps, mobility outcomes.
+- **Proposed Ingestion Role**: `evaluation_challenge` and `motion_pretraining`.
+
 ## Stroke, motor impairment, and clinical quality
+
+### Park et al. Stroke Rehabilitation Exercise Data with Kinect 3D Depth and IMU (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Mendeley Data, [DOI: 10.17632/ygpdzx52g2.1](https://doi.org/10.17632/ygpdzx52g2.1); [NIAID data record](https://data.niaid.nih.gov/resources?id=mendeley_ygpdzx52g2).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: 128 clinical post-stroke and mobility-impaired participants (631 recorded movement sequences).
+- **Modalities**: Microsoft Kinect v2 3D skeletal data (25 joint centers at 30 FPS) paired with multi-sensor tri-axial IMUs.
+- **Exercise Types**: (1) arm lifting, (2) lateral trunk tilt, (3) trunk rotation, (4) pelvis rotation, (5) squatting.
+- **Annotations**: Primary Outcome (PO, clinician execution quality score 0–100) and Control Factor (CF, physical impairment/spasticity constraints).
+- **Proposed Ingestion Role**: `quality_compensation` and `direct_temporal` (maps 25 Kinect joints to canonical 33 MediaPipe layout, provides repetition boundaries for clinical cohorts, and calibrates `expert_quality_logits` and trunk compensation against clinician-certified Primary Outcome ratings).
+
+### PrimSeq / StrokeRehab Functional Motion Primitives & Dose (Proposed Candidate / Not Integrated Code)
+
+- **Source**: NYU Langone Health, SimTK Project: `primseq` (https://simtk.org/projects/primseq); GitHub: `schambra-lab/primseq`.
+- **License / Terms**: Open Research Access via SimTK terms.
+- **Cohort**: Chronic stroke hemiparetic patients and healthy controls.
+- **Modalities**: 9 synchronized wearable 9-axis IMUs paired with multi-camera video streams.
+- **Annotations**: Sub-repetition motion primitives (`reach`, `reposition`, `transport`, `stabilize`, `idle`) and repetition dose counts.
+- **Proposed Ingestion Role**: `direct_temporal` and `evaluation_challenge`.
+
+### STRIDE: Stroke Initiative for Gait Data Evaluation (Proposed Candidate / Not Integrated Code)
+
+- **Source**: ICPSR Data Repository, [DOI: 10.3886/ICPSR38002.v2](https://doi.org/10.3886/ICPSR38002.v2).
+- **License / Terms**: Open Academic Research Access.
+- **Cohort**: 300+ post-stroke individuals exhibiting hemiparetic motor deficits across multiple US rehabilitation centers.
+- **Modalities**: Harmonized multi-center optical motion capture, synchronized force plates, and standardized clinical impairment batteries.
+- **Proposed Ingestion Role**: `evaluation_challenge` (evaluating unilateral lower-limb asymmetry and single-leg loading capability masks).
 
 ### StrokeRehab
 
@@ -679,6 +737,30 @@ attribution. It can seed AdaptFit's exercise/capability recipe catalog, but it
 must never be treated as evidence about how a body with a limitation should
 move.
 
+### Rehab-Pile Benchmark Suite for Human Motion Rehabilitation (Proposed Candidate / Not Integrated Code)
+
+- **Source**: IRIMAS, Université de Haute-Alsace (2025); GitHub (`msd-irimas/DeepRehabPile`); PyPI: `deep-rehab-pile`.
+- **License / Terms**: Apache 2.0 / MIT Open Source.
+- **Cohort**: Harmonized multi-cohort rehabilitation benchmark aggregating 8 primary repositories (39 classification and 21 regression problems).
+- **Modalities**: Standardized skeleton-based motion time series across video and inertial sensors.
+- **Proposed Ingestion Role**: `quality_compensation` and `evaluation_challenge`.
+
+### VSRep: Multimodal Video and 3D Skeleton Repetitive Action Benchmark (Proposed Candidate / Not Integrated Code)
+
+- **Source**: IET Computer Vision / ResearchGate (2023–2024).
+- **License / Terms**: Open Access Research License.
+- **Modalities**: Synchronized RGB video and lifted 3D skeleton keypoint trajectories.
+- **Annotations**: Sub-action phase segmentation, repetition cycle start/end boundaries, instantaneous cadence.
+- **Proposed Ingestion Role**: `direct_temporal` and `evaluation_challenge`.
+
+### PoseRAC: RepCount-pose & UCFRep-pose (Teacher Distillation Benchmark) (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Peking University, CVPR 2023; GitHub (`MiracleDance/PoseRAC`).
+- **License / Terms**: MIT Academic Open Source.
+- **Cohort**: 1,451 videos in RepCount and 526 videos in UCFRep (33-keypoint BlazePose 2D landmark sequences at 30 FPS).
+- **Annotations**: 20,000+ repetition intervals and 2 salient inflection poses per cycle: maximum concentric contraction (apex) and maximum eccentric extension (turnaround).
+- **Proposed Ingestion Role**: Phase 4 Teacher Distillation (`training/src/distill/` planned).
+
 ## General anatomy, pose, and occlusion pretraining
 
 ### KIT Whole-Body Human Motion Database
@@ -714,6 +796,32 @@ individually for relevance and license.
 H3WB extends standard human pose with body, feet, face, and hand keypoints. It
 is valuable for improving landmark coverage and cross-skeleton mapping, but it
 contains intact bodies and does not model limb absence.
+
+### ULTRA-MoCap: Multimodal Upper Limb Tracking Dataset (Proposed Candidate / Not Integrated Code)
+
+- **Source**: University of Central Florida, Nature Scientific Data (2026); Figshare, [DOI: 10.6084/m9.figshare.28751156.v1](https://doi.org/10.6084/m9.figshare.28751156.v1).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: 13 adult participants performing standardized upper-limb functional and therapeutic tasks.
+- **Modalities**: Vicon Vero multi-camera optical mocap, OpenSim inverse kinematics, 6-DOF IMUs, sEMG.
+- **Annotations**: Continuous 3D joint angles, repetition timestamps, muscle activation envelopes, SPARC smoothness.
+- **Proposed Ingestion Role**: `direct_temporal` and `quality_compensation`.
+
+### CARRT Robotic Human Upper-Body Motion Capture Dataset (Proposed Candidate / Not Integrated Code)
+
+- **Source**: University of South Florida, Sensors 2023 (DOI: 10.3390/s23208354); Zenodo, [DOI: 10.5281/zenodo.8034000](https://doi.org/10.5281/zenodo.8034000) (Concept DOI: [10.5281/zenodo.8032646](https://doi.org/10.5281/zenodo.8032646)).
+- **License / Terms**: CC BY 4.0 Open Access.
+- **Cohort**: 10 adult participants performing functional assistive upper-limb manipulation and therapy routines (340 demonstrations).
+- **Modalities**: Vicon 3D optical mocap (Cartesian marker trajectories, C3D) formatted for OpenSim (`.trc`) and MATLAB.
+- **Proposed Ingestion Role**: `motion_pretraining` and `quality_compensation`.
+
+### OpenCap 100-Subject Movement Dynamics Dataset (Proposed Candidate / Not Integrated Code)
+
+- **Source**: Stanford University, PLOS Computational Biology 19(10): e1011462 (2023), [DOI: 10.1371/journal.pcbi.1011462](https://doi.org/10.1371/journal.pcbi.1011462); SimTK Project: `opencap` (https://simtk.org/projects/opencap).
+- **License / Terms**: Apache 2.0 for code; SimTK Open Research Terms.
+- **Cohort**: 100 individuals recorded in unconstrained environments by non-expert clinicians.
+- **Modalities**: Dual smartphone monocular video (iOS) processed into 3D skeletal dynamics and OpenSim inverse kinematics.
+- **Annotations**: 3D joint kinematics, joint moments, ground reaction forces, bilateral knee extension moment symmetry indices.
+- **Proposed Ingestion Role**: `evaluation_challenge` and `motion_pretraining`.
 
 ## Data acquisition backlog
 

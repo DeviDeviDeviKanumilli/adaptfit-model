@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** detection, reason codes, user behavior, fallback, telemetry, and test ownership
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit runtime and product engineering
 > - **Supersedes or supports:** supports `system-context-and-dataflow.md`, `on-device-deployment.md`, `product-scope.md`, and `privacy-and-data-lifecycle.md`
 > - **Review trigger:** new failure mode, reason code, fallback, runtime, or user-visible behavior
@@ -27,6 +27,11 @@ observation is not converted into a confident prediction.
 | Decoder reset/pause | state transition | `decoder_reset` | close or pause event with explicit state | reset reason | decoder fixture / runtime |
 | Corrupt dataset/manifest | checksum/schema/identity check | `data_invalid` | stop preparation/training; no artifact promotion | manifest/checksum | preflight fixture / data |
 | Missing label | label mask | `label_unavailable` | zero loss weight; report coverage | task valid count | training tests / evaluation |
+| Low tracking confidence | `tracking_confidence` drops below recipe floor (`confidence_floor`) | `low_tracking` | abstain repetition count increment and dependent quality feedback; prompt user to reposition camera | confidence floor delta and duration only; no raw pose | streaming fixture / runtime |
+| Ambiguous repetition boundary | Start/end logits exceed threshold simultaneously or peak separation < minimum window | `ambiguous_boundary` | suppress count increment; maintain active set count until unambiguous boundary is observed | boundary event confidence and peak distance | decoder fixture / runtime |
+| Cadence out of bounds | Repetition cycle duration faster than minimum physiological duration or slower than maximum duration in recipe dose constraints | `cadence_out_of_bounds` | disregard spurious cycle or emit cadence pacing prompt; do not increment valid rep count | measured repetition cycle duration and recipe ID | decoder fixture / runtime |
+| Excessive compensation | Biomechanical compensation metric (e.g., trunk lean $\theta_{trunk} \ge \tau_{trunk}$) exceeds recipe safety threshold | `excessive_compensation` | emit real-time form guidance; recommend rest, posture reset, or regression exercise variant | compensation dimension and threshold delta only | quality fixture / product |
+| Consent withdrawn | User toggles off telemetry/diagnostics in profile or requests session data deletion | `consent_withdrawn` | immediately purge local session cache, disable diagnostic recording, fail-safe to strictly stateless on-device execution | zero telemetry emitted (all logging disabled) | privacy fixture / privacy review |
 
 ## Recovery rules
 

@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** local-first data handling, consent, retention, deletion, and logging boundaries
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit product and privacy review
 > - **Supersedes or supports:** supports `product-scope.md`, `recommendation-model-plan.md`, `on-device-deployment.md`, and `contracts-and-schemas.md`
 > - **Review trigger:** new storage, sync, telemetry, consent field, model input, or data-retention policy

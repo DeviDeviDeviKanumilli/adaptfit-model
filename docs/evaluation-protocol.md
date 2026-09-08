@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** evaluation code/configuration, artifact manifests, and this protocol
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit engineering and evaluation reviewer
 > - **Supersedes or supports:** establishes the common protocol for corrected-v1, v2-quality, and future experiments
 > - **Review trigger:** metric/code/config changes, new labels, new target population, new runtime, or a release decision

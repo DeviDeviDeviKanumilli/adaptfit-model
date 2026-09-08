@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** top-level repository index and operational entry point
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** project root README; points to canonical docs/ and training/
 > - **Review trigger:** new run, artifact layout, or entry point change

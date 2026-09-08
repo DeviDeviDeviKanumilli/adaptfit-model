@@ -3,12 +3,14 @@ name: documentation-validation
 on:
   push:
     paths:
+      - "README.md"
       - "docs/**"
       - "training/README.md"
       - "scripts/validate_docs.py"
       - ".github/workflows/docs.yml"
   pull_request:
     paths:
+      - "README.md"
       - "docs/**"
       - "training/README.md"
       - "scripts/validate_docs.py"

@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** label definitions, temporal boundaries, masking, adjudication, and annotation provenance
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit data and evaluation engineering
 > - **Supersedes or supports:** supports `data-and-training-plan.md`, `dataset-catalog.md`, and `evaluation-protocol.md`
 > - **Review trigger:** label policy, source adapter, quality target, split policy, or temporal aggregation change
@@ -52,6 +52,24 @@ When annotators disagree, preserve all source labels, record the disagreement
 type, and adjudicate with a named reviewer or a declared consensus rule. Report
 agreement and unresolved masks. Never replace disagreement with a majority label
 without recording the policy version.
+
+### Temporal window aggregation protocol for quality logits
+
+Because `MovementPredictionV1.quality_logits` is a pooled representation per temporal window of $W = 128$ frames (tensor shape `[batch, 4]`), frame-level clinical ratings $q_t^{(k)} \in \{0, 1\}$ or continuous kinematic deviations $\theta(t)$ require an explicit window pooling contract. For active repetition frames $W_{active} \subseteq W$:
+$$Y_{W, k} = \begin{cases} 1 & \text{if } \frac{1}{|W_{active}|} \sum_{t \in W_{active}} q_t^{(k)} \ge \alpha_{active} \\ 0 & \text{otherwise} \end{cases}$$
+where the default threshold is $\alpha_{active} = 0.20$ (at least 20% of active repetition frames exhibit the designated compensation or form error). For continuous trunk lean, the window binary label is $1$ if $\max_{t \in W_{active}} \theta_{trunk}(t) \ge 15^\circ$ and $0$ otherwise. If no clinical aggregation rubric or verified threshold exists, the quality target must remain strictly masked (`quality_mask[:, k] = 0.0`). Continuous angle values must never be passed directly into binary quality logits.
+
+### Absence vs. occlusion vs. assisted protocol
+
+- **Absence (`absent`, capability mask = 0.0)**: Anatomical limb absence (e.g., transradial/transhumeral or transfemoral/transtibial amputation declared in `CapabilityProfileV1`). In `training/src/features/anatomy.py`, missing joints are masked from loss computation and excluded from expected tracking targets; they are not penalized or flagged as occluded or incorrect form.
+- **Occlusion (`occluded`, observation mask = 0.0, capability mask > 0.0)**: Anatomically present limb temporarily obscured from camera view. Generates a `joint_occluded` abstention rather than a form error.
+- **Assisted (`assisted`, capability mask = 0.80)**: Limb supported by orthosis, strap, or caregiver. Movement is tracked with adjusted kinematics and not penalized for assistive stabilization.
+
+### Salient pose inflection point protocol (apex vs. turnaround)
+
+- **Turnaround Boundary (`rep_start` / `rep_end`)**: Directional reversal marking transition from rest to concentric motion (`rep_start`) or return to rest (`rep_end`).
+- **Apex Inflection (`hold` / peak contraction)**: Frame of maximum joint excursion or zero velocity ($\dot{\theta} = 0, \ddot{\theta} < 0$) between concentric and eccentric phases.
+- **Enforcement**: The temporal decoder requires an apex detection between `rep_start` and `rep_end`. Any end-boundary candidate not preceded by an apex inflection is rejected as motion jitter.
 
 ## Adapter obligations
 

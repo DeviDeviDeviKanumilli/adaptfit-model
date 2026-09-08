@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** implemented model code plus explicitly labeled future architecture
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit ML engineering
 > - **Supersedes or supports:** canonical model/data-flow explanation; contracts-and-schemas owns exact serialized interfaces
 > - **Review trigger:** architecture, feature schema, head, runtime, or deployment change

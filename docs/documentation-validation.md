@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** documentation review procedure
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports the validation checklist in `docs/README.md`
 > - **Review trigger:** canonical document, contract, artifact, or repository-layout change

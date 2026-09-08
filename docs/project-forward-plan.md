@@ -4,12 +4,12 @@
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
 > - **Review trigger:** milestone completion, dependency change, gate result, or empirical evidence
 
-Planning review: September 8, 2026. Audited model checkout: `ba8bf1a` (code baseline), `1a46f38` (documentation revision base and repository HEAD before this working-tree update).
+Planning review: September 8, 2026. Audited model checkout: `ba8bf1a` (code baseline), `9fe47fb` (documentation revision, repository HEAD).
 
 ---
 

@@ -109,7 +109,7 @@ def read_json(path: Path, errors: list[str]) -> dict[str, Any] | None:
 
 
 def validate_metadata(errors: list[str]) -> None:
-    markdown = sorted(DOCS.glob("*.md")) + [ROOT / "training" / "README.md"]
+    markdown = sorted(DOCS.glob("*.md")) + [ROOT / "README.md", ROOT / "training" / "README.md"]
     for path in markdown:
         text = path.read_text(encoding="utf-8")
         for field in REQUIRED_METADATA:
@@ -118,7 +118,7 @@ def validate_metadata(errors: list[str]) -> None:
 
 
 def validate_links(errors: list[str]) -> None:
-    markdown = sorted(DOCS.glob("*.md")) + [ROOT / "training" / "README.md"]
+    markdown = sorted(DOCS.glob("*.md")) + [ROOT / "README.md", ROOT / "training" / "README.md"]
     pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
     for source in markdown:
         for target in pattern.findall(source.read_text(encoding="utf-8")):
@@ -181,6 +181,8 @@ def validate_fixtures(errors: list[str]) -> None:
             "dataset-missing-license.json": "dataset-manifest-v1.schema.json",
             "experiment-missing-provenance.json": "experiment-record-v1.schema.json",
             "artifact-mismatch.json": "model-artifact-manifest-v1.schema.json",
+            "prediction-confidence-out-of-bounds.json": "movement-prediction-v1.schema.json",
+            "recommendation-request-missing-profile.json": "recommendation-request-v1.schema.json",
         }
         schema_path = SCHEMAS / mapping.get(path.name, schema_path.name)
         schema = read_json(schema_path, errors) if schema_path.exists() else None

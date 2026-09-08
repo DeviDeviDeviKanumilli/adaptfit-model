@@ -1,0 +1,22 @@
+{
+  "schema_version": "prediction.v1",
+  "model_id": "movement-tcn-v1",
+  "family_logits": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "phase_logits": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "rep_start_logit": 0.5,
+  "rep_end_logit": -0.5,
+  "tracking_confidence": 1.5
+}

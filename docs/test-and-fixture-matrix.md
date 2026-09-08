@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** mapping from contracts/failures to verification evidence
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit engineering and evaluation review
 > - **Supersedes or supports:** supports `documentation-validation.md`, `evaluation-protocol.md`, and `failure-and-recovery-matrix.md`
 > - **Review trigger:** contract, failure behavior, test suite, runtime, or release-gate change

@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training runbook; commands must still be verified against the runner and config
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `1a46f38` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** canonical staged-training workflow; supports current-state, data-and-training-plan, and evaluation-protocol
 > - **Review trigger:** runner/config/schema change, new checkpoint, or changed compute/evaluation budget
