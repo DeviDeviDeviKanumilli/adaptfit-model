@@ -98,6 +98,21 @@ class StreamingRuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             runtime.step(torch.zeros(2, 283), timestamps=torch.tensor([3.0, 3.0]))
 
+    def test_runtime_preserves_expert_quality_logits_for_tcn_and_gru(self) -> None:
+        torch.manual_seed(34)
+        values = torch.randn(8, 283)
+        timestamps = torch.arange(8, dtype=torch.float32) / 30.0
+        v2_config = dict(self.config)
+        v2_config["model"] = dict(self.config["model"])
+        v2_config["model"]["expert_quality_classes"] = 5
+
+        for name in ("tcn", "gru"):
+            model = build_model(name, v2_config).eval()
+            runtime = CausalStreamingRuntime(model)
+            result = runtime.step(values, timestamps=timestamps, session_id="s1", exercise_id="curl")
+            self.assertIn("expert_quality_logits", result.outputs)
+            self.assertEqual(tuple(result.outputs["expert_quality_logits"].shape), (5,))
+
 
 if __name__ == "__main__":
     unittest.main()

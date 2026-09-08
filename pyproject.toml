@@ -29,12 +29,15 @@ adaptfit-preflight = "training.preflight:main"
 adaptfit-prepare = "training.prepare_data:main"
 adaptfit-train = "training.train:main"
 adaptfit-evaluate = "training.evaluate:main"
+adaptfit-audit = "training.audit:main"
+adaptfit-runtime-check = "training.runtime_check:main"
 
 [tool.setuptools.packages.find]
 include = ["training*"]
 
 [tool.pytest.ini_options]
 testpaths = ["training/tests"]
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 target-version = "py311"

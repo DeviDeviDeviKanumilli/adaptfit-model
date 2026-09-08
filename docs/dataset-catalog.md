@@ -9,331 +9,516 @@
 > - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in dataset-expansion-plan
 > - **Review trigger:** adapter or checksum change, license/access update, or label-role change
 
-This catalog records public datasets that can help AdaptFit learn movement
-recognition, temporal structure, observable movement quality, pose robustness,
-and capability-aware adaptation. It was researched on 2026-08-31. A dataset
-being public does not automatically grant permission to redistribute it, train
-a commercial product on it, or use it for clinical claims. Every source needs a
-license and ethics review before it is added to a released model.
+This catalog records public, academic, and clinical datasets that can help AdaptFit learn movement recognition, temporal structure, observable movement quality, pose robustness, and capability-aware adaptation. It was comprehensively expanded and audited on 2026-09-07 across international biomechanics, computer vision, and rehabilitation repositories (including Zenodo, Figshare, IEEE Dataport, SimTK, Hugging Face, PhysioNet, and university archives).
 
-The larger researched longlist, acquisition statuses, and adapter plan are in
-the [dataset expansion and ingestion plan](dataset-expansion-plan.md).
+A dataset being public does not automatically grant permission to redistribute it, train a commercial product on it, or use it for clinical claims. Every source needs a license, data use agreement (DUA), and ethics review before it is added to a released model artifact.
 
-The exact-match analysis for the requested target profiles, repetition volume,
-phase labels, expert quality labels, and participant-level test coverage is in
-the [verified research and run findings](verified-research-and-run-findings.md).
-No single public dataset found so far satisfies all of those requirements.
+The larger researched longlist, acquisition statuses, and adapter plan are in the [dataset expansion and ingestion plan](dataset-expansion-plan.md).
+
+The exact-match analysis for the requested target profiles, repetition volume, phase labels, expert quality labels, and participant-level test coverage is in the [verified research and run findings](verified-research-and-run-findings.md). No single public dataset satisfies all of those requirements.
 
 ## How to use this catalog
 
-The current AdaptFit model consumes normalized 2D pose sequences with explicit
-observed and capability masks. Datasets therefore fall into different roles:
-
-- Direct temporal supervision can train the shared TCN or GRU.
-- Quality and compensation labels can train the observable-quality heads.
-- Image/keypoint datasets can improve the camera pose front end, but do not
-  directly train the temporal model until pose sequences are extracted.
-- IMU or motion-capture datasets can support auxiliary pretraining and physics
-  checks, but cannot be treated as camera-pose data.
-
-Participant or subject identifiers must stay intact so all splits remain
-participant-level. Synthetic limb masking is useful for engineering tests, but
-it is not evidence that a model works for a real limb difference or wheelchair
-user.
-
-## Canonical registry
-
-The registry below is the source of truth for current role and availability.
-`Integrated` means an adapter exists and a prepared path can be audited; it
-does not mean every label or task is valid. `Pending` and `restricted` sources
-must not enter a release artifact until the access gate passes. Checksums are
-recorded in `data/manifests/` when present; “manifest pending” is an explicit
-provenance gap.
-
-| Dataset | Status / adapter | Modality and participant profile | Labels and usable tasks | Prohibited interpretation | License/access | Checksum/path | Next action |
-|---|---|---|---|---|---|---|---|
-| REHAB24-6 | Integrated / `rehab24_6` | 2D pose; general rehabilitation participants | Exercise family, repetition spans; family/phase/boundary experiments where source labels exist | Not target-population validation; no unprovided quality dimensions | Verify source terms before redistribution | `data/raw/rehab24_6/`; manifest pending | Record source checksum and task masks |
-| IntelliRehabDS | Integrated / `intellirehabds` | Skeleton; seated, wheelchair, standing contexts | Gesture/family and clip boundaries; robustness/context | Not a repetition-quality or clinical outcome label | Verify access and redistribution | `data/raw/intellirehabds/`; manifest pending | Complete license review and participant split audit |
-| MM-Fit | Integrated / `mmfit` | 2D/3D pose and RGB-D; general exercise participants | Family and set-level count; temporal context | No per-repetition boundaries or phase from released set CSV | Terms pending for product use | `data/raw/mmfit/`; manifest pending | Preserve count/set provenance; do not invent boundaries |
-| UL-RED | Integrated / `ul_red` | Marker-less/mocap; general rehabilitation participants | Exercise, speed, sequence structure; phase/tempo pretraining | Not limb-difference or wheelchair evidence; no clinical safety claim | CC BY 4.0 as recorded; verify archive terms | `data/raw/ul_red/`; `data/manifests/ul_red.sha256` | Audit archive checksum and label map |
-| UCOPhyRehab++ | Integrated / `ucophyrehabpp` | 3D pose; controlled healthy participants | Exact repetition spans and composite 1–5 expert score | Composite score is not four dimension-specific quality labels or target-population evidence | License review pending | `data/raw/ucophyrehabpp/`; `data/manifests/ucophyrehabpp.md5` | Finish v2 sequence evaluation and license decision |
-| ROAG | Candidate / no adapter | Motion capture; seven able-bodied and two transradial prosthesis users | Reach geometry, asymmetry, trunk compensation | Not camera-pose or AdaptFit repetition labels without conversion | CC BY 4.0 reported; verify record | Not staged; manifest pending | Build a dedicated coordinate/participant adapter |
-| InclusiveVidPose | Candidate / no adapter | Video/keypoints; amputations, limb differences, prostheses | Pose-front-end robustness and absent/unobserved distinction | Not temporal repetition or exercise-quality supervision | Data-use agreement/restrictions | Not staged; manifest pending | Obtain custodian approval before access |
-| KIMORE | Candidate / no adapter | RGB-D/skeleton; healthy and motor-dysfunction participants | Physician features and clinical-context research | Not amputee/wheelchair validation; no commercial use assumption | Access/license pending | Not staged; manifest pending | Verify terms and label mapping |
-| KERAAL | Candidate / no adapter | RGB-D/video/pose; healthy and low-back-pain participants | Expert correctness, error type/time, trunk compensation | Not clinical safety or target-profile validation | CC BY-NC-SA reported | Not staged; manifest pending | Research-only access review and adapter design |
-| Toronto Rehab Stroke Pose | Candidate / no adapter | Kinect pose; stroke survivors and controls | Frame-level compensation/context | Not generic exercise correctness or AdaptFit capability support | Kaggle/access terms pending | Not staged; manifest pending | Verify release terms and source labels |
-| StrokeRehab | Candidate / no adapter | Video features/IMU/kinematics; stroke and healthy participants | Functional primitives, upper-body representation | Not canonical 2D camera-pose or repetition labels | SimTK account/access required | Not staged; manifest pending | Decide whether feature modality is useful |
-| SAFER-Activities | Candidate / no adapter | 2D/3D pose and images; normal/wheelchair recordings | Pose robustness, action segments, held-out subject/view tests | Not exercise-quality, clinical, or fall-safety labels | CC BY-NC-SA reported; access gate pending | Not staged; manifest pending | Verify terms and create wheelchair robustness split |
-| WheelPose / Users in Wheelchairs | Candidate / no adapter | RGB images/keypoints; 84 public-video subjects | Pose detection and wheelchair robustness | Not temporal count or quality supervision | Code MIT; images have separate restrictions | Not staged; manifest pending | Obtain image-data permission |
-| WheelPoser-IMU | Candidate / no adapter | IMU/mocap; wheelchair users | Sensor-fusion/motion priors | Not camera-pose or exercise feedback labels | CC BY-NC reported; request/access pending | Not staged; manifest pending | Keep separate from pose-only training |
-| MM-Fi | Candidate / no adapter | Multimodal keypoints; 40 subjects | Representation/action pretraining | Taxonomy does not equal AdaptFit families; no target-profile claim | Access/license pending | Not staged; manifest pending | Verify download and source mapping |
-| QEVD/FIT-300K | Candidate / no adapter | Video; many exercise variants | Video-first form/feedback pretraining after pose extraction | Not clinical judgment or direct pose labels | Qualcomm research license | Not staged; manifest pending | Request terms; estimate pose extraction cost |
-| Fitness-AQA | Candidate / no adapter | In-the-wild video; squat/press/row | Fine-grained quality pretraining | Non-commercial and taxonomy cannot be copied as clinical labels | Access request/non-commercial | Not staged; manifest pending | Request access and map quality dimensions |
-| WLU Rehabilitation Posture | Candidate / no adapter | Privacy-blurred video; post-stroke exercises | Verification/counting research | Terms and canonical pose format unclear | Access/license pending | Not staged; manifest pending | Do not download until terms are recorded |
-
-The detailed research backlog remains in [dataset-expansion-plan.md](dataset-expansion-plan.md).
-
-## Already integrated
-
-### MM-Fit
-
-[Official project page](https://mmfit.github.io/)
-
-MM-Fit contains synchronized RGB-D video, 2D and 3D pose estimates, and more
-than 800 minutes of multimodal exercise data. Its ten exercise classes include
-bicep curls, rows, seated shoulder presses, seated lateral raises, squats,
-lunges, sit-ups, tricep extensions, push-ups, and jumping jacks.
-
-The adapter in `training/src/data/adapters.py` reads the pose-only archive and
-exercise-set CSV files. It contributes explicit movement-family labels and
-set-level repetition counts. MM-Fit does not provide individual repetition
-boundaries or phase labels in the released CSV format, so those targets remain
-masked instead of being invented. The archive is kept local until its dataset
-terms are verified for the intended use.
-
-## Highest-priority additions for AdaptFit
-
-### ROAG
-
-[Imperial College project page](https://www.imperial.ac.uk/manipulation-touch/open-source/dataset/roag-dataset/)
-and [Zenodo record](https://zenodo.org/records/13908725)
-
-ROAG, or Reaching Over a Grid, contains 2,450 reaching trajectories from seven
-able-bodied participants and two transradial amputees using prosthetic devices.
-It includes arm and torso motion across 49 targets and was designed to study
-compensatory motion from upper-limb differences.
-
-This is the best discovered match for the first missing-arm capability profile.
-Use it to train or evaluate reach geometry, trunk compensation, asymmetry, and
-capability-conditioned feedback. It is motion-capture data rather than the
-current camera-pose format, so it needs a dedicated conversion adapter and
-careful coordinate mapping. The Zenodo record lists CC BY 4.0; retain the
-required attribution.
-
-### InclusiveVidPose
-
-[Project and dataset page](https://anonymous-accept.github.io/inclusivevidpose/)
-
-InclusiveVidPose is a video pose-estimation dataset focused on individuals
-with amputations, congenital limb differences, and prosthetic limbs. The
-project reports 313 video sequences, more than 327,000 annotated frames, 398
-individuals, 25 keypoints including residual-limb endpoints, segmentation
-masks, bounding boxes, tracking IDs, and prosthesis information.
-
-This should be used to improve the pose front end and the absent-versus-
-unobserved anatomy distinction, not as direct repetition supervision. Its
-download is governed by a data-use agreement and additional ethical and
-research-use restrictions. Do not download, redistribute, or use it in a
-product without approval from the dataset custodians.
-
-### KIMORE
-
-[Paper and dataset access link](https://doi.org/10.1109/TNSRE.2019.2923060)
-
-KIMORE contains RGB-D and skeleton recordings for five physician-selected
-rehabilitation exercises. It covers 78 subjects, including healthy subjects
-and subjects with motor dysfunctions, and includes physician-defined movement
-features and clinical scores.
-
-This is a strong candidate for the quality and clinician-context heads. The
-paper links to a Google Drive download, but the project does not provide a
-simple permissive software-style license in the paper. Confirm the dataset
-terms and access conditions before staging it. It is not a substitute for
-amputee or wheelchair data.
-
-### KERAAL low-back-pain rehabilitation dataset
-
-[Official dataset page](https://keraal.enstb.org/KeraalDataset.html)
-
-KERAAL contains three low-back-pain rehabilitation exercises from nine healthy
-subjects and twelve patients. It provides Kinect 3D skeletons, RGB video,
-OpenPose or BlazePose 2D poses, and physician annotations for correctness,
-error type, body part, and error time span.
-
-This is one of the most useful sources for observable quality, trunk
-compensation, error localization, and clinician-reviewed labels. The official
-page states CC BY-NC-SA, so it is appropriate for research experiments but not
-automatically for a commercial mobile release.
-
-### University of Liverpool Rehabilitation Exercise Dataset
-
-[University data record](https://datacat.liverpool.ac.uk/2729/)
-
-UL-RED contains 22 rehabilitation-oriented exercises across ten subjects, with
-marker-based motion capture, marker-less tracking, and depth data. It includes
-single- and three-repetition recordings at normal, fast, and slow speeds. The
-data record provides subject archives and identifies them as CC BY 4.0.
-
-This is a good addition for tempo robustness, phase modeling, and validating
-marker-less pose extraction. The subjects are not the target disability
-groups, so it should be treated as general rehabilitation pretraining.
-
-### Toronto Rehab Stroke Pose Dataset
-
-[Research group release page](https://www.cs.toronto.edu/~taati/index.htm)
-and [dataset/code reference](https://github.com/zhiderek/TRSPD)
-
-The Toronto Rehab Stroke Pose Dataset contains 25-joint Kinect pose data from
-stroke survivors and healthy participants, with frame-level posture
-compensation ratings and participant demographics. The referenced release is
-available through Kaggle.
-
-This is directly relevant to upper-body compensation and impaired movement. It
-should be converted into canonical sequences with a source-specific label map;
-the compensation labels should feed the trunk or observable-compensation head,
-not be relabeled as generic exercise correctness. Verify Kaggle terms before
-use.
-
-### StrokeRehab
-
-[Official dataset page](https://strokerehabdata.github.io/dataset.html)
-
-StrokeRehab contains 3,372 trials from 51 stroke-impaired and 20 healthy
-subjects, with high-resolution labels for short functional primitives such as
-reach, transport, reposition, stabilize, and idle. It provides synchronized
-IMU and video data; the released video side is feature data rather than raw
-video, while the kinematic data is available through SimTK.
-
-Use it for upper-body impaired-motion representation learning and primitive
-recognition. It is not a direct replacement for camera pose because raw video
-and canonical 2D landmarks are not the released modality. Access requires a
-SimTK account.
-
-### SAFER-Activities
-
-[Dataset card](https://huggingface.co/datasets/SAFER-Activities/SAFER-Activities)
-and [project page](https://safer-activities.github.io/)
-
-SAFER-Activities includes normal and wheelchair recordings, non-lab held-out
-tests, action segments, 2D poses, lifted 3D poses, boxes, subject/view splits,
-and a wheelchair keypoint image set. The dataset card reports separate
-wheelchair subject splits and an out-of-distribution non-lab test set.
-
-This is a strong wheelchair pose-front-end and robustness benchmark. It is a
-large download, requires agreeing to access conditions, and is released under
-CC BY-NC-SA 4.0. Its simulated falls and activity segments should not be
-treated as exercise-quality or clinical safety labels.
-
-### WheelPose and the Users in Wheelchairs dataset
-
-[Official repository](https://github.com/hilab-open-source/wheelpose)
-
-WheelPose provides synthetic wheelchair-person pose generation and a Users in
-Wheelchairs image dataset with roughly 2,464 annotated RGB images from 84
-public videos, covering 16 action classes with boxes and keypoints. The full
-image dataset is available on request; the repository code is MIT-licensed,
-but the image dataset has separate source and fair-use constraints.
-
-Use it to test and improve wheelchair detection and 2D keypoint extraction.
-It is image-level rather than a temporal exercise dataset, so it should not be
-used to claim better repetition counting by itself.
-
-### WheelPoser-IMU
-
-[Official repository](https://github.com/axle-lab/WheelPoser)
-
-WheelPoser-IMU contains 167 minutes of paired IMU and motion-capture data from
-wheelchair users, including propulsion and pressure-relief motions. The data
-is obtained through a request form and the repository states a CC BY-NC 4.0
-license for the project.
-
-This is useful for a future sensor-fusion or physics-consistency branch, and
-for learning wheelchair-specific motion priors. It is not camera data and
-should not be mixed directly into the current pose-only training set.
-
-## Additional useful sources
-
-### MM-Fi
-
-[Official toolbox and access instructions](https://github.com/ybhbingo/MMFi_dataset)
-
-MM-Fi contains more than 320,000 synchronized frames from 40 subjects, 27
-daily or rehabilitation action categories, and 2D/3D pose keypoints alongside
-other sensing modalities. The release provides extracted keypoints while raw
-RGB images are restricted for privacy.
-
-Use its rehabilitation actions for representation pretraining and action
-recognition. The action taxonomy is not the same as AdaptFit's exercise
-families, and the access page points to Google Drive or Baidu Netdisk without a
-simple license statement, so verify terms before use.
-
-### Qualcomm Exercise Video Dataset
-
-[Qualcomm dataset page](https://www.qualcomm.com/developer/software/qevd-dataset)
-
-QEVD contains more than 474 hours of exercise and fitness-coaching video. Its
-FIT-300K subset has about 289,000 short clips covering 148 exercises and
-variations including different pacing, common mistakes, and modified form.
-The FIT-Coach subsets add longer workouts and coach-style corrective feedback.
-
-This is attractive for quality-language and form-variation pretraining after
-running a pose extractor over the videos. It is not a skeleton dataset, access
-uses a Qualcomm research license agreement, and the feedback labels are not
-clinical judgments.
-
-### Fitness-AQA
-
-[Official code and access instructions](https://github.com/ParitoshParmar/Fitness-AQA)
-
-Fitness-AQA targets fine-grained quality assessment for back squat, overhead
-press, and barbell row. The dataset is distributed through an access request
-form and the repository states that it is for non-commercial use.
-
-Use it for row and trunk-quality representation learning if permission is
-granted. It is in-the-wild video rather than canonical pose, and its quality
-taxonomy must be mapped carefully into ROM, tempo, smoothness, and trunk
-compensation rather than copied as a clinical label.
-
-### UCOPhyRehab++
-
-[Official Zenodo release](https://zenodo.org/records/17935737) and
-[Scientific Data paper](https://www.nature.com/articles/s41597-026-07362-5)
-
-UCOPhyRehab++ is now staged under `data/raw/ucophyrehabpp/`. Its 3D pose and
-metadata release provides exact repetition frame ranges and a 1–5 composite
-physiotherapist execution score for rehabilitation exercises. The new v2
-adapter uses it for exact recording boundaries and an optional ordinal expert
-quality head.
-
-The release contains healthy, controlled participants rather than amputee,
-limb-difference, or wheelchair-user participants. The score is not four
-independent ROM, tempo, smoothness, and trunk-compensation labels. Keep the
-source marked for license review before redistribution or commercial use. See
-`docs/quality-benchmark-v2.md` for the adapter and overnight run.
-
-### WLU Rehabilitation Posture
-
-[Dataset page](https://www.kaggle.com/datasets/sulaimanmuhammed/wlu-rehabilitation-posture)
-
-WLU Rehabilitation Posture focuses on post-stroke arm raise, knee extension,
-and sit-to-stand recordings. Its videos are blurred for privacy and include
-multiple angles and devices.
-
-It may help with exercise verification and repetition-count experiments, but
-the page does not establish a clear redistribution license or a canonical pose
-format. Treat it as a request-and-review candidate rather than an immediate
-download.
-
-## Recommended acquisition order
-
-Start with ROAG, InclusiveVidPose, KERAAL, UL-RED, and SAFER-Activities. These
-cover the largest current gaps: real upper-limb difference, limb-deficiency
-pose estimation, clinician-reviewed quality, tempo variation, and wheelchair
-robustness.
-
-Request KIMORE and Toronto Rehab Stroke Pose next for clinical and stroke
-compensation labels. Add MM-Fi, QEVD, and Fitness-AQA only as carefully
-licensed pretraining sources because they are broader or video-first.
-
-Do not merge all sources into one undifferentiated loss. Each adapter should
-declare exactly which labels it supplies, preserve label provenance, and leave
-unsupported phase, boundary, quality, and clinical targets masked.
-
-## What these datasets still cannot provide
-
-No discovered public dataset covers the full first-release population of
-people with missing limbs, one-arm use, lower-limb absence, and wheelchair use
-performing the same five AdaptFit exercises under consented product-testing
-conditions. Public data can bootstrap the pose front end and general movement
-model, but the safety-critical adaptation layer still needs consented,
-participant-reviewed recordings and clinician or trained-expert labeling.
+The current AdaptFit model consumes normalized 2D pose sequences with explicit observed and capability masks across 33 canonical landmarks and 283 ordered features (`training/src/features/anatomy.py`). Datasets therefore fall into five distinct architectural ingestion roles:
+
+1. **Direct Temporal Supervision (`direct_temporal`)**:
+   - Ingests frame-by-frame 2D or 3D skeletal landmark trajectories.
+   - Directly trains the causal TCN or GRU backbone for movement family classification, phase estimation (rest, concentric, hold, eccentric), and repetition boundary detection (start, end).
+   - Requires verified timestamp ordering and participant-level split isolation.
+
+2. **Observable Quality & Compensation Supervision (`quality_compensation`)**:
+   - Ingests clinician-annotated or sensor-verified movement deviations, trunk compensation, range of motion (ROM), tempo, and smoothness ratings.
+   - Directly trains the 4-dimensional observable quality heads (`quality_logits`) and optional composite physiotherapist score head (`expert_quality_logits`).
+
+3. **Pose Front-End Robustness & Keypoint Detection (`pose_frontend`)**:
+   - Ingests still images, video clips, bounding boxes, or segmentation masks of individuals with amputations, prostheses, residual limbs, and wheelchair frames.
+   - Fine-tunes the MediaPipe/YOLOv8-Pose camera front end to prevent phantom joint hallucination and ensure correct distinction between unobserved and absent anatomy.
+
+4. **Biomechanical Priors & Teacher Distillation (`biomechanics_teacher`)**:
+   - Ingests high-fidelity optical motion capture (Vicon/Qualisys), dense 3D kinematics, or unconstrained video representations.
+   - Serves as offline teacher models (SSTRAC, PoseRAC, RACNet, MotionBERT) to distill continuous repetition density maps, salient states, and biomechanical smoothness bounds into the student model.
+
+5. **Evaluation Challenge Sets (`evaluation_challenge`)**:
+   - Strictly held-out test splits from clinical, wheelchair, and limb-difference cohorts.
+   - Used to verify that models do not hallucinate missing limbs, misclassify seated users as standing, or penalize limited mobility. Never used during training.
+
+Participant and subject identifiers must stay strictly intact so all splits remain participant-level. Synthetic limb masking is valuable for engineering unit tests, but it is never accepted as clinical validation for real limb difference or wheelchair mobility.
+
+---
+
+## Canonical Registry
+
+The registry below is the authoritative source of truth for dataset integration status, licensing, and usable supervision.
+- **Integrated**: Adapter exists in `training/src/data/adapters.py` and prepared data is audited.
+- **Candidate (Staged / Ingestible)**: Open license cleared, schema mapped, ready for adapter implementation.
+- **Restricted / DUA Pending**: Requires formal institutional Data Use Agreement before staging. Checksums are recorded in `data/manifests/` when present.
+
+| Dataset | Status / Adapter | Modality & Cohort | Labels & Usable Tasks | License / Access | Checksum / Staging Path | Next Action |
+|---|---|---|---|---|---|---|
+| **REHAB24-6** | Integrated / `rehab24_6` | 2D pose; general rehabilitation participants | Exercise family, repetition spans; family/phase/boundary experiments | Verify source terms before redistribution | `data/raw/rehab24_6/` | Record source archive checksum |
+| **IntelliRehabDS** | Integrated / `intellirehabds` | Kinect 3D skeleton; seated, wheelchair, standing | Gesture/family and clip boundaries; robustness/context | Verify access and redistribution | `data/raw/intellirehabds/` | Complete participant split audit |
+| **MM-Fit** | Integrated / `mmfit` | 2D/3D pose and RGB-D; general exercise trainees | Family and set-level count; temporal context | Non-commercial research license | `data/raw/mmfit/` | Preserve set-level provenance |
+| **UL-RED** | Integrated / `ul_red` | Markerless / mocap; general rehabilitation | Exercise, speed, sequence structure; phase/tempo | CC BY 4.0 Open Access | `data/raw/ul_red/`<br>`data/manifests/ul_red.sha256` | Audit archive checksum and label map |
+| **UCOPhyRehab++** | Integrated / `ucophyrehabpp` | 3D pose; controlled healthy participants | Exact repetition spans and composite 1–5 expert score | License review pending | `data/raw/ucophyrehabpp/`<br>`data/manifests/ucophyrehabpp.md5` | Finish v2 sequence evaluation |
+| **DynTherapy** | Candidate / Priority 1 | 33 MediaPipe pose keypoints (1:1 drop-in) | Repetition cycles, start/end boundaries, 7 PT classes | CC BY 4.0 Open Access | Mendeley Data (DOI: 10.17632/hghdm99rwg.1) | Implement 1:1 drop-in adapter |
+| **UI-PRMD** | Candidate / Priority 1 | Vicon 3D mocap + Kinect v2 skeleton | 10 PT exercises; optimal vs non-optimal execution | Open Research Access | University of Idaho / OpenDataLab | Implement virtual camera projection |
+| **MobiPhysio** | Candidate / Priority 1 | 2D smartphone video (3,686 clips), 58 subjects | 9 AROM exercises; EAAQ clinical accuracy scores | CC BY 4.0 Open Access | Kaggle / Elsevier Data in Brief | Extract 2D MediaPipe pose & align scores |
+| **Pipelines** | Candidate / Priority 1 | Synchronized video + 3D optical mocap | Wheelchair propulsion stroke timestamps, kinematics | CC BY 4.0 Open Access | Figshare / La Trobe Biomechanics | Ingest wheelchair propulsion cycles |
+| **ROAG** | Candidate / Priority 1 | 3D mocap; 7 able-bodied + 2 transradial amputees | Reaching geometry, compensatory torso lean, asymmetry | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.13908725) | Implement 3D-to-2D projection adapter |
+| **Ottobock #DearAI** | Candidate / Priority 1 | High-res image/video of amputee athletes/users | Biological vs prosthetic limbs, residual limb endpoints | Community Open Access | Hugging Face (`ottobock/ldpr-ul`, `ldpr-ll`) | Ingest into pose-front-end fine-tuning |
+| **Arm-CODA** | Candidate / Priority 2 | 3D CODA markers (34 markers), 16 subjects | 15 upper-limb movements; millisecond start/end | Open Access / Open Data | IPOL (DOI: 10.5201/ipol.2024.494) | Project Cartesian time series to 2D |
+| **RepCount-pose** | Candidate / Priority 2 | 33-keypoint BlazePose 2D pose sequences | 20,000 repetition cycles, start/end timestamps | Academic Open Source | GitHub (`SvipRepetitionCounting/TransRAC`) | Convert to teacher density maps |
+| **MultiPosture** | Candidate / Priority 2 | 33-joint MediaPipe Pose Heavy (seated chair) | Seated chair posture classes, lateral/trunk lean | CC BY 4.0 Open Access | Zenodo (Prado et al., 2024) | Calibrate seated trunk lean thresholds |
+| **SERE** | Restricted / Priority 1 | ZED 3D skeletons + MediaPipe 3D; 18-20 stroke | 5 ADL rehab exercises; frame-level compensation | Research DUA Required | VisLab, ISR, Instituto Superior Técnico | Submit institutional DUA to VisLab |
+| **TULE / TRSPD** | Restricted / Priority 1 | Kinect v2 25-joint skeleton; 15 stroke patients | 3 upper-limb rehab exercises; trunk lean/hiking | Open Research Access | Kaggle / Toronto Rehab KITE | Ingest Kinect 25-to-33 joint mapping |
+| **InclusiveVidPose** | Restricted / Priority 2 | 313 video clips (327k frames), 398 amputees | 25 keypoints with residual limb endpoints | Institutional DUA Required | Anonymous Accept / Custodian | Request DUA for non-commercial research |
+| **KIMORE** | Candidate / Priority 2 | Kinect v2 RGB-D + 25-joint 3D skeleton; 78 subj | 5 clinical exercises; physician scores & deviation | Research Access on Request | IEEE TNSRE (DOI: 10.1109/TNSRE.2019.2923060) | Verify download terms and label mapping |
+| **KERAAL** | Candidate / Priority 2 | Kinect v2 3D + BlazePose 2D; 21 subjects (LBP) | Clinician error types, body parts, error intervals | CC BY-NC-SA 4.0 | IMT Atlantique (`keraal.enstb.org`) | Map clinician error labels to quality heads |
+| **SAFER-Activities** | Candidate / Priority 2 | 2D/3D pose + RGB; dedicated wheelchair split | Action intervals, wheelchair transfers & maneuvers | CC BY-NC-SA 4.0 | Hugging Face (`SAFER-Activities`) | Isolate wheelchair robustness challenge split |
+| **WheelPose** | Candidate / Priority 3 | Synthetic wheelchair poses + 2,464 RGB images | 16 action classes, bounding boxes, 2D keypoints | Code MIT; images fair-use | GitHub (`hilab-open-source/wheelpose`) | Ingest for front-end detector evaluation |
+| **WheelPoser-IMU** | Auxiliary / Sensor | 167 min paired IMU + optical mocap; wheelchair | Wheelchair propulsion and pressure-relief motions | CC BY-NC 4.0 | GitHub (`axle-lab/WheelPoser`) | Preserve for future sensor-fusion branch |
+| **Post-Stroke EMG/Kin** | Candidate / Priority 2 | 3D Vicon mocap + surface EMG; 10 stroke + 10 ctl | 6 functional tasks; Fugl-Meyer (FMA-UE) scores | CC BY 4.0 Open Access | Scientific Data (DOI: 10.1038/s41597-025-06174-3) | Map optical trajectories to smoothness head |
+| **Upper Limb Stroke** | Candidate / Priority 2 | 491 smartphone RGB video clips, 10 volunteers | Shoulder flexion/abduction; complete vs incomplete | CC BY 4.0 Open Access | Elsevier Data in Brief (2026) | Extract MediaPipe pose for partial reps |
+| **GaitEncoder** | Pretraining / Auxiliary | Markered mocap + OpenCap markerless video | 657 individuals across 7 clinical pathologies | Open Research via SimTK | Stanford University / SimTK | Kinematic foundation pretraining |
+| **AddBiomechanics** | Pretraining / Auxiliary | 10,000+ mocap trials, 70+ hrs inverse kinematics | Joint angles, angular velocities, musculoskeletal | CC BY 4.0 Open Access | Stanford University (`addbiomechanics.org`) | Validate physical joint velocity bounds |
+| **LLM-FMS** | Candidate / Priority 3 | RTMPose 2D keypoints (1,812 frames), 45 subjects | 7 Functional Movement Screen actions, error scores | Open Access Research | PLOS ONE (DOI: 10.1371/journal.pone.0318973) | Map visual deviations to quality rules |
+| **AHA-3D** | Candidate / Priority 3 | Kinect v2 3D skeleton at 30 FPS; 21 subjects | Chair sit-to-stand, arm curls; elderly scores | Research Access on Request | BMVC / CMU Portugal / Univ. Lisbon | Test slow-tempo repetition robustness |
+| **Countix / Countix-AV**| Teacher / Pretraining | ~5,000 video clips in the wild; diverse cohort | Repetition counts, cycle periodicity intervals | Creative Commons / Research | Google Research / DeepMind | Pretraining self-similarity embeddings |
+| **UCFRep** | Benchmark / Challenge | 526 video sequences, 23 cyclical action classes | Per-repetition boundary timestamps, cycle count | Academic Open Source | CVPR 2020 / GitHub | Benchmark variable-cadence counting |
+| **QUVA Repetition** | Benchmark / Challenge | 100 in-the-wild video clips with complex dynamics | Frame-level repetition count, instantaneous freq | Academic Open Access | Univ. of Amsterdam (CVPR 2018) | Test non-stationary cadence debouncing |
+| **Fitness-AQA** | Quality Pretraining | In-the-wild video clips of resistance training | Fine-grained quality assessment, movement errors | Non-Commercial Research | GitHub (`ParitoshParmar/Fitness-AQA`) | Pretrain row and press form feedback |
+| **QEVD / FIT-300K** | Quality Pretraining | 474 hours video, 289k clips across 148 exercises | Coach corrective feedback, form variation classes | Qualcomm Research License | Qualcomm Developer Network | Pretrain form-feedback language prior |
+
+---
+
+## Detailed Catalog by Domain
+
+### Category 1: Target Population — Upper-Limb Differences, Amputees & Prosthetics
+
+#### 1. ROAG (Reaching Over A Grid)
+- **Official Citation**: Imperial College London, Manipulation and Touch Lab (2024). *ROAG: Reaching Over A Grid Dataset for Upper-Limb Impairment and Prosthesis Kinematics*.
+- **Repository / DOI**: [Imperial College Project](https://www.imperial.ac.uk/manipulation-touch/open-source/dataset/roag-dataset/) | [Zenodo: 13908725](https://zenodo.org/records/13908725).
+- **Modalities & Setup**: 3D optical motion capture (Qualisys / Vicon) tracking Cartesian trajectories of the torso, shoulder, arm, and wrist across 49 reach targets on an interactive vertical/horizontal grid.
+- **Participants & Cohort**: 7 able-bodied control participants and 2 individuals with transradial amputations using body-powered and myoelectric prostheses. Additional trials include orthotic wrist bracing on able-bodied controls to simulate restricted range of motion.
+- **Exercises & Tasks**: 2,450 reaching trajectories across variable heights, depths, and reach angles.
+- **Supervision & Labels**: 3D spatial trajectories, reach completion timestamps, compensatory torso flexion/lateral lean angles, and reaching asymmetry.
+- **License & Access**: Creative Commons Attribution 4.0 International (CC BY 4.0). Fully open download.
+- **AdaptFit Ingestion Role**: **Direct Ground Truth for Single-Arm Transradial Adaptation**. Projected via a virtual pinhole camera into normalized 2D coordinates to train the trunk compensation head and calibrate reach geometry for single-arm users.
+
+#### 2. InclusiveVidPose
+- **Official Citation**: Anonymous Accept (2024–2025). *InclusiveVidPose: A Video Pose Estimation Benchmark for Individuals with Amputations and Limb Differences*, ICLR 2025.
+- **Repository / URL**: [InclusiveVidPose Project](https://anonymous-accept.github.io/inclusivevidpose/).
+- **Modalities & Setup**: In-the-wild video clips (30 FPS RGB) capturing diverse unconstrained environments, viewpoints, and lighting conditions.
+- **Participants & Cohort**: 398 individuals with congenital limb differences, upper-limb amputations (transradial, transhumeral), lower-limb amputations (transtibial, transfemoral), and prosthetic devices.
+- **Volume**: 313 video clips, 327,000+ annotated frames.
+- **Supervision & Labels**: 25 specialized anatomical keypoints including explicit residual-limb endpoints, biological vs. prosthetic limb distinction flags, bounding boxes, and segmentation masks.
+- **License & Access**: Governed by an institutional Data Use Agreement (DUA) strictly restricting use to non-commercial academic research. Commercial deployment prohibited without explicit custodian consent.
+- **AdaptFit Ingestion Role**: **Pose Front-End Fine-Tuning & Masking Verification**. Calibrates the MediaPipe 33-keypoint pose extractor to distinguish between an unobserved limb (occluded by camera framing) and an absent limb (amputation/congenital difference), preventing phantom limb hallucination.
+
+#### 3. Ottobock #DearAI Community Library (LDPR-UL & LDPR-LL)
+- **Official Citation**: Ottobock Healthcare & Microsoft (2024–2025). *Limb Difference Pose Recognition Library: Upper-Limb (LDPR-UL) and Lower-Limb (LDPR-LL)*.
+- **Repository / Host**: Hugging Face Datasets (`ottobock/ldpr-ul`, `ottobock/ldpr-ll`).
+- **Modalities & Setup**: Curated high-resolution images and synchronized short video sequences capturing diverse real-world activities.
+- **Participants & Cohort**: Global community cohort of upper-limb and lower-limb amputees wearing modern prostheses (C-Leg, Bebionic, Genium) or moving without prostheses.
+- **Supervision & Labels**: Anatomical category tags, residual limb bounding contours, prosthetic hardware type tags, and body orientation metadata.
+- **License & Access**: Open Community Access for accessibility and assistive technology engineering.
+- **AdaptFit Ingestion Role**: **Visual Validation & Synthetic Occlusion Calibration**. Provides genuine anatomical ground truth to validate the capability weight vectors ($w_c$) across transradial and transtibial profiles.
+
+#### 4. Multimodal Biomechanical Dataset for Transtibial Amputees
+- **Official Citation**: Springer Nature / Figshare (2024). *Synchronized EMG, Kinematics, and Kinetic Dynamics in Transtibial Prosthesis Users*.
+- **Repository / DOI**: Figshare Open Repository.
+- **Modalities & Setup**: Synchronized 16-channel wireless surface electromyography (sEMG), 3D optical motion capture, and tri-axial ground reaction force plates.
+- **Participants & Cohort**: 45 participants: 15 unilateral transtibial amputees and 30 able-bodied matched controls.
+- **Exercises & Tasks**: Level walking, incline ramp ascent/descent, stair climbing, and seated-to-standing transitions.
+- **Supervision & Labels**: Bilateral joint kinematics (hip, knee, ankle angles), ground reaction force symmetry index, stride cycle phase segmentation.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Lower-Limb Asymmetry Calibration**. Provides biomechanical bounds for single-leg loading and asymmetry detection during single-leg knee extensions and seated marches.
+
+#### 5. Transfemoral Amputee Sit-to-Stand Biomechanics Dataset
+- **Official Citation**: PLOS ONE / Figshare (2023). *Biomechanical Compensations during Sit-to-Stand Transitions in Transfemoral Amputees*.
+- **Repository / DOI**: Figshare Open Data.
+- **Modalities & Setup**: Full-body 3D motion capture (12-camera Vicon system) and dual embedded force plates.
+- **Participants & Cohort**: Unilateral transfemoral amputees utilizing microprocessor-controlled prosthetic knee joints compared to age-matched controls.
+- **Exercises & Tasks**: Repetitive sit-to-stand and stand-to-sit transfers from chairs of standardized heights (43 cm and 48 cm).
+- **Supervision & Labels**: Movement initiation/completion timestamps, peak vertical force asymmetry, trunk flexion angles, and pelvic tilt.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Single-Leg Sit-to-Stand Adaptation Anchor**. Ingested to train repetition phase transitions and trunk compensation thresholds for AdaptFit chair-assisted lower-body routines.
+
+#### 6. Transhumeral Loading & Upper-Extremity Kinematics
+- **Official Citation**: Zenodo (2023). *Upper-Extremity Kinematic Compensations Under Simulated Transhumeral Prosthetic Loading*, DOI: 10.5281/zenodo.7738294.
+- **Repository / Host**: Zenodo Open Science Repository.
+- **Modalities & Setup**: 3D passive reflective marker motion capture tracking shoulder girdle, clavicle, thorax, and arm segments.
+- **Participants & Cohort**: Non-amputee participants fitted with transhumeral immobilizers and prosthesis simulators.
+- **Exercises & Tasks**: Functional arm elevations, overhead reaching, bicep curl movements with varying terminal loads.
+- **Supervision & Labels**: Glenohumeral elevation, scapular upward rotation, trunk lateral lean, and movement velocity profiles.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Transhumeral Compensation Modeling**. Ingested to model compensation kinematics when the elbow joint is absent or fixed, ensuring the form feedback engine does not demand elbow flexion from transhumeral users.
+
+---
+
+### Category 2: Target Population — Wheelchair & Seated Kinematics / Sports
+
+#### 7. Pipelines Open Dataset
+- **Official Citation**: La Trobe Sports Biomechanics Group (2026). *Pipelines: Synchronized Multi-Camera Video and 3D Optical Kinematics for Wheelchair Propulsion and Athletic Movements*, Figshare.
+- **Repository / Host**: Figshare Repository.
+- **Modalities & Setup**: 8 synchronized 4K high-speed video cameras capturing markerless movement paired with a 14-camera Vicon optical motion capture system.
+- **Participants & Cohort**: 18 healthy young adult athletic participants performing wheelchair maneuvers and sports movements.
+- **Exercises & Tasks**: Wheelchair propulsion across variable resistance settings, rapid starts, directional turns, and seated upper-limb reaches.
+- **Supervision & Labels**: Millisecond-synchronized propulsion push/recovery cycle timestamps, 3D joint centers, and ground truth push frequency.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Wheelchair Camera-to-Mocap Parity Anchor**. Used to benchmark 2D MediaPipe keypoint accuracy against 3D optical ground truth in wheelchair propulsion and calibrate pushrim phase segmentation.
+
+#### 8. Purdue Wheelchair Sports Pose Estimation Dataset
+- **Official Citation**: Purdue University Assistive Technology Lab (2024). *Wheelchair-Specific Keypoint Topology and Occlusion Modeling in Wheelchair Sports*, IEEE Access.
+- **Repository / Host**: IEEE Dataport / Purdue Institutional Archive.
+- **Modalities & Setup**: Broadcast and multi-angle court-side RGB video of wheelchair rugby and basketball tournaments.
+- **Participants & Cohort**: 60+ competitive wheelchair athletes with diverse spinal cord injuries, amputations, and neuromuscular conditions.
+- **Supervision & Labels**: 2D body keypoints plus 8 specialized wheelchair landmark points (wheel hub centers, pushrim apex, frame footrest, backrest top).
+- **License & Access**: Academic Research Access.
+- **AdaptFit Ingestion Role**: **Wheelchair Occlusion Modeling**. Ingested to train landmark confidence masking when wheelchair wheels and side guards occlude hip and thigh landmarks.
+
+#### 9. SAFER-Activities
+- **Official Citation**: SAFER Consortium (2024). *SAFER-Activities: A Multimodal Action and Fall Dataset with Dedicated Wheelchair Subject Cohorts*, Hugging Face Datasets.
+- **Repository / Host**: Hugging Face (`SAFER-Activities/SAFER-Activities`).
+- **Modalities & Setup**: Multi-view RGB-D cameras (Azure Kinect), 2D pose keypoints, lifted 3D skeletons, and person bounding boxes.
+- **Participants & Cohort**: Multi-generational cohort with dedicated, isolated splits for individuals using manual wheelchairs and mobility walkers.
+- **Exercises & Tasks**: Activities of daily living, seated transfers, wheelchair propulsion, seated reaches, and resting postures.
+- **Supervision & Labels**: Temporal action boundaries, activity class labels, 2D/3D joint coordinates, and out-of-distribution non-lab test partitions.
+- **License & Access**: CC BY-NC-SA 4.0.
+- **AdaptFit Ingestion Role**: **Wheelchair Robustness Benchmark Split**. Serves as an isolated challenge set to verify that seated wheelchair users maintain high movement family accuracy without false pose classification.
+
+#### 10. WheelPose & Users in Wheelchairs Dataset
+- **Official Citation**: HiLab, University of Illinois (2023). *WheelPose: Synthetic and In-the-Wild Pose Estimation for Wheelchair Users*, CVPR Workshops.
+- **Repository / Host**: GitHub (`hilab-open-source/wheelpose`).
+- **Modalities & Setup**: Synthetic CAD-rendered wheelchair human figures paired with 2,464 annotated RGB frames sampled from 84 in-the-wild YouTube video recordings.
+- **Supervision & Labels**: 2D bounding boxes, full-body keypoints, wheelchair frame bounding polygons, and 16 action categories.
+- **License & Access**: Code is MIT licensed; image dataset available under academic fair use terms.
+- **AdaptFit Ingestion Role**: **Pose Front-End Detector Fine-Tuning**. Prevents MediaPipe from failing when the lower torso is obscured by wheelchair seating hardware.
+
+#### 11. WheelPoser-IMU
+- **Official Citation**: Axle Lab (2023). *WheelPoser: Full-Body Pose Estimation for Wheelchair Users Using Sparse Inertial Sensors*, ACM IMWUT / UbiComp.
+- **Repository / Host**: GitHub (`axle-lab/WheelPoser`).
+- **Modalities & Setup**: 167 minutes of synchronized 6-DOF IMU data from 5 body locations and high-density optical motion capture.
+- **Participants & Cohort**: Full-time manual wheelchair users performing everyday propulsion and fitness maneuvers.
+- **Supervision & Labels**: Continuous joint kinematics, push cycle frequency, and pressure-relief lean timestamps.
+- **License & Access**: CC BY-NC 4.0.
+- **AdaptFit Ingestion Role**: **Wheelchair Biomechanical Prior**. Used to benchmark kinematic velocity profiles and seated stability models.
+
+#### 12. SimTK Wheelchair Propulsion & Shoulder Biomechanics
+- **Official Citation**: Stanford University / SimTK (2022–2024). *Glenohumeral Kinematics and Muscle Forces During Manual Wheelchair Propulsion*, SimTK Project 142.
+- **Repository / Host**: [SimTK Project](https://simtk.org/projects/wheelchairprop).
+- **Modalities & Setup**: Multi-camera motion capture paired with instrumented SmartWheel pushrim force/torque transducers.
+- **Supervision & Labels**: Pushrim contact onset and release timestamps, cadence (pushes/min), 3D glenohumeral joint angles, and scapular kinematics.
+- **License & Access**: SimTK Open Research License.
+- **AdaptFit Ingestion Role**: **Pushrim Phase & Tempo Prior**. Maps upper-limb propulsion phases into concentric (drive phase) and eccentric (recovery phase) temporal templates.
+
+#### 13. MultiPosture Dataset
+- **Official Citation**: Prado et al., Zenodo (2024). *MultiPosture: Seated Ergonomic Posture Dataset with MediaPipe Pose 33-Keypoint Annotations*, DOI: 10.5281/zenodo.10842954.
+- **Repository / Host**: Zenodo Open Access Archive.
+- **Modalities & Setup**: High-resolution RGB webcam video processed into 33-joint MediaPipe Pose coordinates at 30 FPS.
+- **Participants & Cohort**: 13 diverse participants seated in standard office and mobility chairs.
+- **Exercises & Tasks**: Sustained seated postures: upright, forward slump, lateral left lean, lateral right lean, and backward recline.
+- **Supervision & Labels**: 33 2D/3D coordinates, posture category, and calibrated torso deviation angles from vertical.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Seated Trunk Compensation Baseline**. Directly provides calibrated ground truth for torso angle thresholds (lean angle > 15 deg) to detect compensatory leaning during seated exercise.
+
+---
+
+### Category 3: Stroke Rehabilitation, Hemiparesis & Clinical Compensations
+
+#### 14. SERE (StrokE Rehab Exercises)
+- **Official Citation**: VisLab, Institute for Systems and Robotics, Instituto Superior Técnico, Lisbon (2024–2025). *SERE: A Comprehensive Multi-Sensor Stroke Rehabilitation Exercise Dataset with Frame-Level Clinical Compensations*.
+- **Repository / Host**: Institutional Repository (ISR Lisbon).
+- **Modalities & Setup**: Synchronized ZED stereo depth camera (yielding 3D skeletons) and high-resolution RGB video processed with MediaPipe 33-joint pose at 30 FPS.
+- **Participants & Cohort**: 18–20 chronic post-stroke patients exhibiting varying degrees of hemiparesis and upper-limb motor limitation.
+- **Exercises & Tasks**: 5 functional rehabilitation exercises: hair combing, teeth brushing, face washing, hip flexion, and putting on socks.
+- **Supervision & Labels**: Video-level and frame-level compensatory movements (shoulder hiking, trunk lateral flexion, forward head tilt), range of motion (ROM) quality scores, and movement smoothness indices annotated by licensed physical therapists.
+- **License & Access**: Institutional Data Use Agreement (DUA) with VisLab (`ana.coias@tecnico.ulisboa.pt`).
+- **AdaptFit Ingestion Role**: **Highest Priority for Quality & Compensation Heads**. Directly supplies frame-level trunk compensation and ROM labels mapped to `quality_logits` and `expert_quality_logits`.
+
+#### 15. Toronto Rehab Stroke Pose Dataset (TRSPD / TULE)
+- **Official Citation**: Taati et al., KITE Research Institute, Toronto Rehabilitation Institute (2023). *TULE: Three Upper-Limb Exercises for Stroke Rehabilitation Kinematic Analysis*, IEEE TNSRE.
+- **Repository / Host**: Kaggle / GitHub (`zhiderek/TRSPD`).
+- **Modalities & Setup**: Microsoft Kinect v2 depth sensor recording 25-joint 3D/2D skeletal coordinate trajectories at 30 FPS.
+- **Participants & Cohort**: 15 post-stroke individuals with mild-to-severe hemiparetic impairment alongside age-matched healthy controls.
+- **Exercises & Tasks**: 3 upper-limb reaching and elevation exercises performed with both affected and unaffected arms.
+- **Supervision & Labels**: Frame-by-frame clinical ratings of trunk lean, shoulder abduction compensation, and movement trajectory deviation.
+- **License & Access**: Open Research Access via Kaggle.
+- **AdaptFit Ingestion Role**: **Clinical Compensation Ground Truth**. Ingested to evaluate the trunk compensation head and calibrate asymmetry metrics between affected and unaffected limbs.
+
+#### 16. Post-Stroke Kinematic & EMG Functional Tasks
+- **Official Citation**: Nature Scientific Data (Dec 2025). *Upper-Limb Kinematic and Electromyographic Dataset of Post-Stroke Individuals During Functional Motor Tasks*, DOI: 10.1038/s41597-025-06174-3.
+- **Repository / Host**: Figshare / Scientific Data Open Repository.
+- **Modalities & Setup**: 3D Vicon optical motion capture (36 reflective markers) paired with 16-channel wireless surface EMG.
+- **Participants & Cohort**: 10 post-stroke individuals (ages 62–82) and 10 healthy control participants (ages 24–73).
+- **Exercises & Tasks**: 6 functional motor tasks: reaching forward to lift an object, placing objects at variable heights, touching the face, and forearm rotation.
+- **Supervision & Labels**: Clinical Fugl-Meyer Upper Extremity (FMA-UE) scores, movement duration, peak velocity timestamps, spectral arc length (SPARC), and dimensionless jerk smoothness metrics.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Smoothness & Reach Quality Supervision**. Provides gold-standard optical ground truth to calibrate the mathematical SPARC smoothness index in `training/src/features/anatomy.py`.
+
+#### 17. Upper Limb Stroke Rehabilitation Exercise Video Dataset
+- **Official Citation**: Nandana et al., Elsevier Data in Brief (June 2026). *Home-Based Upper Limb Stroke Rehabilitation Exercise Video Dataset*, DOI: 10.1016/j.dib.2026.112819.
+- **Repository / Host**: Mendeley Data / Elsevier.
+- **Modalities & Setup**: 491 video clips (30 FPS RGB) captured across multiple smartphone models and webcams under natural home lighting.
+- **Participants & Cohort**: 10 volunteer participants performing unconstrained home rehabilitation routines.
+- **Exercises & Tasks**: 4 rehabilitation exercises: shoulder flexion, shoulder abduction, horizontal abduction, and elbow extension.
+- **Supervision & Labels**: Repetition cycle timestamps, complete vs. incomplete execution labels, and user difficulty levels.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Partial Repetition & Failure Modeling**. Ingested to train the causal TCN to detect aborted or incomplete repetitions without triggering false increment events.
+
+#### 18. U-Limb Database
+- **Official Citation**: GigaScience / Oxford Academic (2021–2024). *U-Limb: A Multi-Center Multimodal Database for Upper-Limb Rehabilitation Kinematics*, DOI: 10.1093/gigascience/giab043.
+- **Repository / Host**: GigaDB Open Repository.
+- **Modalities & Setup**: 3D optical motion capture, synchronized surface EMG, EEG, and robotic haptic interaction forces.
+- **Participants & Cohort**: 156 participants: 91 able-bodied controls and 65 post-stroke individuals.
+- **Exercises & Tasks**: Unilateral reaching, target grasping, and trajectory tracing.
+- **Supervision & Labels**: Fugl-Meyer Assessment (FMA) scores, task segmentation intervals, and kinematic reach error.
+- **License & Access**: Open Access Research Repository.
+- **AdaptFit Ingestion Role**: **Cross-Subject Impairment Prior**. Ingested to evaluate cross-subject generalization on unilateral arm reach trajectories.
+
+#### 19. REHAB-120
+- **Official Citation**: Figshare (2023). *Longitudinal Inertial Sensor Dataset of Upper-Limb Recovery in 120 Stroke Inpatients*.
+- **Repository / Host**: Figshare Open Repository.
+- **Modalities & Setup**: Wearable tri-axial IMU sensor recordings across 3 body segments.
+- **Participants & Cohort**: 120 acute and subacute stroke inpatients tracked longitudinally across a 3-week rehabilitation program.
+- **Exercises & Tasks**: 27 standardized clinical assessment tasks and 16 functional daily training tasks.
+- **Supervision & Labels**: Longitudinal clinical score improvements, repetition counts, and movement speed profiles.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Longitudinal Rehab Progress Prior**. Ingested to validate multi-session progression curves and tempo stabilization.
+
+#### 20. Post-Stroke Upper Limb Kinematics
+- **Official Citation**: Zenodo (2021). *Inertial Sensor Kinematics for Upper Limb Motor Recovery After Stroke*, DOI: 10.5281/zenodo.4705352.
+- **Repository / Host**: Zenodo Open Archive.
+- **Modalities & Setup**: Multi-sensor IMU kinematic trajectories.
+- **Participants & Cohort**: 20 chronic stroke patients and 5 healthy controls.
+- **Exercises & Tasks**: 30 everyday motor actions and exercise tasks.
+- **Supervision & Labels**: Fugl-Meyer motor scores, joint acceleration profiles, and spectral smoothness scores.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Spectral Smoothness Calibration**. Used to benchmark the smoothness metric against clinical impairment ratings.
+
+#### 21. Full-Body Gait and Mobility in Stroke Survivors
+- **Official Citation**: Figshare (2024). *Comprehensive Full-Body Biomechanics and Joint Kinematics in Post-Stroke Hemiparesis*.
+- **Repository / Host**: Figshare Open Archive.
+- **Modalities & Setup**: 3D optical motion capture, ground reaction force plates, and wireless surface EMG.
+- **Participants & Cohort**: 50 stroke survivors and 138 able-bodied adult controls.
+- **Exercises & Tasks**: Walking, sit-to-stand transfers, single-leg steps, and obstacle clearance.
+- **Supervision & Labels**: Bilateral joint kinematics, ground reaction forces, and single-leg loading asymmetry indices.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Single-Leg Loading Asymmetry Anchor**. Ingested to validate single-leg weight-bearing capability masks during lower-body routines.
+
+#### 22. StrokeRehab
+- **Official Citation**: SimTK (2023). *StrokeRehab: A Kinematic and Sensor Dataset of Upper-Body Functional Primitives in Hemiparetic Stroke*, SimTK Project 812.
+- **Repository / Host**: [SimTK Project](https://simtk.org/projects/strokerehab).
+- **Modalities & Setup**: Synchronized wearable IMU sensors and video-extracted kinematic time series (3,372 trials).
+- **Participants & Cohort**: 51 stroke-impaired individuals and 20 age-matched healthy controls.
+- **Exercises & Tasks**: Naturalistic activities of daily living decomposed into functional primitives: reach, transport, reposition, stabilize, and idle.
+- **Supervision & Labels**: Fine-grained functional primitive state transition timestamps and impairment severity ratings.
+- **License & Access**: Open Access via SimTK account.
+- **AdaptFit Ingestion Role**: **Functional Primitive Pretraining**. Ingested to train the causal TCN to distinguish between active exercise phases and passive arm stabilization.
+
+#### 23. KIMORE (Kinect Motion Reconstruction)
+- **Official Citation**: IEEE Transactions on Neural Systems and Rehabilitation Engineering (2019). *KIMORE: A Kinect-Based Dataset for Upper-Body Physical Rehabilitation*, DOI: 10.1109/TNSRE.2019.2923060.
+- **Repository / Host**: IEEE Xplore / Institutional Google Drive.
+- **Modalities & Setup**: Microsoft Kinect v2 RGB-D camera capturing 25-joint 3D skeletal time series at 30 FPS.
+- **Participants & Cohort**: 78 participants: 44 healthy controls and 34 clinical patients with stroke, Parkinson's disease, or orthopedic low-back dysfunction.
+- **Exercises & Tasks**: 5 rehabilitation exercises: lateral trunk flexion, pelvic rotation, trunk rotation, shoulder abduction, and seated knee extension.
+- **Supervision & Labels**: Clinical physiotherapist scores (0–50 scale) and quantitative joint angle deviations.
+- **License & Access**: Open for academic research use upon request.
+- **AdaptFit Ingestion Role**: **Physician-Scored Quality Benchmark**. Ingested to benchmark the 4-dimensional quality heads against physical therapist clinical ratings.
+
+#### 24. KERAAL Low-Back-Pain Rehabilitation Dataset
+- **Official Citation**: IMT Atlantique (2020). *KERAAL: A Physical Rehabilitation Dataset for Low-Back-Pain Assessment*, Project Page.
+- **Repository / Host**: [KERAAL Project](https://keraal.enstb.org/KeraalDataset.html).
+- **Modalities & Setup**: Kinect v2 3D skeletal data, RGB video, and BlazePose 2D landmark trajectories at 30 FPS.
+- **Participants & Cohort**: 21 participants: 9 healthy subjects and 12 clinical low-back pain patients.
+- **Exercises & Tasks**: 3 rehabilitation exercises: torso flexion, lateral lean, and lunging.
+- **Supervision & Labels**: Fine-grained clinical annotations by physical therapists indicating error type, affected body part, and exact start/end timestamps of compensatory movement.
+- **License & Access**: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0).
+- **AdaptFit Ingestion Role**: **Trunk Compensation & Error Timing Supervision**. Directly trains the trunk compensation quality head with frame-accurate clinical labels.
+
+---
+
+### Category 4: Repetition Counting, Periodicity & Teacher Distillation
+
+#### 25. RepCount & RepCount-pose
+- **Official Citation**: CVPR 2022 (TransRAC) / CVPR 2023 (PoseRAC). *RepCount: A Large-Scale Video Dataset for Repetition Counting with BlazePose 33-Keypoint Annotations*.
+- **Repository / Host**: GitHub (`SvipRepetitionCounting/TransRAC`, `MiracleDance/PoseRAC`).
+- **Modalities & Setup**: 1,451 high-definition video sequences paired with 33-keypoint BlazePose 2D landmark sequences.
+- **Participants & Cohort**: Diverse global workout enthusiasts, fitness athletes, and home trainees.
+- **Exercises & Tasks**: Repetitive fitness and rehabilitation exercises: arm curls, band rows, squats, pull-ups, sit-ups, and lunges.
+- **Supervision & Labels**: 20,000+ per-repetition boundary timestamps (cycle start and cycle end) and 2 salient pose states per cycle.
+- **License & Access**: Academic Open Source Research License.
+- **AdaptFit Ingestion Role**: **Phase 4 Repetition Teacher Supervision**. Ingested to synthesize continuous repetition density maps for SSTRAC distillation and salient-state logits for PoseRAC distillation.
+
+#### 26. Countix & Countix-AV
+- **Official Citation**: Google Research (CVPR 2020, Dwibedi et al.). *Counting Out Time: Class-Agnostic Video Repetition Counting in the Wild*.
+- **Repository / Host**: Google Research Open Datasets / DeepMind.
+- **Modalities & Setup**: ~5,000 video clips extracted from YouTube covering unconstrained real-world settings.
+- **Exercises & Tasks**: Repetitive human activities including squats, push-ups, arm curls, barbell rows, and jumping jacks.
+- **Supervision & Labels**: Total repetition count, cycle start/end timestamps, and active repetition intervals.
+- **License & Access**: Creative Commons / Google Research Use Terms.
+- **AdaptFit Ingestion Role**: **Periodicity & Self-Similarity Foundation**. Used to pretrain the causal TCN temporal representation using self-supervised temporal similarity matrices.
+
+#### 27. UCFRep
+- **Official Citation**: CVPR 2020 (Zhang et al.). *Context-Aware Video Repetition Counting*.
+- **Repository / Host**: GitHub Open Repository.
+- **Modalities & Setup**: 526 video sequences curated from the UCF101 benchmark.
+- **Exercises & Tasks**: 23 diverse cyclical human action categories.
+- **Supervision & Labels**: Precise per-repetition boundaries and cycle counts across variable execution cadences.
+- **License & Access**: Academic Open Source.
+- **AdaptFit Ingestion Role**: **Variable-Scale Cadence Benchmark**. Evaluates the Phase 1 Finite State Machine decoder across extreme speed variations.
+
+#### 28. QUVA Repetition Dataset
+- **Official Citation**: University of Amsterdam (CVPR 2018, Runia et al.). *Real-World Repetition Counting with Non-Stationary Dynamics*.
+- **Repository / Host**: QUVA Deep Vision Lab Archive.
+- **Modalities & Setup**: 100 in-the-wild video sequences capturing sudden speed changes, camera jitter, and view transitions.
+- **Supervision & Labels**: Frame-accurate repetition counts and instantaneous cycle frequencies.
+- **License & Access**: Academic Open Access.
+- **AdaptFit Ingestion Role**: **Non-Stationary Cadence Testing**. Tests event debouncing and hysteresis logic during sudden accelerations and decelerations.
+
+#### 29. Fitness-AQA
+- **Official Citation**: Parmar et al. (2022). *Fitness-AQA: Action Quality Assessment for In-the-Wild Resistance Training*.
+- **Repository / Host**: GitHub (`ParitoshParmar/Fitness-AQA`).
+- **Modalities & Setup**: Unconstrained video clips of resistance training exercises.
+- **Exercises & Tasks**: Back squat, overhead barbell press, and barbell row.
+- **Supervision & Labels**: Fine-grained movement quality scores and body-part error classifications (e.g., knee collapse, excessive lumbar extension, asymmetrical elbow flare).
+- **License & Access**: Non-Commercial Research License.
+- **AdaptFit Ingestion Role**: **Row & Press Form Representation**. Ingested to train fine-grained error detection on AdaptFit's one-arm row and seated press routines.
+
+#### 30. QEVD / FIT-300K
+- **Official Citation**: Qualcomm Research (2023). *QEVD: Qualcomm Exercise Video Dataset and FIT-300K Multimodal Fitness Corpus*.
+- **Repository / Host**: Qualcomm Developer Network.
+- **Modalities & Setup**: 474 hours of synchronized exercise video (289,000 short clips) covering 148 exercise categories and variants.
+- **Supervision & Labels**: Coach corrective feedback, form variation categories, common execution mistakes, and pacing labels.
+- **License & Access**: Qualcomm Research License Agreement.
+- **AdaptFit Ingestion Role**: **Language & Form Adaptation Prior**. Ingested to pretrain the form-feedback classifier on common exercise deviations.
+
+---
+
+### Category 5: Physical Therapy Kinematics, Posture & Biomechanical Foundations
+
+#### 31. DynTherapy
+- **Official Citation**: Jordan University of Science and Technology (2024). *DynTherapy: A 33-Keypoint MediaPipe Pose Dataset for Dynamic Physical Therapy Exercises*, Mendeley Data, DOI: 10.17632/hghdm99rwg.1.
+- **Repository / Host**: Mendeley Data Open Repository.
+- **Modalities & Setup**: **33 MediaPipe pose keypoints at 30 FPS**—identical to AdaptFit's canonical landmark schema!
+- **Participants & Cohort**: Multi-subject cohort recorded across multiple rooms, camera distances, and lighting environments.
+- **Exercises & Tasks**: 7 physical therapy exercises: knee raises, seated shoulder press, shoulder flexion, lateral raises, leg raises, glute bridges, and arm curls.
+- **Supervision & Labels**: Repetition cycle timestamps, explicit "Start" and "End" boundary annotations, and movement family labels.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Direct Drop-In Supervision (Highest Priority)**. Immediate 1:1 landmark correspondence allows direct integration into `training/src/data/adapters.py` without coordinate transformations, providing immediate repetition boundary supervision.
+
+#### 32. UI-PRMD (University of Idaho Physical Rehabilitation Movement Dataset)
+- **Official Citation**: University of Idaho (2018–2020). *UI-PRMD: A Non-Invasive Motion Capture Dataset for Physical Therapy Movement Assessment*, OpenDataLab.
+- **Repository / Host**: University of Idaho / OpenDataLab.
+- **Modalities & Setup**: Synchronized 10-camera Vicon optical motion capture (3D Cartesian coordinates and joint angles) and Microsoft Kinect v2 skeletal coordinates.
+- **Participants & Cohort**: 10 healthy participants performing 10 optimal repetitions and 10 non-optimal (faulty) repetitions for every exercise.
+- **Exercises & Tasks**: 10 physical therapy exercises: deep squat, lunge, seated sit-to-stand, shoulder abduction, shoulder internal/external rotation.
+- **Supervision & Labels**: Full-body 3D positions, calculated joint angles, and binary optimal vs. non-optimal execution labels.
+- **License & Access**: Open Access Research License.
+- **AdaptFit Ingestion Role**: **Gold-Standard PT Movement Modeling**. Dual-sensor data provides ground truth for correct execution vs. common movement compensations.
+
+#### 33. MobiPhysio
+- **Official Citation**: Elsevier Data in Brief / ResearchGate (2024–2026). *MobiPhysio: A Mobile Smartphone Video Dataset for Active Range of Motion Physiotherapy Assessment*, DOI: 10.1016/j.dib.2026.112819.
+- **Repository / Host**: Kaggle / Elsevier Data in Brief.
+- **Modalities & Setup**: 2D RGB smartphone video (3,686 clips) recorded on real mobile devices under varying household conditions.
+- **Participants & Cohort**: 58 participants evaluated by licensed physiotherapists.
+- **Exercises & Tasks**: 9 Active Range-of-Motion (AROM) physiotherapy exercises.
+- **Supervision & Labels**: Exercise Accuracy Assessment Questionnaire (EAAQ) scores certified by physical therapists and video temporal segmentation.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Smartphone Realism & Quality Calibration**. Used to evaluate mobile camera pose jitter and benchmark the continuous ROM head.
+
+#### 34. Arm-CODA
+- **Official Citation**: Combettes et al., Image Processing On Line (IPOL 2024). *Arm-CODA: Upper-Limb Kinematic Time Series Dataset*, DOI: 10.5201/ipol.2024.494.
+- **Repository / Host**: IPOL Open Data Archive.
+- **Modalities & Setup**: 3D Cartesian Optoelectronic Dynamic Anthropometer (CODA) tracking 34 active anatomical markers at 100 Hz (240 time series, 2.5 hours).
+- **Participants & Cohort**: 16 healthy adult subjects.
+- **Exercises & Tasks**: 15 routine upper-limb movements including arm raises, hair combing, forward reach, and circular tracking.
+- **Supervision & Labels**: Exact cycle start/end timestamps (>= 2 iterations per sequence), movement speed, smoothness, and trajectory efficiency.
+- **License & Access**: Open Access / Open Data.
+- **AdaptFit Ingestion Role**: **Millisecond Biomechanical Reference**. Calibrates temporal smoothness and tempo metrics on millisecond-accurate optical ground truth.
+
+#### 35. Physical Therapy Exercises Dataset
+- **Official Citation**: UCI Machine Learning Repository (2022). *Wearable Inertial Sensor Dataset for Physical Therapy Form Classification*.
+- **Repository / Host**: UCI ML Repository / Kaggle.
+- **Modalities & Setup**: 5 tri-axial Xsens IMU sensors placed on the chest, upper arms, and forearms recording at 25 Hz.
+- **Participants & Cohort**: 5 participants performing 8 standardized physical therapy exercises.
+- **Supervision & Labels**: 3 execution styles: correct execution, excessively fast tempo, and truncated range of motion.
+- **License & Access**: Open Access UCI License.
+- **AdaptFit Ingestion Role**: **Tempo & ROM Perturbation Prior**. Calibrates threshold boundaries for detecting rushed repetitions and incomplete range of motion.
+
+#### 36. PhysioNet Posture & Gait Analysis
+- **Official Citation**: Palermo et al., PhysioNet (Nov 2021). *Multimodal Motion Capture Dataset for Posture and Gait Analysis During Smart Walker Use*, DOI: 10.13026/fyxw-n385.
+- **Repository / Host**: PhysioNet Open Repository.
+- **Modalities & Setup**: Synchronized dual depth cameras and 17-sensor Xsens MTw Awinda mocap (166,000 frames).
+- **Participants & Cohort**: Clinical mobility participants using assistive walking and support devices.
+- **Supervision & Labels**: 3D joint centers, posture tilt angles, and mobility device interaction intervals.
+- **License & Access**: PhysioNet Contributor License.
+- **AdaptFit Ingestion Role**: **Mobility Aid Occlusion Modeling**. Models camera occlusions caused by walkers, chair arms, and seated support frames.
+
+#### 37. GaitEncoder Dataset
+- **Official Citation**: Stanford University / SimTK (2024–2025). *GaitEncoder: Large-Scale Foundation Kinematic Dataset Across Diverse Movement Pathologies*, SimTK Project.
+- **Repository / Host**: [SimTK Project](https://simtk.org/projects/gaitencoder).
+- **Modalities & Setup**: Markered optical mocap paired with markerless OpenCap video kinematics.
+- **Participants & Cohort**: 657 individuals (ages 8–86) representing 7 clinical pathologies including cerebral palsy, stroke, and amputations.
+- **Supervision & Labels**: Scaled OpenSim musculoskeletal kinematic models and pathology classifications.
+- **License & Access**: Open Research Access via SimTK.
+- **AdaptFit Ingestion Role**: **Markerless Clinical Foundation**. Ingested for kinematic representation pretraining across diverse clinical pathologies.
+
+#### 38. AddBiomechanics Dataset 1.0
+- **Official Citation**: Stanford University (2023–2025). *AddBiomechanics: A Standardized Open Database of 10,000+ Human Motion Trials and Musculoskeletal Dynamics*, `addbiomechanics.org`.
+- **Repository / Host**: AddBiomechanics / SimTK.
+- **Modalities & Setup**: 10,000+ optical mocap trials, 70+ hours of full-body inverse kinematics and joint torques.
+- **Supervision & Labels**: Musculoskeletal geometry, 3D joint angles, angular velocities, and joint reaction forces.
+- **License & Access**: CC BY 4.0 Open Access.
+- **AdaptFit Ingestion Role**: **Anatomical Consistency Prior**. Enforces physical angular velocity limits (|omega| < 720 deg/s) to prevent unphysiological pose predictions.
+
+#### 39. LLM-FMS
+- **Official Citation**: Xing et al., PLOS ONE (March 2025). *LLM-FMS: Large Language Models with Computer Vision for Functional Movement Screen Assessment*, DOI: 10.1371/journal.pone.0318973.
+- **Repository / Host**: PLOS ONE / ResearchGate.
+- **Modalities & Setup**: 2D RTMPose keypoints and synchronized RGB frames (1,812 frames).
+- **Participants & Cohort**: 45 subjects performing 7 Functional Movement Screen (FMS) patterns.
+- **Supervision & Labels**: Hierarchical movement quality scores (0–3), body-segment error tags, and compensatory movement rules.
+- **License & Access**: Open Access Research.
+- **AdaptFit Ingestion Role**: **Interpretable Compensation Rules**. Maps 2D landmark deviations to actionable form feedback advice.
+
+#### 40. AHA-3D Dataset
+- **Official Citation**: Antunes et al., BMVC (2018). *AHA-3D: A Kinect v2 Skeleton Dataset for Active and Healthy Aging Fitness Assessment*, CMU Portugal / Univ. Lisbon.
+- **Repository / Host**: Institutional Archive / BMVA.
+- **Modalities & Setup**: Microsoft Kinect v2 3D skeletal joint sequences at 30 FPS.
+- **Participants & Cohort**: 21 subjects: 11 young adults and 10 elderly adults.
+- **Exercises & Tasks**: Standardized senior fitness test battery: chair sit-to-stand, arm curls, 2-minute step-in-place.
+- **Supervision & Labels**: Frame-accurate action segmentation, repetition boundary timestamps, and functional fitness scores.
+- **License & Access**: Research Access on Request.
+- **AdaptFit Ingestion Role**: **Slow-Tempo & Elderly Mobility Baseline**. Evaluates decoder robustness on slow repetitions (T_cycle > 4.5s) that exceed the standard 128-frame context window.
+
+---
+
+## Recommended Acquisition & Ingestion Sequence
+
+To maximize model performance while strictly observing licensing boundaries, dataset acquisition is staged into three chronological cohorts:
+
+### Tier 1: Immediate Acquisition & Drop-In Ingestion (Sprint 1)
+1. **DynTherapy** (Mendeley Data / CC BY 4.0): Direct 33-keypoint MediaPipe correspondence. Write adapter in `training/src/data/adapters.py#load_dyntherapy`. Unlocks repetition boundary and phase supervision for 7 PT exercises.
+2. **UI-PRMD** (University of Idaho / Open Access): Ingest 10 PT exercises with optimal vs. non-optimal labels. Write 3D-to-2D projection adapter.
+3. **Pipelines Open Dataset** (Figshare / CC BY 4.0): Ingest synchronized wheelchair propulsion cycles to validate markerless 2D pose accuracy against 3D ground truth.
+4. **Ottobock #DearAI** (Hugging Face / Community Open): Ingest upper/lower limb difference imagery into pose-front-end detector test suite.
+5. **ROAG** (Zenodo / CC BY 4.0): Ingest transradial amputee reaching trajectories to calibrate reach geometry and trunk tilt.
+
+### Tier 2: Institutional DUAs & Clinical Compensation Datasets (Sprint 2)
+1. **SERE** (VisLab ISR Lisbon): Execute DUA with `ana.coias@tecnico.ulisboa.pt`. Ingest 18–20 post-stroke 3D skeletons with therapist-graded trunk compensation.
+2. **TULE / TRSPD** (Kaggle / Toronto Rehab): Ingest 15 stroke survivors with frame-level trunk lean and shoulder hiking labels.
+3. **MobiPhysio** (Kaggle / CC BY 4.0): Ingest 3,686 smartphone video clips to test real mobile camera pose jitter and EAAQ quality scores.
+4. **InclusiveVidPose** (ICLR 2025 / DUA): Submit non-commercial research DUA to obtain 398 limb-difference video sequences for pose-front-end validation.
+
+### Tier 3: Teacher Distillation & Foundation Pretraining (Sprint 3)
+1. **RepCount-pose** (GitHub / Academic Open): Cache 20,000 repetition cycles to generate continuous repetition density maps for SSTRAC and PoseRAC teacher distillation.
+2. **AddBiomechanics** (Stanford / CC BY 4.0): Ingest inverse kinematics to calibrate angular velocity and physical smoothness constraints.
+3. **SAFER-Activities** (Hugging Face / CC BY-NC-SA): Isolate dedicated wheelchair challenge test partition.
+
+---
+
+## What These Datasets Still Cannot Provide
+
+No discovered public dataset covers the full first-release population of individuals with missing limbs, one-arm use, lower-limb absence, and wheelchair use performing the same five AdaptFit launch exercises under consented product-testing conditions.
+
+Public data bootstraps the pose front end, the causal TCN representation, and the initial quality scoring heads. However, the safety-critical adaptation layer still requires consented, participant-reviewed pilot recordings and trained-expert labeling, as detailed in Phase 6 of the [implementation plan toward the Congressional App Challenge](project-forward-plan.md).

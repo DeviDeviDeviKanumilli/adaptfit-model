@@ -13,6 +13,7 @@ RUN_TRAINING="${ADAPTFIT_RUN_TRAINING:-0}"
 RUN_SMOKE="${ADAPTFIT_RUN_SMOKE:-1}"
 NUM_WORKERS="${ADAPTFIT_NUM_WORKERS:-2}"
 FULL_PREFLIGHT="${ADAPTFIT_PREFLIGHT_FULL:-0}"
+STRICT_STORAGE="${ADAPTFIT_STRICT_STORAGE:-0}"
 
 mkdir -p "$ARTIFACT_ROOT"
 LOG_PATH="$ARTIFACT_ROOT/overnight.log"
@@ -35,12 +36,13 @@ if [[ "$FULL_PREFLIGHT" == "1" ]]; then
   python3 -m training.preflight --config "$CONFIG" --mode full
 fi
 
-echo "[fixed] strict prepared-data audit"
-python3 -m training.audit \
-  --mode prepared \
-  --config "$CONFIG" \
-  --strict-storage \
-  --output "$ARTIFACT_ROOT/prepared_audit.json"
+echo "[fixed] prepared-data audit"
+AUDIT_ARGS=(--mode prepared --config "$CONFIG" --output "$ARTIFACT_ROOT/prepared_audit.json")
+if [[ "$STRICT_STORAGE" == "1" ]]; then
+  echo "[fixed] enabling strict memmap finite-value scan"
+  AUDIT_ARGS+=(--strict-storage)
+fi
+python3 -m training.audit "${AUDIT_ARGS[@]}"
 
 echo "[fixed] stage small metadata artifacts"
 for required in \

@@ -15,7 +15,7 @@ Reuse the existing TCN, repair the supervision around its weakest tasks, and fin
 
 The objective is **reliable movement feedback per hour of total experimentation**, including preparation, teacher inference, training and evaluation. Minimum training time and maximum possible accuracy are competing objectives; there is no guaranteed optimal recipe before measuring the failures. The strategy below spends compute in stages and stops when further work does not produce a meaningful improvement.
 
-This is a proposed training strategy, not a report of new experiments. It complements [the project plan](/Users/devk/AdaptFit/docs/project-forward-plan.md).
+This is a proposed training strategy, not a report of new experiments. It complements [the project plan](project-forward-plan.md).
 
 For execution, use the **Luna execution TODO list** below. It breaks this strategy into bounded tasks with dependencies, outputs and completion checks.
 
@@ -90,7 +90,7 @@ Do not begin by training or running all four teachers. Teacher inference, pose-f
 
 If counting remains weak, **SSTRAC density/count supervision is the first task-specific teacher experiment I would try**, after verifying that its predictions improve on existing labels for the relevant recordings. Use released compatible weights where available, freeze the teacher, and cache its aligned outputs once. Reliable human/source labels remain the anchor. [SSTRAC implementation](https://github.com/imjjun/SSTRAC_public).
 
-MotionBERT is a later representation experiment if the main failure is transfer to unfamiliar motion or incomplete pose. Its 17-joint format needs an explicit adapter; it does not supply repetition or quality labels. RACNet's RGB-derived action-start signals and PoseRAC's salient-pose events introduce additional adaptation work, so defer them unless they address a measured gap. None directly supplies AdaptFit's biomechanical phase labels. [Teacher details and sources](/Users/devk/AdaptFit/docs/project-forward-plan.md).
+MotionBERT is a later representation experiment if the main failure is transfer to unfamiliar motion or incomplete pose. Its 17-joint format needs an explicit adapter; it does not supply repetition or quality labels. RACNet's RGB-derived action-start signals and PoseRAC's salient-pose events introduce additional adaptation work, so defer them unless they address a measured gap. None directly supplies AdaptFit's biomechanical phase labels. [Teacher details and sources](project-forward-plan.md).
 
 Compare one teacher-assisted candidate against supervised-only training with matched data and update budgets. Retain it only if its benefit justifies the **total** extra time and preserves subgroup and streaming performance. Distillation can improve a small student; it does not inherently reduce total training cost.
 

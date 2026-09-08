@@ -55,6 +55,7 @@ commit/config/artifact that supports it. If evidence is missing, write
 | How is a model evaluated and released? | [Evaluation protocol](evaluation-protocol.md) |
 | How does a future mobile bundle work? | [On-device deployment](on-device-deployment.md) |
 | What is the dependency-ordered delivery plan? | [Project forward plan](project-forward-plan.md) |
+| What is the training execution state and checkpoint inventory? | [Training execution log](training-execution-log.md) |
 | Why was a decision made? | [Decision ledger](decisions-and-open-questions.md) |
 | What is a prior experiment or audit? | Use the [historical reports](#historical-and-supporting-records), not current-state claims. |
 
@@ -77,6 +78,7 @@ commit/config/artifact that supports it. If evidence is missing, write
 - [Evaluation protocol](evaluation-protocol.md)
 - [On-device deployment plan](on-device-deployment.md)
 - [Project forward plan](project-forward-plan.md)
+- [Training execution log and run inventory](training-execution-log.md)
 - [Decision ledger](decisions-and-open-questions.md)
 - [Training implementation quickstart](../training/README.md)
 

@@ -72,7 +72,7 @@ Current label facts:
 |---|---|---|
 | `artifacts/corrected-v1/` | Complete benchmark | TCN and GRU were trained/evaluated and overlapping windows were merged to sequence metrics. This is the current baseline. |
 | `artifacts/v2-quality/` | Prepared data only | Preparation and manifests exist; no completed model comparison. |
-| `artifacts/v2-quality-fixed/` | Partial | TCN training completed through 72 epochs with best epoch 42, but only window metrics are available; the GRU checkpoint is an interrupted intermediate run at epoch 52. It is not a complete TCN/GRU comparison. |
+| `artifacts/v2-quality-fixed/` | Partial (TCN evaluated; GRU interrupted) | TCN training completed through 72 epochs (best epoch 42) and has been evaluated on the test split with sequence and window metrics; the GRU checkpoint is an interrupted intermediate run at epoch 52. It is not a complete TCN/GRU comparison. |
 
 Checkpoint-level status at this verification:
 
@@ -80,10 +80,10 @@ Checkpoint-level status at this verification:
   `gru_baseline.pt`, with model-specific histories, evaluations, sequence
   predictions, feature schema, normalization statistics, and model card.
 - V2-quality: no checkpoint files; only preparation/config/schema/audit files.
-- V2-quality-fixed: `checkpoints/tcn_best.pt` and `gru_baseline.pt` exist, but
-  the TCN has no merged sequence evaluation in this artifact and the GRU is an
-  interrupted intermediate state. Do not select either as a complete v2
-  comparison without new evaluation evidence.
+- V2-quality-fixed: `checkpoints/tcn_best.pt` has verified test sequence and
+  window evaluation (`metrics/tcn_evaluation.json`, predictions, and sequence
+  metadata); `gru_baseline.pt` remains an interrupted intermediate state (epoch 52).
+  See [training-execution-log.md](training-execution-log.md) for full metrics.
 
 Corrected-v1 evidence includes 617 logical test sequences and 7,592 windows
 with zero identity collisions. Reported baseline metrics are family accuracy

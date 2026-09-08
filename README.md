@@ -1,5 +1,14 @@
 # AdaptFit
 
+> **Documentation metadata**
+> - **Status:** canonical-active
+> - **Authority:** top-level repository index and operational entry point
+> - **Last verified:** 2026-09-07
+> - **Source commit:** `b6ac20c`
+> - **Owner:** AdaptFit engineering
+> - **Supersedes or supports:** project root README; points to canonical docs/ and training/
+> - **Review trigger:** new run, artifact layout, or entry point change
+
 AdaptFit is being rewritten as a training-first, on-device movement adaptation
 project. The PeddieHacks repository is reference material only; this project
 does not nest it under `/app`.

@@ -164,6 +164,8 @@ class CausalStreamingRuntime:
                 "quality_logits": model_outputs["quality_logits"].squeeze(0),
                 "tracking_logits": model_outputs["tracking_logits"].squeeze(0)[context_length:],
             }
+            if "expert_quality_logits" in model_outputs:
+                outputs["expert_quality_logits"] = model_outputs["expert_quality_logits"].squeeze(0)
             retained = torch.cat((context, features), dim=0)
             if self.retained_context_frames:
                 self._feature_buffer = retained[-self.retained_context_frames :].detach()

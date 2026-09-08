@@ -748,6 +748,86 @@ contains intact bodies and does not model limb absence.
 
 ## Implementation work
 
+### 3D Mocap to 2D Canonical Virtual Camera Projection Specification
+
+Several high-fidelity biomechanical datasets (ROAG, UI-PRMD, Pipelines, Arm-CODA, AddBiomechanics) provide 3D Cartesian coordinates in millimeters $(X, Y, Z)$ rather than monocular 2D camera coordinates $(x, y) \in [0, 1]^2$. To integrate these datasets into AdaptFit's 283-feature pipeline without corrupting the camera-space input contract, every 3D mocap adapter must pass coordinates through a standardized virtual camera projection pipeline:
+
+#### 1. Pinhole Perspective Camera Model
+For a 3D joint coordinate in world frame $\mathbf{P}_w = [X_w, Y_w, Z_w]^T$:
+$$\mathbf{P}_c = \mathbf{R}_{c} (\mathbf{P}_w - \mathbf{T}_c)$$
+where:
+- $\mathbf{T}_c = [0, h_{cam}, -d_{cam}]^T$ positions the virtual camera at a realistic standing smartphone tripod distance $d_{cam} \in [1.8\text{m}, 2.4\text{m}]$ and elevation $h_{cam} \in [0.9\text{m}, 1.2\text{m}]$ from the subject.
+- $\mathbf{R}_c = \mathbf{R}_x(\phi_{tilt})$ applies a downward camera tilt angle $\phi_{tilt} \in [5^\circ, 15^\circ]$, matching typical real-world mobile device placement.
+
+The 2D projected sensor coordinates $(u, v)$ in pixels are computed via the camera intrinsics matrix $\mathbf{K}$:
+$$\begin{bmatrix} u \\ v \\ 1 \end{bmatrix} \sim \mathbf{K} \mathbf{P}_c = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} X_c \\ Y_c \\ Z_c \end{bmatrix}$$
+with standard mobile parameters: image resolution $W=1080$, $H=1920$, focal length $f_x = f_y \approx 800\text{px}$, and principal point $(c_x, c_y) = (W/2, H/2)$.
+
+#### 2. Normalization to Canonical 2D Contract
+The projected pixel coordinates $(u, v)$ are mapped directly into the $[0, 1]$ normalized image frame:
+$$x = \frac{u}{W}, \quad y = \frac{v}{H}$$
+To match AdaptFit's `training/src/features/anatomy.py` normalization:
+- **Hip-Centered Origin**: Subtract the midpoint between left and right hip landmarks:
+  $$x_{norm} = x - \frac{x_{left\_hip} + x_{right\_hip}}{2}, \quad y_{norm} = y - \frac{y_{left\_hip} + y_{right\_hip}}{2}$$
+- **Torso-Length Scale Invariance**: Normalize distances by the Euclidean torso scale:
+  $$S_{torso} = \|\mathbf{P}_{mid\_hip} - \mathbf{P}_{mid\_shoulder}\|_2$$
+- **Velocity Derivation**: Compute finite-difference temporal derivatives:
+  $$v_x(t) = \frac{x(t) - x(t-1)}{\Delta t}, \quad v_y(t) = \frac{y(t) - y(t-1)}{\Delta t}$$
+- **Confidence & Capability Masking**: Set $confidence = 1.0$ (ground truth marker), $observed = 1.0$, and apply profile-specific capability weights $w_{capability} \in \{0.0, 1.0\}$.
+
+---
+
+### Adapter Specifications for Priority Ingestions
+
+#### 1. DynTherapy Adapter (`training/src/data/adapters.py#load_dyntherapy`)
+- **Source Layout**: 33 MediaPipe Pose landmarks $(x, y, z, visibility)$ at 30 FPS.
+- **Mapping**: Exact 1:1 joint index mapping (Joints 0–32 correspond identically to MediaPipe standard).
+- **Target Mapping**:
+  - `family`: Map 7 exercises into AdaptFit families (knee raises $\rightarrow$ `single_leg_march`, seated shoulder press $\rightarrow$ `overhead_press`, arm curls $\rightarrow$ `arm_curl`).
+  - `rep_start` / `rep_end`: Map explicit source "Start" and "End" frame annotations directly to boundary heads.
+  - `phase`: Synthesize temporal phases between boundaries: concentric (start to peak velocity), hold (apex inflection), eccentric (descent), rest (inter-cycle stillness).
+- **Masks**: Quality heads masked (`-1`), boundary and family heads fully active (`1`).
+
+#### 2. UI-PRMD Adapter (`training/src/data/adapters.py#load_uiprmd`)
+- **Source Layout**: Vicon 3D optical marker trajectories across 10 physical therapy movements.
+- **Mapping**: Transform 39 Vicon markers to canonical 33 joints via anatomical centroid estimation; apply the 3D-to-2D virtual camera projection.
+- **Target Mapping**:
+  - `family`: Map exercises (e.g. seated sit-to-stand, shoulder abduction).
+  - `quality_logits`: Map binary "optimal" vs. "non-optimal" labels into ROM (`quality[:, 0]`) and trunk compensation (`quality[:, 3]`). Non-optimal trials feature deliberate excessive trunk flexion and asymmetric shoulder elevation.
+- **Masks**: `quality_mask` set to active (`1`) for supported exercises.
+
+#### 3. Pipelines Wheelchair Adapter (`training/src/data/adapters.py#load_pipelines`)
+- **Source Layout**: Synchronized 8-camera markerless video paired with 14-camera Vicon optical mocap.
+- **Mapping**: Ingest markerless 2D pose keypoints directly, with 3D optical mocap serving as numerical verification.
+- **Target Mapping**:
+  - `family`: `seated_mobility`.
+  - `phase`: Map propulsion push phase to `concentric` and recovery phase to `eccentric`.
+  - `boundary`: Mark push contact onset as `rep_start` and push release as `rep_end`.
+- **Masks**: Set capability masks for legs to $0.0$ when wheelchair propulsion restricts lower-body movement.
+
+#### 4. Ottobock #DearAI Visual Ingestion Pipeline
+- **Source Layout**: Curated community video clips of upper-limb and lower-limb amputees.
+- **Mapping**: Feed frames through MediaPipe 33-keypoint detector. Compare extracted landmarks against ground truth residual limb endpoint annotations.
+- **Target Mapping**:
+  - Does not emit temporal repetition labels. Emits `PoseFrame` robustness shards.
+  - Calibrates absent-limb capability weighting vectors ($w_c$) to verify that zero confidence on absent joints does not degrade torso tracking.
+
+#### 5. ROAG Transradial Ingestion Adapter (`training/src/data/adapters.py#load_roag`)
+- **Source Layout**: 3D optical marker time series of 7 controls and 2 transradial amputees across 2,450 reaching trajectories.
+- **Mapping**: Apply 3D-to-2D virtual camera projection. Set intact arm $w_c = 1.0$, transradial arm $w_{c, wrist} = 0.0$ (or prosthesis flag).
+- **Target Mapping**:
+  - `family`: `forward_reach`.
+  - `quality_logits[:, 3]`: Continuous trunk compensation angle $\theta_{trunk}$ mapped from torso marker tilt.
+  - `boundary`: Reach initiation $\rightarrow$ `rep_start`, target contact $\rightarrow$ `rep_end`.
+
+#### 6. SERE / TRSPD Stroke Adaptation Adapter (`training/src/data/adapters.py#load_sere`)
+- **Source Layout**: ZED 3D skeletons + Kinect v2 25-joint skeletons for post-stroke hemiparetic patients.
+- **Mapping**: Map Kinect 25 joints to canonical 33 joints by interpolating hip/torso midpoints.
+- **Target Mapping**:
+  - `quality_logits[:, 3]`: Therapist-graded frame-level trunk lean and shoulder hiking annotations mapped directly to binary compensation threshold $\ge 1$.
+  - `quality_logits[:, 0]`: Range of motion deficit scores mapped to ROM quality.
+  - `expert_quality_logits`: Therapist composite score (1–5 ordinal).
+
 ### Canonical adapters
 
 Every adapter must emit the existing `CanonicalSequence` contract and record:
