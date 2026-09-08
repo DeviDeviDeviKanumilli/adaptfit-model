@@ -4,12 +4,12 @@
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
 > - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Source commit:** `ba8bf1a`
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
 > - **Review trigger:** milestone completion, dependency change, gate result, or empirical evidence
 
-Planning review: September 7, 2026. Audited model checkout: `e75ba65`.
+Planning review: September 7, 2026. Audited model checkout: `ba8bf1a`.
 
 ---
 
@@ -37,11 +37,11 @@ The first-release scope covers **five seated, unilateral-friendly rehabilitation
 | Subsystem | Verified Current State | Identified Empirical Bottleneck | Master Plan Solution & Next Action |
 |---|---|---|---|
 | **Pose Landmarks** | Canonical 33-joint 2D layout normalized around hip midpoint and torso scale | Optical mocap datasets (Vicon/Qualisys) are in 3D millimeters | Standardized 3D-to-2D virtual camera projection pipeline |
-| **Feature Pipeline** | 283 ordered features (`training/src/features/anatomy.py`): angles, velocities, masks, capability context | Normalization assumes intact bilateral body by default | Explicit capability weights ($w_c \in \{0, 1\}$) zero out absent anatomy |
+| **Feature Pipeline** | 283 ordered features (`training/src/features/anatomy.py`): angles, velocities, masks, capability context | Normalization assumes intact bilateral body by default | Explicit capability weights ($w_c \in \{1.0, 0.8, 0.65, 0.5, 0.0\}$) modulate confidence and zero out absent anatomy |
 | **Model Architectures** | Causal Dilated TCN (307,410 params; 5 blocks); Causal GRU (68,178 params; 1 layer) | TCN receptive field is strictly 125 frames (~4.16s at 30 FPS) | Separate long-horizon count state machine from fixed-context backbone |
 | **Repetition Counting** | Repetition Start F1: **66.96%–99.54%**; Repetition End F1: **12.26%–18.47%** | Naive per-frame accumulation $\sum p_{end}(t)$ causes severe overcounting | **Phase 1**: Phase-Coupled Finite State Machine with dual hysteresis |
 | **Training Pipeline** | Overnight 72-epoch TCN trained; GRU interrupted at epoch 52 | Full retraining requires 18 hrs across 267k windows; no warm-start | **Phase 2**: Event-weighted sampler ($4.4\times$ speedup) + warm-start runner |
-| **Quality Supervision** | 4-dimensional quality heads (`quality_logits`) have **0% labeled coverage** in v1/v2 | UCO composite score is 1-5 scalar, not dimension-specific | **Phase 3**: Ingest SERE, TRSPD, KERAAL, and UI-PRMD clinical labels |
+| **Quality Supervision** | 4-dimensional quality heads (`quality_logits`) have **0% labeled coverage** in v1/v2 | UCO composite score is 1-5 scalar, not dimension-specific | **Phase 3**: Ingest SERE, TRSPD, and KERAAL clinical compensation labels (UI-PRMD correctness remains masked from dimension-specific quality heads) |
 | **Teacher Distillation** | Supervised baseline only; no teacher models integrated | Boundary jitter on variable-cadence repetitions | **Phase 4**: SSTRAC repetition density + PoseRAC salient-state distillation |
 | **Mobile Deployment** | Python causal streaming runtime (`CausalStreamingRuntime`) passing unit tests | Native Android/iOS MediaPipe feature bridge and on-device runtime unbuilt | **Phase 5**: ONNX / TFLite INT8 export + 6 golden fixture parity tests |
 | **Target Validation** | Tested on public datasets (REHAB24-6, IntelliRehabDS, MM-Fit, UL-RED, UCO) | Zero validation on real amputee, wheelchair, or stroke participants | **Phase 6**: Consented $N=10\text{–}15$ pilot study + Congressional App Challenge delivery |
@@ -127,15 +127,15 @@ Let $p_{start}(t)$, $p_{end}(t)$, $p_{phase}(t) \in [0, 1]^5$, and $p_{track}(t)
   - $\tau_{end\_high} \in [0.30, 0.65]$ (step 0.05)
   - $T_{ref} \in [15, 36]$ frames (step 3 frames / 0.1s)
   - $\tau_{track} \in [0.40, 0.75]$ (step 0.05)
-- **Validation Target**: Replay inference over all 16,483 validation windows in `artifacts/v2-quality-fixed/evaluations/tcn_validation.json`.
-- **Exit Gate**: Repetition Count MAE $\le 0.40$ (reducing current MAE 2.03 by $>80\%$) and Sequence-Level Repetition End F1 $\ge 60.0\%$ (up from 12.26%).
+- **Validation Target**: Replay inference over all 16,483 validation windows prepared in `data/processed-v2-quality/` (`validation/*.npy` memmaps and `validation.jsonl`) using `artifacts/v2-quality-fixed/checkpoints/tcn_best.pt`. (Note: `artifacts/v2-quality-fixed/evaluations/tcn_validation.json` does not exist; existing evaluation artifacts in `artifacts/v2-quality-fixed/metrics/tcn_evaluation.json` represent test split results only). The 7,536-window (1,007-sequence) test split must remain strictly locked and unpeeked during decoder calibration to prevent evaluation leakage and protect test set integrity.
+- **Exit Gate**: Repetition Count MAE $\le 0.40$ (reducing validation count error by $>80\%$) and Sequence-Level Repetition End F1 $\ge 60.0\%$ evaluated on the validation split.
 
 ---
 
 ### Phase 2: Warm-Start & Fine-Tuning Runner Implementation (Tasks B1–B4)
 
 **Owner: Machine Learning Team | Priority: High (Sprint 1)**  
-**Status: Ready for Implementation | Prerequisites: Phase 1 calibration**
+**Status: Pending (blocked on Phase 1 calibration) | Prerequisites: Phase 1 calibration**
 
 #### Task B1: Safe Warm-Start Weight Loading
 Implement `load_pretrained_backbone` in `training/src/runner.py`:
@@ -214,7 +214,7 @@ graph LR
 2. **UI-PRMD (Priority 1, Sprint 1)**:
    - Ingest 10 PT exercises with dual Vicon/Kinect data.
    - Project 3D markers to canonical 2D via virtual camera projection ($d=2.0\text{m}, h=1.0\text{m}$).
-   - Maps binary optimal vs non-optimal execution into `quality_logits[:, 0]` (ROM) and `quality_logits[:, 3]` (trunk compensation).
+   - Maps repetition cycle boundaries and exercise family labels; dimension-specific quality heads remain strictly masked (`quality_mask = 0.0`, target `-1`). UI-PRMD provides overall movement correctness ("optimal" vs. "non-optimal"), which must NOT be mapped into dimension-specific ROM (`quality[:, 0]`) or trunk compensation (`quality[:, 3]`) heads per the feature contract and `dataset-expansion-plan.md`.
 
 3. **Pipelines Open Dataset (Priority 1, Sprint 1)**:
    - Ingest synchronized wheelchair propulsion cycles.
@@ -223,7 +223,7 @@ graph LR
 
 4. **ROAG (Priority 1, Sprint 1)**:
    - Ingest 2 transradial amputee reaching trajectories (2,450 trials).
-   - Maps reach geometry and torso lean to single-arm capability profiles and trunk tilt quality.
+   - Maps reach geometry and torso lean to single-arm capability profiles and thresholded binary trunk compensation quality (applying an explicit biomechanical threshold $\theta_{trunk} \ge \tau_{trunk} = 15^\circ$ to prevent a schema mismatch with the binary classification head `quality_logits[:, 3]`).
 
 5. **Ottobock #DearAI Community Library (Priority 1, Sprint 1)**:
    - Ingest community imagery of upper-limb and lower-limb amputees.
@@ -345,11 +345,11 @@ gantt
     title Congressional App Challenge Delivery Timeline (2026)
     dateFormat  YYYY-MM-DD
     section Phase 1-2: Core Engine
-    Decoder Calibration (Task C1)     :done, 2026-09-08, 2026-09-12
-    Fast Warm-Start Runner (B1-B4)    :done, 2026-09-10, 2026-09-16
+    Decoder Calibration (Task C1)     :active, 2026-09-08, 2026-09-12
+    Fast Warm-Start Runner (B1-B4)    :2026-09-12, 2026-09-18
     section Phase 3-4: Data & Teachers
-    Tier 1 Dataset Ingestion          :active, 2026-09-16, 2026-09-24
-    SSTRAC/PoseRAC Distillation       :2026-09-24, 2026-10-02
+    Tier 1 Dataset Ingestion          :2026-09-18, 2026-09-26
+    SSTRAC/PoseRAC Distillation       :2026-09-26, 2026-10-04
     section Phase 5: Mobile Runtime
     ONNX/TFLite Parity & Mobile App   :2026-09-28, 2026-10-08
     On-Device Profiling               :2026-10-08, 2026-10-14
@@ -360,14 +360,16 @@ gantt
     Official CAC Deadline (12 PM EDT) :milestone, 2026-10-26, 0d
 ```
 
+*Status Alignment with Execution Log*: As documented in `docs/training-execution-log.md`, Decoder Calibration (Task C1) is currently READY / active for execution. Fast Warm-Start Runner (Tasks B1–B4) is PENDING completion of calibration. Neither is marked complete, and downstream data ingestion and distillation phases are scheduled rather than active.
+
 - **Key Dates**:
   - **Internal Submission Freeze**: **October 23, 2026** (3-day safety buffer).
   - **Official CAC Submission Deadline**: **October 26, 2026, 12:00 PM EDT**.
 - **1–3 Minute Demonstration Video Storyboard**:
   - **Act 1: The Problem (0:00–0:30)**: Generic fitness apps assume two arms, two legs, and standing posture. For amputees, wheelchair users, and stroke survivors, these apps fail immediately.
   - **Act 2: The Solution & Setup (0:30–1:15)**: User profile onboarding: selecting "Single-Arm (Right)" and "Seated". AdaptFit configures a feasible 5-exercise routine and sets up smartphone camera tracking.
-  - **Act 3: Live On-Device Execution (1:15–2:15)**: Real-time workout demo. The user performs seated curls and band rows. Visual overlays show zero phantom landmarks on absent limbs, rock-solid repetition counting without overcounting, and real-time trunk compensation feedback.
-  - **Act 4: Technical Architecture & Impact (2:15–3:00)**: Student-built causal dilated TCN (307k params), 283 anatomy-informed features, 100% on-device privacy, and pilot validation results.
+  - **Act 3: Live On-Device Execution (1:15–2:15)**: Real-time workout demo prototype. The user performs seated curls and band rows. Visual overlays illustrate capability-masked tracking on absent limbs, repetition counting using calibrated phase-coupled debouncing (targeting MAE $\le 0.40$), and prototype compensation monitoring (pending reviewed quality supervision).
+  - **Act 4: Technical Architecture & Impact (2:15–3:00)**: Student-built causal dilated TCN (307k params), 283 anatomy-informed features, local on-device architecture designed for privacy (zero cloud video streaming), and planned pilot study evaluation protocol.
 
 ---
 
@@ -377,7 +379,7 @@ The table below defines the formal acceptance gates across all work packages. Lu
 
 | Package | Responsible Role | Primary Files & Interfaces | Expected Release Artifact | Acceptance Gate | Downstream Dependencies Unlocked |
 |---|---|---|---|---|---|
-| **Phase 1: Decoder Calibration** | ML Team | `training/src/metrics.py`<br>`training/src/evaluation.py` | `artifacts/calibrated_decoder_v1/fsm_params.json` | Count MAE $\le 0.40$; Rep End F1 $\ge 60.0\%$ on test split | Unlocks Phase 2 training and Phase 5 runtime |
+| **Phase 1: Decoder Calibration** | ML Team | `training/src/metrics.py`<br>`training/src/evaluation.py` | `artifacts/calibrated_decoder_v1/fsm_params.json` | Count MAE $\le 0.40$; Rep End F1 $\ge 60.0\%$ on validation split (test split held locked for final reporting) | Unlocks Phase 2 training and Phase 5 runtime |
 | **Phase 2: Fast Runner** | ML Team | `training/src/runner.py`<br>`training/src/data/samplers.py` | `training/configs/experiments/warmstart.yaml` | $4.4\times$ speedup verified; clean checkpoint resumption | Unlocks Phase 3 & 4 fine-tuning runs |
 | **Phase 3: Dataset Ingestion** | Data Team | `training/src/data/adapters.py`<br>`docs/dataset-catalog.md` | `data/raw/{dyntherapy, roag, uiprmd}` | Checksums verified; 100% split isolation; 0 participant overlap | Unlocks expanded supervised training |
 | **Phase 4: Distillation** | ML Research | `training/src/models/heads.py`<br>`training/src/distill/` | `data/teacher_cache/*.npz` | Distilled student beats supervised baseline on RepCount-pose | Unlocks final student model checkpoint |

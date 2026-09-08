@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training entry point; [the full runbook](../docs/efficient-training-strategy.md) and runner/config are authoritative for commands
 > - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Source commit:** `ba8bf1a`
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** short operational quickstart; rationale and staged workflow live in the linked runbook
 > - **Review trigger:** command/config/runner change or new artifact layout
@@ -145,8 +145,8 @@ Run the full contract suite before an overnight job:
 python3 -m pytest -q
 python3 -m unittest discover -s training/tests -p 'test_*.py'
 python3 -m compileall -q training
-sh -n run_overnight.sh
-sh -n run_v2_quality_fixed_overnight.sh
+bash -n run_overnight.sh
+bash -n run_v2_quality_fixed_overnight.sh
 ```
 
 The tests cover canonical data validation, participant-level split behavior,

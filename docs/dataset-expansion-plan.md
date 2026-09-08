@@ -4,7 +4,7 @@
 > - **Status:** research-backlog
 > - **Authority:** research notes and proposed acquisition work
 > - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Source commit:** `ba8bf1a`
 > - **Owner:** AdaptFit data research
 > - **Supersedes or supports:** supports future acquisition decisions; dataset-catalog and current-state override availability and training inclusion
 > - **Review trigger:** source access/license verification, adapter completion, or change in the canonical data protocol
@@ -773,7 +773,7 @@ To match AdaptFit's `training/src/features/anatomy.py` normalization:
   $$S_{torso} = \|\mathbf{P}_{mid\_hip} - \mathbf{P}_{mid\_shoulder}\|_2$$
 - **Velocity Derivation**: Compute finite-difference temporal derivatives:
   $$v_x(t) = \frac{x(t) - x(t-1)}{\Delta t}, \quad v_y(t) = \frac{y(t) - y(t-1)}{\Delta t}$$
-- **Confidence & Capability Masking**: Set $confidence = 1.0$ (ground truth marker), $observed = 1.0$, and apply profile-specific capability weights $w_{capability} \in \{0.0, 1.0\}$.
+- **Confidence & Capability Masking**: Compute camera-space observability $observed \in \{0.0, 1.0\}$ strictly from marker availability and camera view frustum: set $observed = 1.0$ only if the marker is present/finite in the mocap trajectory AND the projected pixel coordinates lie within the sensor viewport ($0 \le u \le W$, $0 \le v \le H$, and depth $Z_c > 0$); set $observed = 0.0$ for occluded, dropped, or out-of-frame markers. Apply canonical profile capability weights $w_{capability} \in \{1.0 \text{ (available)}, 0.8 \text{ (assisted)}, 0.65 \text{ (limited)}, 0.5 \text{ (unknown)}, 0.0 \text{ (absent)}\}$ per the feature contract in [contracts-and-schemas.md](contracts-and-schemas.md) (never restricted to binary $\{0.0, 1.0\}$). Compute joint confidence as camera observability multiplied by capability weight ($confidence = observed \cdot w_{capability}$ clipped to $[0.0, 1.0]$), preserving the `FeatureSchemaV1` ABI.
 
 ---
 
@@ -793,8 +793,9 @@ To match AdaptFit's `training/src/features/anatomy.py` normalization:
 - **Mapping**: Transform 39 Vicon markers to canonical 33 joints via anatomical centroid estimation; apply the 3D-to-2D virtual camera projection.
 - **Target Mapping**:
   - `family`: Map exercises (e.g. seated sit-to-stand, shoulder abduction).
-  - `quality_logits`: Map binary "optimal" vs. "non-optimal" labels into ROM (`quality[:, 0]`) and trunk compensation (`quality[:, 3]`). Non-optimal trials feature deliberate excessive trunk flexion and asymmetric shoulder elevation.
-- **Masks**: `quality_mask` set to active (`1`) for supported exercises.
+  - `rep_start` / `rep_end`: Map repetition cycle boundaries where verified segmentation timestamps exist.
+  - `quality_logits`: Kept masked (`-1` with `quality_mask = 0.0`). UI-PRMD provides overall binary correctness ("optimal" vs. "non-optimal"), which must NOT be mapped directly into dimension-specific ROM (`quality[:, 0]`) or trunk compensation (`quality[:, 3]`) heads. Per the feature contract and line 844, correctness scores must never become ROM or trunk quality; dimension-specific heads remain zero-coverage until verified sub-dimension annotations exist.
+- **Masks**: `quality_mask` strictly masked (`0.0`) across all 4 dimension-specific heads; boundary and family heads active (`1.0`) where verified.
 
 #### 3. Pipelines Wheelchair Adapter (`training/src/data/adapters.py#load_pipelines`)
 - **Source Layout**: Synchronized 8-camera markerless video paired with 14-camera Vicon optical mocap.
@@ -817,15 +818,16 @@ To match AdaptFit's `training/src/features/anatomy.py` normalization:
 - **Mapping**: Apply 3D-to-2D virtual camera projection. Set intact arm $w_c = 1.0$, transradial arm $w_{c, wrist} = 0.0$ (or prosthesis flag).
 - **Target Mapping**:
   - `family`: `forward_reach`.
-  - `quality_logits[:, 3]`: Continuous trunk compensation angle $\theta_{trunk}$ mapped from torso marker tilt.
+  - `quality_logits[:, 3]`: Binary trunk compensation logit. To prevent a schema mismatch between ROAG's continuous trunk tilt angle $\theta_{trunk}$ and the binary pooled classification head (`quality_logits[:, 3]`), $\theta_{trunk}$ must be thresholded against a validated biomechanical compensation threshold (e.g. compensatory trunk lean $\theta_{trunk} \ge \tau_{trunk} = 15^\circ \implies 1$, normal $\implies 0$). Continuous angle values must never be directly placed into the binary quality logit; continuous regression is reserved for a future schema version.
   - `boundary`: Reach initiation $\rightarrow$ `rep_start`, target contact $\rightarrow$ `rep_end`.
+- **Masks**: `quality_mask[:, 3]` active (`1.0`) only when thresholded compensation is evaluated; other quality dimensions remain masked (`0.0`).
 
 #### 6. SERE / TRSPD Stroke Adaptation Adapter (`training/src/data/adapters.py#load_sere`)
 - **Source Layout**: ZED 3D skeletons + Kinect v2 25-joint skeletons for post-stroke hemiparetic patients.
 - **Mapping**: Map Kinect 25 joints to canonical 33 joints by interpolating hip/torso midpoints.
 - **Target Mapping**:
   - `quality_logits[:, 3]`: Therapist-graded frame-level trunk lean and shoulder hiking annotations mapped directly to binary compensation threshold $\ge 1$.
-  - `quality_logits[:, 0]`: Range of motion deficit scores mapped to ROM quality.
+  - `quality_logits[:, 0]`: Range of motion deficit scores thresholded to binary ROM deficit quality logit (or held masked if continuous, preserving the binary schema of `MovementPredictionV1`).
   - `expert_quality_logits`: Therapist composite score (1–5 ordinal).
 
 ### Canonical adapters

@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
 > - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Source commit:** `ba8bf1a`
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -19,9 +19,9 @@ an update here and a source artifact.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Commit | `e75ba65` | Re-verify with `git rev-parse HEAD` before reproducing a run. |
+| Commit | `ba8bf1a` | Re-verify with `git rev-parse HEAD` before reproducing a run. |
 | Branch state | Clean except the documentation files being refined | Do not treat uncommitted documentation as model implementation. |
-| Test suite | 123 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes; this documentation pass does not change code. |
+| Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
 
 ## Implemented model contract
@@ -119,6 +119,12 @@ the required split and metric provenance.
 5. A production model bundle and native runtime contract do not exist.
 6. No document may claim medical, clinical, force, muscle-activation, joint-load,
    or safety certification from the current evidence.
+7. Demo and marketing language must never outpace empirical evidence: claims of
+   “rock-solid repetition counting,” real-time trunk compensation feedback,
+   “100% on-device privacy,” or target-population pilot validation are ahead of
+   current evidence and strictly prohibited until mobile export, privacy audit,
+   and the consented target-population pilot study are executed and evidenced by
+   committed artifacts.
 
 ## Next validated actions
 

@@ -4,12 +4,14 @@
 > - **Status:** canonical-active
 > - **Authority:** dataset registry, adapter code, manifests, and license/access evidence
 > - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Source commit:** `ba8bf1a`
 > - **Owner:** AdaptFit data engineering
-> - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in dataset-expansion-plan
+> - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in [dataset-expansion-plan.md](dataset-expansion-plan.md)
 > - **Review trigger:** adapter or checksum change, license/access update, or label-role change
 
-This catalog records public, academic, and clinical datasets that can help AdaptFit learn movement recognition, temporal structure, observable movement quality, pose robustness, and capability-aware adaptation. It was comprehensively expanded and audited on 2026-09-07 across international biomechanics, computer vision, and rehabilitation repositories (including Zenodo, Figshare, IEEE Dataport, SimTK, Hugging Face, PhysioNet, and university archives).
+This catalog records public, academic, and clinical datasets that can help AdaptFit learn movement recognition, temporal structure, observable movement quality, pose robustness, and capability-aware adaptation. It inventories both verified benchmark datasets and prospective candidate sources researched on 2026-09-07 across international biomechanics, computer vision, and rehabilitation repositories (including Zenodo, Figshare, IEEE Dataport, SimTK, Hugging Face, PhysioNet, and university archives).
+
+**Important verification status**: Only the 5 datasets marked **Integrated** below (`rehab24_6`, `intellirehabds`, `mmfit`, `ul_red`, `ucophyrehabpp`) have implemented code adapters in `training/src/data/adapters.py` and audited data in this repository. The remaining 35+ entries are candidate research proposals, prospective benchmarks, or restricted cohorts awaiting license clearance, institutional Data Use Agreements (DUAs), download staging, archive checksum verification, or adapter implementation. They are proposals under active evaluation, not audited or authoritative training assets.
 
 A dataset being public does not automatically grant permission to redistribute it, train a commercial product on it, or use it for clinical claims. Every source needs a license, data use agreement (DUA), and ethics review before it is added to a released model artifact.
 
@@ -48,10 +50,10 @@ Participant and subject identifiers must stay strictly intact so all splits rema
 
 ## Canonical Registry
 
-The registry below is the authoritative source of truth for dataset integration status, licensing, and usable supervision.
-- **Integrated**: Adapter exists in `training/src/data/adapters.py` and prepared data is audited.
-- **Candidate (Staged / Ingestible)**: Open license cleared, schema mapped, ready for adapter implementation.
-- **Restricted / DUA Pending**: Requires formal institutional Data Use Agreement before staging. Checksums are recorded in `data/manifests/` when present.
+The registry below categorizes datasets by integration tier, licensing, and usable supervision:
+- **Integrated (Audited in Repository)**: Adapter implemented in `training/src/data/adapters.py`, raw/prepared paths staged, and participant split auditing verified (5 active datasets).
+- **Candidate (Prospective / Awaiting Adapter & Staging)**: Open license or academic access identified; schema mapped in specification; awaiting download, checksum verification, and adapter implementation.
+- **Restricted / DUA Pending**: Requires formal institutional Data Use Agreement and ethics review before staging. Checksums and manifests are recorded in `data/manifests/` when available.
 
 | Dataset | Status / Adapter | Modality & Cohort | Labels & Usable Tasks | License / Access | Checksum / Staging Path | Next Action |
 |---|---|---|---|---|---|---|
@@ -61,10 +63,10 @@ The registry below is the authoritative source of truth for dataset integration 
 | **UL-RED** | Integrated / `ul_red` | Markerless / mocap; general rehabilitation | Exercise, speed, sequence structure; phase/tempo | CC BY 4.0 Open Access | `data/raw/ul_red/`<br>`data/manifests/ul_red.sha256` | Audit archive checksum and label map |
 | **UCOPhyRehab++** | Integrated / `ucophyrehabpp` | 3D pose; controlled healthy participants | Exact repetition spans and composite 1–5 expert score | License review pending | `data/raw/ucophyrehabpp/`<br>`data/manifests/ucophyrehabpp.md5` | Finish v2 sequence evaluation |
 | **DynTherapy** | Candidate / Priority 1 | 33 MediaPipe pose keypoints (1:1 drop-in) | Repetition cycles, start/end boundaries, 7 PT classes | CC BY 4.0 Open Access | Mendeley Data (DOI: 10.17632/hghdm99rwg.1) | Implement 1:1 drop-in adapter |
-| **UI-PRMD** | Candidate / Priority 1 | Vicon 3D mocap + Kinect v2 skeleton | 10 PT exercises; optimal vs non-optimal execution | Open Research Access | University of Idaho / OpenDataLab | Implement virtual camera projection |
+| **UI-PRMD** | Candidate / Priority 1 | Vicon 3D mocap + Kinect v2 skeleton | 10 PT exercises; optimal vs non-optimal execution (exercise-level; quality heads masked) | Open Research Access | University of Idaho / OpenDataLab | Implement virtual camera projection (quality heads remain masked) |
 | **MobiPhysio** | Candidate / Priority 1 | 2D smartphone video (3,686 clips), 58 subjects | 9 AROM exercises; EAAQ clinical accuracy scores | CC BY 4.0 Open Access | Kaggle / Elsevier Data in Brief | Extract 2D MediaPipe pose & align scores |
 | **Pipelines** | Candidate / Priority 1 | Synchronized video + 3D optical mocap | Wheelchair propulsion stroke timestamps, kinematics | CC BY 4.0 Open Access | Figshare / La Trobe Biomechanics | Ingest wheelchair propulsion cycles |
-| **ROAG** | Candidate / Priority 1 | 3D mocap; 7 able-bodied + 2 transradial amputees | Reaching geometry, compensatory torso lean, asymmetry | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.13908725) | Implement 3D-to-2D projection adapter |
+| **ROAG** | Candidate / Priority 1 | 3D mocap; 7 able-bodied + 2 transradial amputees | Reaching geometry, compensatory torso lean (thresholded to binary quality), asymmetry | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.13908725) | Implement 3D-to-2D projection adapter with thresholded trunk compensation |
 | **Ottobock #DearAI** | Candidate / Priority 1 | High-res image/video of amputee athletes/users | Biological vs prosthetic limbs, residual limb endpoints | Community Open Access | Hugging Face (`ottobock/ldpr-ul`, `ldpr-ll`) | Ingest into pose-front-end fine-tuning |
 | **Arm-CODA** | Candidate / Priority 2 | 3D CODA markers (34 markers), 16 subjects | 15 upper-limb movements; millisecond start/end | Open Access / Open Data | IPOL (DOI: 10.5201/ipol.2024.494) | Project Cartesian time series to 2D |
 | **RepCount-pose** | Candidate / Priority 2 | 33-keypoint BlazePose 2D pose sequences | 20,000 repetition cycles, start/end timestamps | Academic Open Source | GitHub (`SvipRepetitionCounting/TransRAC`) | Convert to teacher density maps |
@@ -103,7 +105,7 @@ The registry below is the authoritative source of truth for dataset integration 
 - **Exercises & Tasks**: 2,450 reaching trajectories across variable heights, depths, and reach angles.
 - **Supervision & Labels**: 3D spatial trajectories, reach completion timestamps, compensatory torso flexion/lateral lean angles, and reaching asymmetry.
 - **License & Access**: Creative Commons Attribution 4.0 International (CC BY 4.0). Fully open download.
-- **AdaptFit Ingestion Role**: **Direct Ground Truth for Single-Arm Transradial Adaptation**. Projected via a virtual pinhole camera into normalized 2D coordinates to train the trunk compensation head and calibrate reach geometry for single-arm users.
+- **AdaptFit Ingestion Role**: **Direct Ground Truth for Single-Arm Transradial Adaptation**. Projected via a virtual pinhole camera into normalized 2D coordinates to train the binary trunk compensation head (applying an explicit biomechanical threshold $\theta_{trunk} \ge \tau_{trunk}$ to align with the pooled binary classification schema) and calibrate reach geometry for single-arm users.
 
 #### 2. InclusiveVidPose
 - **Official Citation**: Anonymous Accept (2024–2025). *InclusiveVidPose: A Video Pose Estimation Benchmark for Individuals with Amputations and Limb Differences*, ICLR 2025.
@@ -415,7 +417,7 @@ The registry below is the authoritative source of truth for dataset integration 
 - **Exercises & Tasks**: 10 physical therapy exercises: deep squat, lunge, seated sit-to-stand, shoulder abduction, shoulder internal/external rotation.
 - **Supervision & Labels**: Full-body 3D positions, calculated joint angles, and binary optimal vs. non-optimal execution labels.
 - **License & Access**: Open Access Research License.
-- **AdaptFit Ingestion Role**: **Gold-Standard PT Movement Modeling**. Dual-sensor data provides ground truth for correct execution vs. common movement compensations.
+- **AdaptFit Ingestion Role**: **Gold-Standard PT Movement Modeling**. Dual-sensor data provides ground truth for correct vs. faulty repetition structures. Note that binary optimal/non-optimal labels represent overall movement correctness and must not be mapped into dimension-specific ROM or trunk quality heads (which remain masked per the feature contract).
 
 #### 33. MobiPhysio
 - **Official Citation**: Elsevier Data in Brief / ResearchGate (2024–2026). *MobiPhysio: A Mobile Smartphone Video Dataset for Active Range of Motion Physiotherapy Assessment*, DOI: 10.1016/j.dib.2026.112819.
@@ -425,7 +427,7 @@ The registry below is the authoritative source of truth for dataset integration 
 - **Exercises & Tasks**: 9 Active Range-of-Motion (AROM) physiotherapy exercises.
 - **Supervision & Labels**: Exercise Accuracy Assessment Questionnaire (EAAQ) scores certified by physical therapists and video temporal segmentation.
 - **License & Access**: CC BY 4.0 Open Access.
-- **AdaptFit Ingestion Role**: **Smartphone Realism & Quality Calibration**. Used to evaluate mobile camera pose jitter and benchmark the continuous ROM head.
+- **AdaptFit Ingestion Role**: **Smartphone Realism & Quality Calibration**. Used to evaluate mobile camera pose jitter and benchmark thresholded ROM quality (or evaluate potential future continuous ROM regression schemas).
 
 #### 34. Arm-CODA
 - **Official Citation**: Combettes et al., Image Processing On Line (IPOL 2024). *Arm-CODA: Upper-Limb Kinematic Time Series Dataset*, DOI: 10.5201/ipol.2024.494.
@@ -499,10 +501,10 @@ To maximize model performance while strictly observing licensing boundaries, dat
 
 ### Tier 1: Immediate Acquisition & Drop-In Ingestion (Sprint 1)
 1. **DynTherapy** (Mendeley Data / CC BY 4.0): Direct 33-keypoint MediaPipe correspondence. Write adapter in `training/src/data/adapters.py#load_dyntherapy`. Unlocks repetition boundary and phase supervision for 7 PT exercises.
-2. **UI-PRMD** (University of Idaho / Open Access): Ingest 10 PT exercises with optimal vs. non-optimal labels. Write 3D-to-2D projection adapter.
+2. **UI-PRMD** (University of Idaho / Open Access): Ingest 10 PT exercises with optimal vs. non-optimal labels (quality heads remain masked; correctness != ROM/trunk quality). Write 3D-to-2D projection adapter.
 3. **Pipelines Open Dataset** (Figshare / CC BY 4.0): Ingest synchronized wheelchair propulsion cycles to validate markerless 2D pose accuracy against 3D ground truth.
 4. **Ottobock #DearAI** (Hugging Face / Community Open): Ingest upper/lower limb difference imagery into pose-front-end detector test suite.
-5. **ROAG** (Zenodo / CC BY 4.0): Ingest transradial amputee reaching trajectories to calibrate reach geometry and trunk tilt.
+5. **ROAG** (Zenodo / CC BY 4.0): Ingest transradial amputee reaching trajectories to calibrate reach geometry and thresholded binary trunk tilt.
 
 ### Tier 2: Institutional DUAs & Clinical Compensation Datasets (Sprint 2)
 1. **SERE** (VisLab ISR Lisbon): Execute DUA with `ana.coias@tecnico.ulisboa.pt`. Ingest 18–20 post-stroke 3D skeletons with therapist-graded trunk compensation.
