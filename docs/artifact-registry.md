@@ -55,3 +55,28 @@ are sequence-level primary metrics or window diagnostics. They must name the
 participant/source split, commit, config/schema versions, checkpoint, and
 label coverage. Zero quality-head coverage remains a valid recorded result;
 quality claims are blocked until a manifest proves reviewed targets.
+
+## Research teacher and recommender artifacts
+
+The methodology reuse work does not make a teacher or recommender artifact current.
+When one is run, register it separately and preserve the parent baseline.
+
+A teacher cache or density/saliency artifact must record:
+
+- research method and exact source repository commit;
+- code, weights, annotation, and dataset licenses separately;
+- source sequence, participant/session identity, and participant/source split;
+- canonical joint mapping, frame rate, timestamps, observed/capability masks, and
+  augmentation or masking lineage;
+- teacher/config/checkpoint hashes and generation commit;
+- target type, horizon, density normalization, saliency convention, and valid mask;
+- cache path, size, checksum, and expiration/invalidation rule;
+- compute device, wall time, memory, and known limitations;
+- matched student experiment, metrics, subgroup results, and rejection reason.
+
+A recommendation experiment must additionally record catalog hash, profile/schema versions,
+exposure policy, consent state, candidate-set size, shown candidates, feedback reason
+codes, user/time split, and fallback behavior. Raw frames and raw pose are prohibited.
+
+External code or weights with missing license, checksum, or provenance remain
+research references and cannot be included in a model bundle.

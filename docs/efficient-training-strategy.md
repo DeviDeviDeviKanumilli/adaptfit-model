@@ -483,3 +483,26 @@ This TODO list is a handoff specification, not an instruction to start training 
 “Read this strategy and applicable repo instructions. Complete A1 and identify the evidence needed for A2. Inspect existing files without launching training. Write the inventory, unresolved provenance questions and next eligible tasks to `docs/training-execution-log.md`. Report the exact checkpoint and data paths you verified. Do not implement optional model extensions.”
 
 After that bounded assignment, use the dependencies above to choose the next task. A1–A4 and C1 establish whether more training is necessary; B1–B4 make the first fine-tuning run controlled and reviewable.
+
+## Research-backed reuse order
+
+Use the [research-backed methodology reuse report](research-method-reuse-report.md)
+to choose one bounded external method at a time. The current student contract and
+training runbook remain unchanged.
+
+1. Freeze corrected-v1 and audit decoder/counting errors.
+2. Choose one cheap movement intervention: pose-preserving synthetic repeats,
+   PoseRAC-style salient anchors, or a density/temporal-correlation teacher.
+3. Compare that intervention against the matched supervised baseline on locked
+   sequence-level metrics.
+4. Only if the remaining error is representation transfer, run one structured
+   SSTRAC/TransRAC-style teacher or one AF-MJEPA pilot.
+5. Distill cached targets into the existing TCN with the same 283-feature input,
+   split, and causal runtime contract.
+6. Keep all other teachers deferred until the selected intervention either passes
+   or is rejected.
+
+Teacher work must include teacher inference time, cache size, preprocessing and
+model hashes, participant/source split, and a stop reason. Do not run multiple
+teachers together in the first comparison, and do not use test data to choose a
+teacher, mask, decoder, or loss weight.

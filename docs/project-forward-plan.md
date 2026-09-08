@@ -493,3 +493,21 @@ The table below defines the formal acceptance gates across all work packages. Lu
 3. **Consented Pilot Recruitment**: Partner with local adaptive sports programs and physical therapy clinics to recruit $N=10\text{–}15$ participants across the target profiles.
 4. **Offline Teacher Verification**: Verify the selected task teacher or AF-MJEPA pilot on the 5 launch exercises and the declared pretraining split before initiating large-scale teacher caching.
 5. **Recommendation Feedback Policy**: Define which workout-selection events may be stored locally, their retention/deletion behavior, approved reason codes, and the minimum future-period holdout before training a neural ranker.
+
+## Research-backed methodology gates
+
+Before adding a new teacher, density head, or recommendation model, follow the
+[cited methodology reuse report](research-method-reuse-report.md).
+
+| Gate | Required action | Stop condition | Evidence artifact |
+|---|---|---|---|
+| R0 | Freeze corrected-v1, decoder behavior, and participant/source splits | Any metric, split, or artifact is untraceable | Baseline and provenance report |
+| R1 | Run one cheap movement intervention: synthetic repeats, salient anchors, or density/TSM teacher | No sequence-level count/boundary improvement | Isolated experiment manifest and evaluation |
+| R2 | Run one structured teacher or AF-MJEPA pilot | Leakage, collapse, excessive cost, or no frozen-probe value | Teacher manifest, diagnostics, and compute report |
+| R3 | Distill only into the existing causal TCN | Student regresses on primary, subgroup, abstention, or latency gates | Student checkpoint and comparison report |
+| R4 | Complete deterministic recommendation feasibility and fallback | Any hard-rule violation or unsafe empty-candidate behavior | Recipe/catalog fixtures and audit |
+| R5 | Train a ranker only with consented exposure/feedback data | No future holdout, calibration, or safe fallback evidence | Recommendation experiment record |
+| R6 | Export and test only the selected student | Native parity, privacy, rollback, or device budget fails | Model bundle manifest and golden-fixture report |
+
+The first research experiment must not combine multiple external teachers. A research
+proposal or repository link never promotes a model, dataset, or deployment state.

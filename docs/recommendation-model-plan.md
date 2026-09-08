@@ -276,3 +276,28 @@ which describes capability/equipment-aware routines, exercise substitution,
 and a separate neural workout recommender. That document is product context;
 the repository contracts, recipe review state, manifests, and evaluation gates
 remain the engineering source of truth.
+
+## Research-backed implementation boundary
+
+The [research-backed methodology reuse report](research-method-reuse-report.md)
+adds external method context without changing the recommendation contract.
+
+The implementation order is:
+
+1. deterministic capability, posture, equipment, approval, and avoid-list feasibility;
+2. content/rules ranking over only eligible recipes;
+3. consented exposure and feedback logging with catalog/profile/model versions;
+4. a small pointwise or BPR-style ranker with user-level and future-time holdouts;
+5. sequential-history or two-stage retrieval methods only when catalog size and history
+   justify them;
+6. contextual bandits only after a safe manual/no-op baseline, reliable exposure
+   probabilities, and offline policy evaluation exist.
+
+YouTube-style retrieval/ranking and TensorFlow Recommenders are scaling references, not
+dependencies for the initial five-recipe catalog. RecBole is an optional research
+benchmark harness, not a product runtime. SASRec and BERT4Rec are architectural
+references because their official environments are obsolete.
+
+A learned score can order eligible candidates but cannot waive feasibility, recipe review,
+capability declarations, equipment requirements, or the manual fallback. No
+recommendation method establishes clinical benefit or exercise safety.

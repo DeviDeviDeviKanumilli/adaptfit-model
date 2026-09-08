@@ -48,7 +48,8 @@ commit/config/artifact that supports it. If evidence is missing, write
 
 For a fast implementation orientation, read [system context and data flow](system-context-and-dataflow.md),
 then [repository and implementation map](repository-and-implementation-map.md),
-[current state](current-state.md), and [model registry](model-registry.md).
+[current state](current-state.md), [model registry](model-registry.md), and the
+[research-backed methodology reuse report](research-method-reuse-report.md).
 
 | Question | Canonical answer |
 |---|---|
@@ -56,6 +57,7 @@ then [repository and implementation map](repository-and-implementation-map.md),
 | Which source file, command, test, and artifact own a subsystem? | [Repository and implementation map](repository-and-implementation-map.md) |
 | What is implemented right now? | [Current state](current-state.md) |
 | Which models are current, planned, or research-only? | [Model registry](model-registry.md) |
+| Which external methods and repositories can be reused safely? | [Research-backed methodology reuse](research-method-reuse-report.md) |
 | What fields, tensors, masks, and event semantics must agree? | [Contracts and schemas](contracts-and-schemas.md) |
 | Which recipes may be offered and who approves them? | [Recipe catalog and review](recipe-catalog-and-review.md) |
 | What do labels mean and when are they masked? | [Annotation handbook](annotation-handbook.md) |
@@ -88,6 +90,7 @@ then [repository and implementation map](repository-and-implementation-map.md),
 - [System context and data flow](system-context-and-dataflow.md)
 - [Repository and implementation map](repository-and-implementation-map.md)
 - [Model registry](model-registry.md)
+- [Research-backed methodology reuse](research-method-reuse-report.md)
 - [Scalable ML architecture](scalable-ml-architecture.md)
 - [Data and training plan](data-and-training-plan.md)
 - [Annotation handbook](annotation-handbook.md)

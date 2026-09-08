@@ -268,3 +268,24 @@ objectives can support useful representations or anticipation in their own
 settings; they do not establish AdaptFit accuracy, safety, or deployment
 readiness. Any AdaptFit claim must come from its own versioned manifest,
 checkpoint, split, metrics, and artifact.
+
+## Research-backed objective and reuse boundary
+
+The [research-backed methodology reuse report](research-method-reuse-report.md)
+grounds this proposal in skeleton representation research:
+
+- Skeleton2vec supports contextualized teacher targets and motion-aware tube masking;
+- MotionBERT supports learning from incomplete pose observations but requires a deliberate
+  3D/skeleton adapter;
+- I-JEPA and V-JEPA support predictor/target latent prediction and anti-collapse patterns;
+- V-JEPA2 is a permissively licensed conceptual reference whose video scale is outside
+  the first AdaptFit pilot.
+
+These sources inform the experiment design; they do not add code, checkpoints, or
+deployment support to this repository. The older I-JEPA/V-JEPA repositories have
+non-commercial research licensing, and Skeleton2vec does not provide a clearly reusable
+implementation license in its public README. Do not vendor their code or weights.
+
+The first AF-MJEPA pilot must choose one target-encoder/masking recipe, record the
+license and commit for every imported component, and compare against a supervised-only
+TCN with matched split and compute budget. A falling latent loss alone is not a pass.

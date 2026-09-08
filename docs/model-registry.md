@@ -62,3 +62,21 @@ release-candidate → released`.
 Promotion requires the evidence in the applicable release gate. A failed or
 missing gate moves the row to `blocked` or `unavailable`; it does not get
 silently treated as an earlier successful state.
+
+## External methodology candidates
+
+External methods are research inputs, not additional current model families. The
+[cited methodology reuse report](research-method-reuse-report.md) records the
+source, license, input mismatch, and experiment gate for each candidate.
+
+| Candidate | Intended role | Current status | Boundary |
+|---|---|---|---|
+| TransRAC / SSTRAC | Offline density or temporal-correlation teacher | Research candidate; no checkpoint | Cannot replace the causal TCN or decoder |
+| RepNet | Pose-preserving synthetic repetition augmentation and TSM diagnostic | Research candidate | Synthetic lineage cannot create participant or clinical evidence |
+| PoseRAC | Salient phase/apex annotation aid | Research candidate | Does not replace full start/end, pause, or partial-rep labels |
+| MotionBERT / Skeleton2vec | Offline representation pretraining reference | Research candidate | Format, license, and adapter review required |
+| Recommendation retrieval/ranking methods | Offline recommender baselines | Planned research | Hard feasibility and manual fallback remain authoritative |
+| I-JEPA / V-JEPA / V-JEPA2 | JEPA objective and target-encoder references | Research references | No external JEPA code or teacher ships in the mobile bundle |
+
+A candidate may become a registry row only after its AdaptFit artifact manifest,
+split provenance, evaluation evidence, runtime status, and limitations are present.
