@@ -40,10 +40,10 @@ The first-release scope covers **five seated, unilateral-friendly rehabilitation
 | **Feature Pipeline** | 283 ordered features (`training/src/features/anatomy.py`): angles, velocities, masks, capability context | Normalization assumes intact bilateral body by default | Explicit capability weights ($w_c \in \{1.0, 0.8, 0.65, 0.5, 0.0\}$) modulate confidence and zero out absent anatomy |
 | **Model Architectures** | Causal Dilated TCN (307,410 params; 5 blocks); Causal GRU (68,178 params; 1 layer) | TCN receptive field is strictly 125 frames (~4.16s at 30 FPS) | Separate long-horizon count state machine from fixed-context backbone |
 | **Repetition Counting** | Repetition Start F1: **66.96%–99.54%**; Repetition End F1: **12.26%–18.47%** | Naive per-frame accumulation $\sum p_{end}(t)$ causes severe overcounting | **Phase 1**: Phase-Coupled Finite State Machine with dual hysteresis |
-| **Training Pipeline** | Overnight 72-epoch TCN trained; GRU interrupted at epoch 52 | Full retraining requires 18 hrs across 267k windows; no warm-start | **Phase 2**: Event-weighted sampler ($4.4\times$ speedup) + warm-start runner |
-| **Quality Supervision** | 4-dimensional quality heads (`quality_logits`) have **0% labeled coverage** in v1/v2 | UCO composite score is 1-5 scalar, not dimension-specific | **Phase 3**: Ingest SERE, TRSPD, and KERAAL clinical compensation labels (UI-PRMD correctness remains masked from dimension-specific quality heads) |
+| **Training Pipeline** | Overnight 72-epoch TCN trained; GRU interrupted at epoch 52 | Full retraining requires 18 hrs across 267k windows; no warm-start | **Phase 2**: Event-weighted sampler (hypothesized $\sim 4.4\times$ speedup) + warm-start runner |
+| **Quality Supervision** | 4-dimensional quality heads (`quality_logits`) have **0% labeled coverage** in v1/v2 | UCO composite score is 1-5 scalar, not dimension-specific | **Phase 3**: Ingest SERE, TRSPD, and KERAAL clinical compensation labels (UI-PRMD correctness remains masked from dimension-specific quality heads; frame-level annotations require window aggregation contracts to align with pooled `quality_logits`) |
 | **Teacher Distillation** | Supervised baseline only; no teacher models integrated | Boundary jitter on variable-cadence repetitions | **Phase 4**: SSTRAC repetition density + PoseRAC salient-state distillation |
-| **Mobile Deployment** | Python causal streaming runtime (`CausalStreamingRuntime`) passing unit tests | Native Android/iOS MediaPipe feature bridge and on-device runtime unbuilt | **Phase 5**: ONNX / TFLite INT8 export + 6 golden fixture parity tests |
+| **Mobile Deployment** | Python causal streaming runtime (`CausalStreamingRuntime`) passing unit tests | Native Android/iOS MediaPipe feature bridge and on-device runtime unbuilt | **Phase 5**: Planned ONNX / TFLite INT8 export + 6 golden fixture parity tests (planned) |
 | **Target Validation** | Tested on public datasets (REHAB24-6, IntelliRehabDS, MM-Fit, UL-RED, UCO) | Zero validation on real amputee, wheelchair, or stroke participants | **Phase 6**: Consented $N=10\text{–}15$ pilot study + Congressional App Challenge delivery |
 
 ---
@@ -169,16 +169,16 @@ def load_pretrained_backbone(model: nn.Module, checkpoint_path: str | Path, free
   3. `full_backbone`: Discriminative learning rates ($2 \times 10^{-5}$ for backbone, $1 \times 10^{-4}$ for heads).
 - Checkpoint serialization stores: `model_state_dict`, `optimizer_state_dict`, `scheduler_state_dict`, `best_metric_score`, `epoch`, and `label_policy_version`.
 
-#### Task B3: Redundant Work Reduction via Event-Weighted Sampler
-- **Bottleneck**: `data/processed-v2-quality/` contains 267,440 training windows. An audit reveals that $>65\%$ of these windows capture steady-state rest periods between exercise sets.
-- **Solution**: Implement `EventWeightedWindowSampler`.
+#### Task B3: Redundant Work Reduction via Event-Weighted Sampler (Planned)
+- **Bottleneck Hypothesis**: `data/processed-v2-quality/` contains 267,440 training windows. Initial inspection suggests a working hypothesis that $>65\%$ of these windows capture steady-state rest periods between exercise sets (pending formal verification against a committed dataset distribution audit artifact).
+- **Proposed Solution**: Implement planned `EventWeightedWindowSampler` in `training/src/data/samplers.py` (planned; not yet implemented in repository).
   - Windows within $t \in [t_{start} - 8, t_{end} + 8]$ (active repetitions) sampled at stride 4.
   - Windows during sustained rest sampled at stride 32.
-  - Reduces active training volume from 267k windows to ~60k windows.
-  - **Yields a $4.4\times$ reduction in per-epoch training time** (from 15 minutes/epoch down to 3.4 minutes/epoch on Apple Silicon MPS, completing a 100-epoch run in ~5.5 hours instead of 25 hours).
+  - Hypothesized to reduce active training volume from 267k windows to ~60k windows.
+  - **Hypothesized Speedup**: Hypothesized to yield an estimated up to $4.4\times$ reduction in per-epoch training time (projected from 15 minutes/epoch down to ~3.4 minutes/epoch on Apple Silicon MPS, targeting a 100-epoch run in ~5.5 hours instead of 25 hours). This speedup is an engineering hypothesis that must be benchmarked and evidenced with a committed timing artifact before marking Phase 2 complete.
 
-#### Task B4: Bounded Experiment Configuration
-Create `training/configs/experiments/warmstart_fine_tune.yaml` with explicit learning rate schedules, gradient clipping ($1.0$), and early stopping patience (15 epochs on validation count MAE).
+#### Task B4: Bounded Experiment Configuration (Planned)
+Create `training/configs/experiments/warmstart_fine_tune.yaml` (planned) with explicit learning rate schedules, gradient clipping ($1.0$), and early stopping patience (15 epochs on validation count MAE).
 
 ---
 
@@ -207,31 +207,31 @@ graph LR
 #### Step-by-Step Acquisition Sequence
 
 1. **DynTherapy (Priority 1, Sprint 1)**:
-   - Ingest 33 MediaPipe keypoints from Mendeley Data (CC BY 4.0).
+   - Propose ingesting 33 MediaPipe keypoints from Mendeley Data (CC BY 4.0).
    - Direct 1:1 drop-in adapter in `training/src/data/adapters.py#load_dyntherapy`.
    - Supplies verified repetition start/end boundaries and phase labels across 7 PT exercises.
 
 2. **UI-PRMD (Priority 1, Sprint 1)**:
-   - Ingest 10 PT exercises with dual Vicon/Kinect data.
+   - Propose ingesting 10 PT exercises with dual Vicon/Kinect data.
    - Project 3D markers to canonical 2D via virtual camera projection ($d=2.0\text{m}, h=1.0\text{m}$).
    - Maps repetition cycle boundaries and exercise family labels; dimension-specific quality heads remain strictly masked (`quality_mask = 0.0`, target `-1`). UI-PRMD provides overall movement correctness ("optimal" vs. "non-optimal"), which must NOT be mapped into dimension-specific ROM (`quality[:, 0]`) or trunk compensation (`quality[:, 3]`) heads per the feature contract and `dataset-expansion-plan.md`.
 
 3. **Pipelines Open Dataset (Priority 1, Sprint 1)**:
-   - Ingest synchronized wheelchair propulsion cycles.
+   - Propose ingesting synchronized wheelchair propulsion cycles.
    - Maps push/recovery timestamps to concentric/eccentric phases.
    - Establishes wheelchair camera-to-mocap benchmark.
 
 4. **ROAG (Priority 1, Sprint 1)**:
-   - Ingest 2 transradial amputee reaching trajectories (2,450 trials).
-   - Maps reach geometry and torso lean to single-arm capability profiles and thresholded binary trunk compensation quality (applying an explicit biomechanical threshold $\theta_{trunk} \ge \tau_{trunk} = 15^\circ$ to prevent a schema mismatch with the binary classification head `quality_logits[:, 3]`).
+   - Propose ingesting 2 transradial amputee reaching trajectories (2,450 trials).
+   - Maps reach geometry and torso lean to single-arm capability profiles and thresholded binary trunk compensation quality (applying an explicit biomechanical threshold $\theta_{trunk} \ge \tau_{trunk} = 15^\circ$ and temporal window aggregation contract to prevent a schema mismatch with the binary classification head `quality_logits[:, 3]`).
 
 5. **Ottobock #DearAI Community Library (Priority 1, Sprint 1)**:
-   - Ingest community imagery of upper-limb and lower-limb amputees.
+   - Propose ingesting community imagery of upper-limb and lower-limb amputees.
    - Evaluates MediaPipe landmark confidence and capability weights ($w_c$) to prevent phantom limb hallucination.
 
 6. **SERE & TRSPD / TULE (Priority 2, Sprint 2)**:
    - Submit research DUA to VisLab Lisbon (`ana.coias@tecnico.ulisboa.pt`).
-   - Ingest 18–20 post-stroke 3D skeletons with therapist-graded trunk lean and shoulder hiking annotations, populating the trunk compensation head.
+   - Propose ingesting 18–20 post-stroke 3D skeletons with therapist-graded trunk lean and shoulder hiking annotations, applying a temporal window aggregation contract to populate the pooled trunk compensation head or keeping them masked.
 
 ---
 
@@ -266,8 +266,9 @@ $$\text{Count}(T) = \left\lfloor \int_0^T \hat{d}(t) \, dt + 0.5 \right\rfloor$$
 | **RACNet** | Luo et al., *ECCV* (2024)<br>`Luoadore/RACnet` | Video feature sequences | **Cycle-Start Probabilities**: Distills full-resolution start-logit probabilities | **Third Candidate**: Optional ablation for cycle initialization |
 | **MotionBERT** | Zhu et al., *ICCV* (2023)<br>`Walter0807/MotionBERT` | 17-joint 2D pose + confidence | **Latent Biomechanical Embeddings**: MSE loss between projected student features and frozen MotionBERT latents | **Auxiliary Only**: General motion prior; does not run on mobile |
 
-#### 4. Offline Teacher Caching Pipeline
-- Teachers are evaluated offline over training sequences. Outputs are stored in `.npz` files indexed by `sequence_id`:
+#### 4. Offline Teacher Caching Pipeline & Distillation Modules (Planned)
+- Teacher loss wrappers, student trainers, and caching scripts will be implemented under `training/src/distill/` (planned module; currently unavailable in repository).
+- Teachers are evaluated offline over training sequences. Outputs are stored in `.npz` files indexed by `sequence_id` under `data/teacher_cache/` (planned cache directory; currently unavailable in repository):
   ```text
   data/teacher_cache/
   ├── sstrac_density/
@@ -295,13 +296,14 @@ flowchart LR
     INT8 --> MobileApp[AdaptFit Android/iOS<br>Native C++ / Kotlin / Swift]
 ```
 
-- **Export Script**: `training/src/export/export_mobile.py` exports the causal TCN with a fixed streaming state buffer:
+- **Export Script (Planned)**: Planned script `training/src/export/export_mobile.py` (planned; not yet implemented in repository) will export the causal TCN with a fixed streaming state buffer:
   - Input: Current frame features $[1, 1, 283]$ + internal causal buffer $[1, 96, 125]$.
   - Output: Multi-task predictions + updated buffer $[1, 96, 125]$.
 - **Post-Training Quantization (PTQ)**: Calibrated using 1,000 representative validation windows.
+- **Mobile Client Integration (Planned)**: Mobile application shell and native runtime bindings will be integrated under `apps/mobile/` (planned module in external repository; currently unavailable in this model repository).
 
-#### 2. Golden Fixture Test Matrix
-Six canonical test vectors are serialized to `tests/fixtures/golden_parity/`:
+#### 2. Golden Fixture Test Matrix (Planned)
+Six canonical test vectors will be serialized to `training/tests/fixtures/golden_parity/` (planned test fixtures; currently unavailable in repository):
 1. **Vector 1: Bilateral Standing Curl** (Symmetric intact movement).
 2. **Vector 2: Unilateral Seated Curl** (Left arm active, right arm absent/capability zeroed).
 3. **Vector 3: Unilateral Seated Band Row** (Single-arm pull with trunk stabilization).
@@ -314,7 +316,7 @@ Six canonical test vectors are serialized to `tests/fixtures/golden_parity/`:
 | Metric / Dimension | Target Tolerance Gate | Failure Condition |
 |---|---|---|
 | **Float32 Parity** | $\max |\hat{y}_{py} - \hat{y}_{onnx}| < 1 \times 10^{-4}$ | Any logit divergence $> 1 \times 10^{-3}$ |
-| **INT8 Quantized Parity** | $\max |\hat{y}_{py} - \hat{y}_{int8}| < 0.05$ | FSM event trigger mismatch on golden fixtures |
+| **INT8 Quantized Parity** | $\max |\hat{y}_{py} - \hat{y}_{int8}| < 0.05$ | FSM event trigger mismatch on golden fixtures (planned) |
 | **Event Alignment** | 100% agreement on Repetition Start and End timestamps | $\ge 1$ skipped or extraneous repetition event |
 | **Camera-to-Display Latency** | $\mathbf{p50 < 45\text{ms}}, \quad \mathbf{p95 < 95\text{ms}}$ | p95 latency $> 150\text{ms}$ at 30 FPS |
 | **Memory Footprint** | Peak RAM consumption $\mathbf{< 25\text{MB}}$ | Peak RAM $> 50\text{MB}$ |
@@ -379,12 +381,12 @@ The table below defines the formal acceptance gates across all work packages. Lu
 
 | Package | Responsible Role | Primary Files & Interfaces | Expected Release Artifact | Acceptance Gate | Downstream Dependencies Unlocked |
 |---|---|---|---|---|---|
-| **Phase 1: Decoder Calibration** | ML Team | `training/src/metrics.py`<br>`training/src/evaluation.py` | `artifacts/calibrated_decoder_v1/fsm_params.json` | Count MAE $\le 0.40$; Rep End F1 $\ge 60.0\%$ on validation split (test split held locked for final reporting) | Unlocks Phase 2 training and Phase 5 runtime |
-| **Phase 2: Fast Runner** | ML Team | `training/src/runner.py`<br>`training/src/data/samplers.py` | `training/configs/experiments/warmstart.yaml` | $4.4\times$ speedup verified; clean checkpoint resumption | Unlocks Phase 3 & 4 fine-tuning runs |
-| **Phase 3: Dataset Ingestion** | Data Team | `training/src/data/adapters.py`<br>`docs/dataset-catalog.md` | `data/raw/{dyntherapy, roag, uiprmd}` | Checksums verified; 100% split isolation; 0 participant overlap | Unlocks expanded supervised training |
-| **Phase 4: Distillation** | ML Research | `training/src/models/heads.py`<br>`training/src/distill/` | `data/teacher_cache/*.npz` | Distilled student beats supervised baseline on RepCount-pose | Unlocks final student model checkpoint |
-| **Phase 5: Mobile Export** | Mobile Team | `training/src/export/`<br>`apps/mobile/` | `artifacts/mobile/adaptfit_tcn_int8.tflite` | 100% parity on 6 golden fixtures; p95 latency $<95\text{ms}$ | Unlocks pilot app deployment |
-| **Phase 6: Pilot & Submission** | Product Lead | `docs/pilot-findings.md`<br>`submission/` | Final CAC Video & Application Package | Signed consent; 0 privacy violations; 100% CAC rubric compliance | Final Public Release & Submission |
+| **Phase 1: Decoder Calibration** | ML Team | `training/src/metrics.py`<br>`training/src/evaluation.py` | `artifacts/calibrated_decoder_v1/fsm_params.json` (planned) | Count MAE $\le 0.40$; Rep End F1 $\ge 60.0\%$ on validation split (test split held locked for final reporting) | Unlocks Phase 2 training and Phase 5 runtime |
+| **Phase 2: Fast Runner** | ML Team | `training/src/runner.py`<br>`training/src/data/samplers.py` (planned) | `training/configs/experiments/warmstart.yaml` (planned) | Hypothesized $4.4\times$ speedup verified via benchmark artifact; clean checkpoint resumption | Unlocks Phase 3 & 4 fine-tuning runs |
+| **Phase 3: Dataset Ingestion** | Data Team | `training/src/data/adapters.py`<br>`docs/dataset-catalog.md` | `data/raw/{dyntherapy, roag, uiprmd}` (planned/candidate staging) | Checksums verified; 100% split isolation; 0 participant overlap | Unlocks expanded supervised training |
+| **Phase 4: Distillation** | ML Research | `training/src/models/heads.py`<br>`training/src/distill/` (planned) | `data/teacher_cache/*.npz` (planned) | Distilled student beats supervised baseline on RepCount-pose | Unlocks final student model checkpoint |
+| **Phase 5: Mobile Export** | Mobile Team | `training/src/export/` (planned)<br>`apps/mobile/` (planned / external repository) | `artifacts/mobile/adaptfit_tcn_int8.tflite` (planned) | 100% parity on 6 golden fixtures (planned); p95 latency $<95\text{ms}$ | Unlocks pilot app deployment |
+| **Phase 6: Pilot & Submission** | Product Lead | `docs/pilot-findings.md` (planned)<br>`submission/` (planned) | Final CAC Video & Application Package (planned) | Signed consent; 0 privacy violations; 100% CAC rubric compliance | Final Public Release & Submission |
 
 ---
 

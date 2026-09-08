@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** source schemas, model heads, config, and runtime interfaces
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** resolves contract detail previously scattered across product, architecture, and data plans
 > - **Review trigger:** any field, enum, tensor shape, unit, mask, decoder, or cross-platform interface change
@@ -115,7 +115,7 @@ Current outputs:
 | movement family | six pooled logits | Train only on source family labels. |
 | phase | five per-frame logits | Train only where phase labels are source-backed or explicitly approved. |
 | repetition boundaries | per-frame start/end logits | One start and one end channel; decoder owns event matching. |
-| dimension-specific quality | four pooled binary logits | Current coverage is zero; keep masked/disabled until reviewed targets exist. |
+| dimension-specific quality | four pooled binary logits | Current coverage is zero; keep masked/disabled until reviewed targets exist. Candidate datasets with frame-level quality annotations (such as SERE) require an explicit window/sequence temporal aggregation contract (e.g. window-level pooling or thresholded active-frame fraction) before mapping into pooled logits; without an explicit aggregation contract, these heads must remain masked. |
 | tracking confidence | per-frame observability output | Self-supervised from pose/capability observations; not clinical uncertainty. |
 | expert quality | optional five-class pooled logits | UCO/composite target only; never relabel as ROM, tempo, or smoothness. |
 

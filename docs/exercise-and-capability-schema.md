@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** product recipe schema, capability rules, and reviewed exercise catalog
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit product and safety review
 > - **Supersedes or supports:** canonical product-facing schema; contracts-and-schemas defines serialized compatibility fields
 > - **Review trigger:** recipe, capability enum, equipment rule, safety review, or feedback-dimension change

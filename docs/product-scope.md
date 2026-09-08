@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** approved product scope and safety review
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit product and safety review
 > - **Supersedes or supports:** canonical user journeys, claim boundaries, and fallback behavior
 > - **Review trigger:** new user profile, exercise, feedback claim, data behavior, or safety review

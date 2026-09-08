@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** documentation review procedure
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports the validation checklist in `docs/README.md`
 > - **Review trigger:** canonical document, contract, artifact, or repository-layout change

@@ -66,5 +66,6 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | Date | Commit | Action | Result | Notes |
 |---|---|---|---|---|
 | 2026-09-01 | `e75ba65` | Initial training & corrected-v1 benchmark | Completed | Full TCN/GRU trained; 123 tests passing. |
-| 2026-09-07 | `f890101` | Documentation contracts and runbooks refined | Completed | Unified metadata, schemas, and roadmap across 23 files. |
-| 2026-09-07 | `f890101` | Repository-wide audit & TCN v2 evaluation | Passed (124 tests) | Evaluated `v2-quality-fixed` TCN; fixed TCN streaming expert head; added CLI scripts and execution log. |
+| 2026-09-07 | `b6ac20c` | Documentation contracts and runbooks refined | Completed | Unified metadata, schemas, and roadmap across 23 files. |
+| 2026-09-07 | `ba8bf1a` | Repository-wide audit & TCN v2 evaluation | Passed (124 tests) | Evaluated `v2-quality-fixed` TCN; fixed TCN streaming expert head; added CLI scripts and execution log. |
+| 2026-09-08 | `f890101` / `686218a` | Roadmap alignment & canonical metadata synchronization | Passed (124 tests) | Aligned roadmap statuses, audited dataset mappings, and synchronized canonical documentation metadata. |

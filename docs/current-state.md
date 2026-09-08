@@ -19,8 +19,8 @@ an update here and a source artifact.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Commit | `f890101` | Re-verify with `git rev-parse HEAD` before reproducing a run. |
-| Branch state | Clean except the documentation files being refined | Do not treat uncommitted documentation as model implementation. |
+| Commit | `686218a` | Re-verify with `git rev-parse HEAD` before reproducing a run. |
+| Branch state | Clean | Tree is clean at HEAD `686218a`; do not treat uncommitted documentation as model implementation. |
 | Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
 

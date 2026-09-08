@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** model/runtime contracts and future export/parity acceptance criteria
-> - **Last verified:** 2026-09-07
-> - **Source commit:** `e75ba65`
+> - **Last verified:** 2026-09-08
+> - **Source commit:** `f890101`
 > - **Owner:** AdaptFit runtime engineering
 > - **Supersedes or supports:** canonical deployment contract; current-state records that deployment is not yet available
 > - **Review trigger:** exporter, native bridge, schema, device target, privacy behavior, or quantization change

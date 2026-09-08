@@ -30,16 +30,19 @@ assigned a role before any data is downloaded or merged.
 
 ## Current status
 
-The current project now has working adapters for REHAB24-6, IntelliRehabDS,
-MM-Fit, and UL-RED. The local MM-Fit archive is integrated into the canonical
-schema, and its workout-to-participant mapping prevents repeated sessions from
-leaking across the participant split.
+The current project now has working adapters for five integrated datasets:
+REHAB24-6, IntelliRehabDS, MM-Fit, UL-RED, and UCOPhyRehab++. The local MM-Fit
+archive is integrated into the canonical schema, and its workout-to-participant
+mapping prevents repeated sessions from leaking across the participant split.
+UCOPhyRehab++ is integrated with exact repetition boundaries and 1–5 expert
+ratings mapped to `expert_quality_logits`.
 
-The current prepared data contains:
+The actual prepared manifest contains:
 
-- 5,004 canonical sequences before synthetic augmentation.
-- 11,986 sequence entries after training-only augmentation.
-- 160,813 training windows, 6,333 validation windows, and 6,463 test windows.
+- 7,315 canonical source sequences before synthetic augmentation.
+- 17,431 sequence entries after training-only augmentation.
+- 267,440 training windows, 16,483 validation windows, and 7,536 test windows
+  across the five integrated datasets.
 - 283 features per frame, including anatomy-derived angles, velocities,
   confidence, observation masks, capability context, and position context.
 - No dimension-specific quality labels yet. Quality heads must remain masked
@@ -537,10 +540,9 @@ validate capability-aware adaptation.
 
 UCO Physical Rehabilitation contains 2,160 videos from 27 people performing
 eight rehabilitation exercises from multiple RGB views with OptiTrack ground
-truth. The authors describe access by email and research-purpose request.
+truth.
 
-Use it for pose-extractor evaluation and viewpoint robustness after the
-maintainers confirm file format and license.
+*Integration status*: UCOPhyRehab++ is now integrated into AdaptFit (`training/src/data/adapters.py#load_ucophyrehabpp`) as one of five canonical datasets, providing exact repetition boundaries and 1–5 expert ratings mapped to `expert_quality_logits`. Raw files are staged under `data/raw/ucophyrehabpp/` with checksums in `data/manifests/ucophyrehabpp.md5`.
 
 ### Upper-limb stroke rehabilitation exercise video dataset
 
@@ -818,17 +820,17 @@ To match AdaptFit's `training/src/features/anatomy.py` normalization:
 - **Mapping**: Apply 3D-to-2D virtual camera projection. Set intact arm $w_c = 1.0$, transradial arm $w_{c, wrist} = 0.0$ (or prosthesis flag).
 - **Target Mapping**:
   - `family`: `forward_reach`.
-  - `quality_logits[:, 3]`: Binary trunk compensation logit. To prevent a schema mismatch between ROAG's continuous trunk tilt angle $\theta_{trunk}$ and the binary pooled classification head (`quality_logits[:, 3]`), $\theta_{trunk}$ must be thresholded against a validated biomechanical compensation threshold (e.g. compensatory trunk lean $\theta_{trunk} \ge \tau_{trunk} = 15^\circ \implies 1$, normal $\implies 0$). Continuous angle values must never be directly placed into the binary quality logit; continuous regression is reserved for a future schema version.
+  - `quality_logits[:, 3]`: Binary trunk compensation logit. Because `MovementPredictionV1.quality_logits` is a pooled representation per temporal window (shape `[batch, 4]`) rather than per-frame, mapping continuous trunk tilt requires an explicit window aggregation and thresholding contract: compute window-level maximum trunk tilt $\max_{t \in W} \theta_{trunk}(t) \ge \tau_{trunk} = 15^\circ \implies 1$ across active reach windows, or keep masked (`quality_mask[:, 3] = 0.0`). Continuous angle values must never be directly placed into the binary quality logit; continuous regression is reserved for a future schema version.
   - `boundary`: Reach initiation $\rightarrow$ `rep_start`, target contact $\rightarrow$ `rep_end`.
-- **Masks**: `quality_mask[:, 3]` active (`1.0`) only when thresholded compensation is evaluated; other quality dimensions remain masked (`0.0`).
+- **Masks**: `quality_mask[:, 3]` active (`1.0`) only when window aggregation and thresholded compensation are evaluated; other quality dimensions remain masked (`0.0`).
 
 #### 6. SERE / TRSPD Stroke Adaptation Adapter (`training/src/data/adapters.py#load_sere`)
 - **Source Layout**: ZED 3D skeletons + Kinect v2 25-joint skeletons for post-stroke hemiparetic patients.
 - **Mapping**: Map Kinect 25 joints to canonical 33 joints by interpolating hip/torso midpoints.
 - **Target Mapping**:
-  - `quality_logits[:, 3]`: Therapist-graded frame-level trunk lean and shoulder hiking annotations mapped directly to binary compensation threshold $\ge 1$.
-  - `quality_logits[:, 0]`: Range of motion deficit scores thresholded to binary ROM deficit quality logit (or held masked if continuous, preserving the binary schema of `MovementPredictionV1`).
-  - `expert_quality_logits`: Therapist composite score (1–5 ordinal).
+  - `quality_logits[:, 3]`: Therapist-graded frame-level trunk lean and shoulder hiking annotations cannot be directly assigned to pooled `quality_logits` without a temporal aggregation contract. Under the `MovementPredictionV1` pooled binary schema, frame-level annotations must either be aggregated across the window/sequence (e.g., labeled positive if $\ge 20\%$ of frames in the active repetition window exhibit compensatory movement, or max-pooled over the window against threshold $\ge 1$) or kept strictly masked (`quality_mask[:, 3] = 0.0`). Frame-level supervision is deferred until a per-frame quality schema is introduced.
+  - `quality_logits[:, 0]`: Range of motion deficit scores must similarly be aggregated over the repetition window (e.g. window-level mean/peak ROM deficit thresholded to binary) or kept masked (`quality_mask[:, 0] = 0.0`), preserving the binary pooled schema of `MovementPredictionV1`.
+  - `expert_quality_logits`: Therapist composite score (1–5 ordinal, pooled per repetition/sequence).
 
 ### Canonical adapters
 
