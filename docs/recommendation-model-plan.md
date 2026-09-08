@@ -4,7 +4,7 @@
 > - **Status:** research-backlog
 > - **Authority:** proposed workout-selection, substitution, and personalization architecture; reviewed recipe and safety rules remain authoritative
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `9fe47fb` (repository base; recommendation system is not implemented)
+> - **Source commit:** `613ff12` (repository base; recommendation system is not implemented)
 > - **Owner:** AdaptFit product and ML engineering
 > - **Supersedes or supports:** supports `product-scope.md`, `exercise-and-capability-schema.md`, `contracts-and-schemas.md`, `data-and-training-plan.md`, and `project-forward-plan.md`
 > - **Review trigger:** recipe schema, capability/equipment rule, feedback-log design, ranking experiment, or safety review

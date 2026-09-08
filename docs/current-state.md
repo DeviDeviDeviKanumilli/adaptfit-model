@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -25,10 +25,10 @@ is the canonical path inventory; this file remains the current-state snapshot.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Repository HEAD | `9fe47fb` | Current commit on `main`; re-verify with `git rev-parse HEAD` before reproducing a run. |
+| Repository revision at last verification | `613ff12` | Parent revision audited for this repair; run `git rev-parse HEAD` before reproducing a run. |
 | Code baseline | `ba8bf1a` | Last commit modifying model code, streaming runtime, tests, or shell scripts (124/124 tests passing). |
-| Documentation revision | `9fe47fb` | Canonical documentation revision expanding schemas, fixtures, validator, and registries. |
-| Branch state | Clean | Working tree clean on `main` at commit `9fe47fb`. |
+| Documentation revision baseline | `613ff12` | Latest pushed documentation revision audited before this repair; this is a provenance anchor, not a mutable HEAD claim. |
+| Working-tree state | Must be checked | Run `git status --short`; this snapshot never treats an unverified tree as clean. |
 | Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
 

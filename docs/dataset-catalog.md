@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** dataset registry, adapter code, manifests, and license/access evidence
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit data engineering
 > - **Supersedes or supports:** concise canonical registry; detailed acquisition proposals live in [dataset-expansion-plan.md](dataset-expansion-plan.md)
 > - **Review trigger:** adapter or checksum change, license/access update, or label-role change
@@ -101,7 +101,7 @@ The registry below categorizes datasets by integration tier, licensing, and usab
 | **QUVA Repetition** | Benchmark / Challenge | 100 in-the-wild video clips with complex dynamics | Frame-level repetition count, instantaneous freq | Academic Open Access | Univ. of Amsterdam (CVPR 2018) | Test non-stationary cadence debouncing |
 | **Fitness-AQA** | Quality Pretraining | In-the-wild video clips of resistance training | Fine-grained quality assessment, movement errors | Non-Commercial Research | GitHub (`ParitoshParmar/Fitness-AQA`) | Pretrain row and press form feedback |
 | **QEVD / FIT-300K** | Quality Pretraining | 474 hours video, 289k clips across 148 exercises | Coach corrective feedback, form variation classes | Qualcomm Research License | Qualcomm Developer Network | Pretrain form-feedback language prior |
-| **Groningen Wheelchair Ergometer** | Candidate / Priority 1 | Wheelchair ergometer kinematics & kinetics; 15 novices + 1 T54 | Propulsion stroke cycles, handrim cadence, power output | CC BY-NC 4.0 Open Access | DataverseNL (DOI: 10.34894/ebjbmf) | Implement wheelchair propulsion cycle adapter |
+| **Groningen Wheelchair Ergometer** | Candidate / Priority 1 | Wheelchair ergometer kinematics & kinetics; 15 novices | Propulsion stroke cycles, handrim cadence, power output | CC BY-NC 4.0 Open Access | DataverseNL (DOI: 10.34894/ebjbmf) | Implement wheelchair propulsion cycle adapter |
 | **Loughborough Sprint Shoulder** | Candidate / Priority 1 | 3D shoulder kinematics; wheelchair court athletes | Scapular/glenohumeral internal rotation, sprint phases | CC BY 4.0 Open Access | Loughborough (DOI: 10.17028/rd.lboro.21118741.v1) | Calibrate high-cadence shoulder ROM thresholds |
 | **Wheelchair Court Mobility** | Candidate / Priority 2 | Spatiotemporal agility metrics; elite wheelchair tennis | Forward/reverse sprints, rotational agility intervals | CC BY 4.0 Open Access | Figshare (DOI: 10.6084/m9.figshare.8237906) | Benchmark multidirectional wheelchair maneuvers |
 | **Utah Above-Knee Amputee** | Candidate / Priority 1 | Synchronized mocap, GRF, sEMG, video; 9 transfemoral | Sit-to-stand repetitions, single-leg stance asymmetry | CC BY 4.0 Open Access | Nature Sci Data (DOI: 10.1038/s41597-025-04695-5) | Ground truth for transfemoral sit-to-stand phases |
@@ -109,7 +109,7 @@ The registry below categorizes datasets by integration tier, licensing, and usab
 | **CARRT Robotic Upper Body** | Candidate / Priority 2 | Vicon 3D mocap (.c3d/.trc); 10 subjects (340 trials) | 9 ADL actions, 8 ROM tasks, reaching envelopes | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.8034000) | Calibrate upper-extremity reach bounds & ROM |
 | **Transhumeral Loading ADL** | Candidate / Priority 2 | Marker-based upper-extremity kinematics; non-amputees | Functional ADLs with simulated transhumeral loading | CC BY 4.0 Open Access | Zenodo (DOI: 10.5281/zenodo.1040453) | Kinematic reference for single-arm capability masks |
 | **PrimSeq Stroke Rehab** | Candidate / Priority 1 | Wearable IMU + video; chronic stroke cohort | Functional motion primitives (reach, reposition, idle) | Open Research Access | SimTK (`primseq`) / GitHub | Benchmark sub-repetition motion primitive classification |
-| **Rehab-Pile Benchmark** | Benchmark / Challenge | Aggregated physical therapy 3D skeletons | Multi-exercise movement quality scores, error classes | Apache 2.0 / MIT | GitHub (`DeepRehabPile`) | Cross-dataset quality assessment benchmark |
+| **Rehab-Pile Benchmark** | Candidate / verification pending | Aggregated physical therapy 3D skeletons | Multi-exercise movement quality scores, error classes | License pending primary-source verification | GitHub (`DeepRehabPile`) | Verify release, license, checksum, and adapter before use |
 | **STRIDE Stroke Gait** | Candidate / Priority 2 | 3D kinematics, kinetics, spatiotemporal parameters | Post-stroke asymmetric gait cycles, step boundaries | Open Research Access | ICPSR (DOI: 10.3886/ICPSR38002.v2) | Held-out evaluation for lower-limb asymmetric cycles |
 | **Park et al. Stroke Depth/IMU** | Candidate / Priority 1 | 631 Kinect v2 skeletons + 2 IMUs; 128 stroke subjects | 5 clinical exercises, therapist performance scores | CC BY 4.0 Open Access | Mendeley Data (DOI: 10.17632/ygpdzx52g2.1) | Map Kinect 25-to-33 joints & supervise trunk tilt head |
 | **OpenCap 100-Subject Dynamics** | Pretraining / Auxiliary | Dual smartphone video + optical mocap + OpenSim; 100 sub | Squats, jumps, lunges; 3D kinematics & joint loading | CC BY 4.0 Open Access | SimTK (`opencap`, DOI: 10.1371/journal.pcbi.1011462) | Video-to-pose pretraining and domain transfer anchor |
@@ -628,9 +628,9 @@ To maximize model performance while strictly observing licensing boundaries, dat
 - **AdaptFit Proposed Use**: **Proposed Candidate / Not Integrated Code**. Proposed for `direct_temporal` and `evaluation_challenge` (gold standard benchmark for sub-repetition primitive segmentation and clinical repetition dose counting in stroke hemiparesis).
 
 #### 42. Rehab-Pile Benchmark Suite for Human Motion Rehabilitation Assessment
-- **Official Citation**: Ismail-Fawaz, A., et al. (IRIMAS, Université de Haute-Alsace, 2025). *Deep Learning for Skeleton Based Human Motion Rehabilitation Assessment: A Benchmark*. arXiv:2501.xxxxx; project page: [https://msd-irimas.github.io/pages/DeepRehabPile/](https://msd-irimas.github.io/pages/DeepRehabPile/).
+- **Citation / verification**: Primary citation and versioned release identifier are pending verification. Project page: [https://msd-irimas.github.io/pages/DeepRehabPile/](https://msd-irimas.github.io/pages/DeepRehabPile/).
 - **Repository / DOI**: GitHub (`msd-irimas/DeepRehabPile`); `aeon-toolkit` (`load_rehab_pile_dataset`); PyPI: `deep-rehab-pile`.
-- **License / Access**: Open Source Academic Benchmark License (Apache 2.0 / MIT).
+- **License / Access**: Pending primary-source verification; do not treat as cleared for AdaptFit training or redistribution.
 - **Modalities & Setup**: Standardized skeleton-based motion time series across video and inertial sensors.
 - **Participants & Cohort**: Harmonized multi-cohort rehabilitation benchmark aggregating 8 primary repositories into a unified evaluation suite.
 - **Exercise Types**: 39 distinct classification problem sets and 21 extrinsic regression problem sets spanning upper-limb, lower-limb, and trunk rehabilitation exercises.

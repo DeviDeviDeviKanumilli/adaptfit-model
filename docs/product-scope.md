@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** approved product scope and safety review
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit product and safety review
 > - **Supersedes or supports:** canonical user journeys, claim boundaries, and fallback behavior
 > - **Review trigger:** new user profile, exercise, feedback claim, data behavior, or safety review

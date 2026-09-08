@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** documentation review procedure
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports the validation checklist in `docs/README.md`
 > - **Review trigger:** canonical document, contract, artifact, or repository-layout change
@@ -142,6 +142,13 @@ under `docs/examples/contracts/` are checked by the validator. Invalid fixtures
 must fail either structural schema validation or an explicit cross-field policy
 such as empty-candidate consistency, catalog compatibility, consent state, or
 model/feature compatibility.
+
+Normative JSON examples embedded in Markdown use a fence whose info string is
+`json contract=<schema-stem>`; the event example in
+`contracts-and-schemas.md` uses `json contract=workout-event-v1`. These blocks
+are validated against the matching schema. Illustrative snippets without a
+`contract=` marker may contain placeholders or type descriptions and are not
+treated as executable payloads.
 
 ## Completion record
 

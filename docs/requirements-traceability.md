@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** mapping from product requirements and claims to contracts, code, tests, artifacts, and release gates
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering, product, and safety review
 > - **Supersedes or supports:** supports `product-scope.md`, `evaluation-protocol.md`, `model-registry.md`, and `project-forward-plan.md`
 > - **Review trigger:** requirement, public claim, contract, test, artifact, or release-gate change
@@ -21,7 +21,7 @@ an invitation to infer.
 | Estimate movement phase | `MovementPredictionV1` | `training/src/models/heads.py` | temporal/streaming tests | `v2-quality-fixed` evaluation | 5-class frame logits; requires phase ground truth |
 | Count repetitions | `WorkoutEventV1` | planned decoder over boundary heads | planned decoder fixtures | sequence predictions and metrics | end-boundary weakness must be debounced |
 | Provide observable quality feedback | `MovementPredictionV1` (`quality_logits`) | 4-head quality outputs in `heads.py` | label-coverage tests | none with valid four-head coverage | unavailable while quality coverage is zero |
-| Provide expert composite quality score | `MovementPredictionV1` (`expert_quality_logits`) | expert quality head in `heads.py` | `test_v2_quality_pipeline.py` | `v2-quality-fixed` evaluation | ordinal clinical scale; not interchangeable with 4 observable heads |
+| Provide expert composite quality score | `MovementPredictionV1` (`expert_quality_logits`) | expert quality head in `heads.py` | `test_v2_quality_pipeline.py` | `v2-quality-fixed` evaluation | source expert/composite scale; not clinical validation and not interchangeable with 4 observable heads |
 | Profile user physical capabilities | `CapabilityProfileV1` | `training/src/data/schema.py` | `test_data_contracts.py` | valid/invalid profile fixtures | self-reported on-device profile; not a medical diagnosis |
 | Author exercise recipe safety bounds | `ExerciseRecipeV1` | `docs/recipe-catalog-and-review.md` | documentation validator | catalog fixtures and review rubrics | reviewed safety bounds; requires human kinesiology review |
 | Filter compatible exercises | `EligibleRecipeSetV1` | planned deterministic filter | planned feasibility fixtures | reviewed catalog hash | zero rule violations in exhaustive fixtures before ranking |

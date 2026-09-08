@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source schemas, model heads, config, and runtime interfaces
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** resolves contract detail previously scattered across product, architecture, and data plans
 > - **Review trigger:** any field, enum, tensor shape, unit, mask, decoder, or cross-platform interface change
@@ -215,21 +215,21 @@ not be serialized under `MovementPredictionV1`.
 The deterministic decoder emits one event only after it has reconciled
 overlapping windows and runtime state:
 
-```json
+```json contract=workout-event-v1
 {
   "schema_version": "workout-event.v1",
-  "session_id": "…",
-  "exercise_id": "…",
-  "variant_id": "…",
-  "side": "left|right|bilateral|alternating|unknown",
-  "start_timestamp_ms": 0,
-  "end_timestamp_ms": 0,
+  "session_id": "session-demo-001",
+  "exercise_id": "seated_one_arm_biceps_curl",
+  "variant_id": "left_no_equipment",
+  "side": "left",
+  "start_timestamp_ms": 1000,
+  "end_timestamp_ms": 2500,
   "count_delta": 1,
-  "event_confidence": 0.0,
-  "tracking_confidence": 0.0,
+  "event_confidence": 0.88,
+  "tracking_confidence": 0.92,
   "abstention": false,
-  "reason_code": "accepted|low_tracking|ambiguous_boundary|paused|reset|manual",
-  "model_version": "…",
+  "reason_code": "decoded_rep",
+  "model_version": "movement-tcn-v1",
   "feature_schema_version": "feature.v1",
   "decoder_version": "decoder.v1"
 }

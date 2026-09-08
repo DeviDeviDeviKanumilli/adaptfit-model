@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** system boundary and cross-subsystem ownership map; contracts and source code own exact fields and behavior
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports `current-state.md`, `contracts-and-schemas.md`, `scalable-ml-architecture.md`, and `on-device-deployment.md`
 > - **Review trigger:** new runtime boundary, model family, event contract, storage path, or deployment target

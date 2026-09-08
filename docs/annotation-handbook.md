@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** label definitions, temporal boundaries, masking, adjudication, and annotation provenance
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit data and evaluation engineering
 > - **Supersedes or supports:** supports `data-and-training-plan.md`, `dataset-catalog.md`, and `evaluation-protocol.md`
 > - **Review trigger:** label policy, source adapter, quality target, split policy, or temporal aggregation change

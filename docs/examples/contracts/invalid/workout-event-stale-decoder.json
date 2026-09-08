@@ -9,7 +9,9 @@
   "reason_code": "decoded_rep",
   "schema_version": "workout-event.v1",
   "session_id": "s",
+  "side": "unknown",
   "start_timestamp_ms": 10,
   "tracking_confidence": 0.5,
-  "variant_id": "v"
+  "variant_id": "v",
+  "feature_schema_version": "feature.v1"
 }

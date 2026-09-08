@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** repository entrypoints, source/config/test ownership, and artifact handoff map
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports `system-context-and-dataflow.md`, `current-state.md`, and the training/deployment runbooks
 > - **Review trigger:** repository layout, entrypoint, config, test, or artifact ownership change

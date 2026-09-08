@@ -4,7 +4,7 @@
 > - **Status:** research-backlog
 > - **Authority:** proposed self-supervised world-model and teacher architecture; it does not override implemented model contracts
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `9fe47fb` (repository base; proposal is not implemented)
+> - **Source commit:** `613ff12` (repository base; proposal is not implemented)
 > - **Owner:** AdaptFit ML research
 > - **Supersedes or supports:** supports `scalable-ml-architecture.md`, `efficient-training-strategy.md`, `data-and-training-plan.md`, and Phase 4 of `project-forward-plan.md`
 > - **Review trigger:** baseline result, data-volume change, compute-budget change, or self-supervised experiment

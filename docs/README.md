@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** documentation index; source code/config/artifacts remain authoritative for implementation facts
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `9fe47fb` (documentation revision base)
+> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** replaces the previous undifferentiated document list
 > - **Review trigger:** any new canonical document, status change, schema change, or roadmap change

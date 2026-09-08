@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -133,6 +134,40 @@ def validate_links(errors: list[str]) -> None:
                 fail(errors, f"{source.relative_to(ROOT)}: broken relative link {target!r}")
 
 
+def validate_markdown_contract_blocks(errors: list[str]) -> None:
+    """Validate normative JSON examples embedded in Markdown.
+
+    Illustrative snippets elsewhere in the documentation intentionally contain
+    ellipses or type-union strings, so only fences explicitly marked with a
+    ``contract=<schema-stem>`` info string are normative and machine-checked.
+    """
+
+    markdown = sorted(DOCS.glob("*.md")) + [ROOT / "README.md", ROOT / "training" / "README.md"]
+    fence = re.compile(
+        r"^[ \t]*```json[ \t]+contract=(?P<contract>[A-Za-z0-9._-]+)[ \t]*\n"
+        r"(?P<body>.*?)^[ \t]*```[ \t]*$",
+        re.MULTILINE | re.DOTALL,
+    )
+    for source in markdown:
+        text = source.read_text(encoding="utf-8")
+        for match in fence.finditer(text):
+            contract = match.group("contract")
+            schema_path = SCHEMAS / f"{contract}.schema.json"
+            if not schema_path.exists():
+                fail(errors, f"{source.relative_to(ROOT)}: no schema for embedded contract {contract!r}")
+                continue
+            try:
+                value = json.loads(textwrap.dedent(match.group("body")).strip())
+            except json.JSONDecodeError as exc:
+                fail(errors, f"{source.relative_to(ROOT)}: invalid embedded {contract} JSON: {exc}")
+                continue
+            schema = read_json(schema_path, errors)
+            if schema is None:
+                continue
+            for problem in validate_value(value, schema):
+                fail(errors, f"{source.relative_to(ROOT)}: embedded {contract}: {problem}")
+
+
 def validate_fixtures(errors: list[str]) -> None:
     schema_by_contract: dict[str, Path] = {}
     for path in sorted(SCHEMAS.glob("*.schema.json")):
@@ -248,6 +283,7 @@ def main() -> int:
     errors: list[str] = []
     validate_metadata(errors)
     validate_links(errors)
+    validate_markdown_contract_blocks(errors)
     validate_fixtures(errors)
     validate_current_facts(errors)
     validate_registry_and_index(errors)
