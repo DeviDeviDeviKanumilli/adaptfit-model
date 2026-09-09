@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
 > - **Review trigger:** milestone completion, dependency change, gate result, or empirical evidence

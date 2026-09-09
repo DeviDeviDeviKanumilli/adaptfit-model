@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -27,11 +27,11 @@ current-state snapshot.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Repository revision at last verification | `8e1db4010257a3ac7211546e3e08d777bba3ef22` | Baseline revision before the current pre-training gate changes; run `git rev-parse HEAD` before reproducing a run. |
-| Code baseline | `ba8bf1a` plus current working-tree gate changes | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, and isolated configs are new working-tree changes. |
+| Repository revision at last verification | `847fd5de7bf736d30adb1eb37d5684cc62936525` | Pre-training gate commit; run `git rev-parse HEAD` before reproducing a run. |
+| Code baseline | `847fd5d` with the pre-training gate changes committed | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, and isolated configs are committed alongside the documentation. |
 | Documentation revision baseline | `613ff12` | Latest pushed documentation revision audited before this repair; this is a provenance anchor, not a mutable HEAD claim. |
 | Working-tree state | Must be checked | Run `git status --short`; this snapshot never treats an unverified tree as clean. |
-| Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
+| Test suite | 132 tests passed in the last verified run (`python3 -m pytest -q`) | Documentation validator and full test suite pass at the pre-training gate commit. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
 
 ## Implemented model contract

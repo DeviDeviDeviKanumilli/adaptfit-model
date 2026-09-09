@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training execution ledger, checkpoint provenance, and audit record
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** satisfies the execution log requirement from [documentation-validation.md](documentation-validation.md) and [efficient-training-strategy.md](efficient-training-strategy.md)
 > - **Review trigger:** after every experiment run, checkpoint evaluation, data preparation, or task transition
@@ -96,3 +96,4 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | 2026-09-08 | `d5362ee` | Documentation revision | Execution provenance audit & contract grounding | Passed (124 tests) | Updated prepared-manifest counts, labeled planned paths and candidate datasets, grounded speedup hypotheses. |
 | 2026-09-08 | `1a46f38` | Documentation revision | Phase 5 planned-metric labeling | Passed (124 tests) | Marked mobile calibration, parity, latency, memory, and thermal values as planned acceptance criteria. |
 | 2026-09-08 | `613ff12` | Documentation revision (prior canonical HEAD) | Expand dataset catalog and formalize operational documentation contracts | Passed (124 tests) | Pushed baseline audited before the documentation correctness repair; expanded dataset registry and operational contracts. |
+| 2026-09-08 | `847fd5d` | Pre-training gate implementation | Decoder, provenance, staged runner controls, R0/R1 configs, and readiness docs | Passed (132 tests; docs validator) | Corrected-v1 hashes unchanged; R0 manifests/calibration regenerated; R1 training intentionally not launched. |

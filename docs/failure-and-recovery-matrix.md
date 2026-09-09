@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** detection, reason codes, user behavior, fallback, telemetry, and test ownership
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit runtime and product engineering
 > - **Supersedes or supports:** supports `system-context-and-dataflow.md`, `on-device-deployment.md`, `product-scope.md`, and `privacy-and-data-lifecycle.md`
 > - **Review trigger:** new failure mode, reason code, fallback, runtime, or user-visible behavior

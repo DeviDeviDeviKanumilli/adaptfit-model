@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** mapping from product requirements and claims to contracts, code, tests, artifacts, and release gates
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering, product, and safety review
 > - **Supersedes or supports:** supports `product-scope.md`, `evaluation-protocol.md`, `model-registry.md`, and `project-forward-plan.md`
 > - **Review trigger:** requirement, public claim, contract, test, artifact, or release-gate change

@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** reproducibility gate for the next training run; source code, configs, and generated reports remain authoritative
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `8e1db4010257a3ac7211546e3e08d777bba3ef22` (working-tree changes are listed in Git status)
+> - **Source commit:** `847fd5de7bf736d30adb1eb37d5684cc62936525` (pre-training gate commit)
 > - **Owner:** AdaptFit training and evaluation engineering
 > - **Supersedes or supports:** supports `current-state.md`, `efficient-training-strategy.md`, `training-execution-log.md`, and `artifact-registry.md`
 > - **Review trigger:** any change to the selected config, prepared split, checkpoint, decoder, label policy, or training runner
@@ -127,7 +127,7 @@ then call the result a pass without a separately named experiment and the same
 validation-only provenance.
 
 The regenerated local calibration report is currently hashed
-`sha256:0ffd3508f6684ec8d30864e7bee68047262ba27c3e70deab429c79c3fada166b`.
+`sha256:c776e159c941d0bb16e45c3debf9189743a4899cc1e5f17c07e6bf86ab80375d`.
 Because the report is ignored by Git, the command above is the source of truth
 when the working tree or commit changes.
 
