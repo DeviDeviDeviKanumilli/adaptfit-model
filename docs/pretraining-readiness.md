@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** reproducibility gate for the next training run; source code, configs, and generated reports remain authoritative
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `847fd5de7bf736d30adb1eb37d5684cc62936525` (pre-training gate commit)
+> - **Source commit:** `627283bec6851d95cba988a0235931c158465eab` (R1 smoke evidence; pre-training gate baseline)
 > - **Owner:** AdaptFit training and evaluation engineering
 > - **Supersedes or supports:** supports `current-state.md`, `efficient-training-strategy.md`, `training-execution-log.md`, and `artifact-registry.md`
 > - **Review trigger:** any change to the selected config, prepared split, checkpoint, decoder, label policy, or training runner
@@ -18,14 +18,15 @@ Git and must be regenerated when it is absent.
 
 ## Current decision
 
-The repository is mechanically ready for an isolated training experiment. The
-next computational action is the R1 boundary-focused TCN warm-start described
-below. The corrected-v1 checkpoint and prepared data remain immutable. The
-decoder gate is recorded as **blocked** because the current TCN does not emit
-validated end events on the validation split; this is the measured training
-target, not a reason to claim product readiness.
+The repository is mechanically ready for an isolated training experiment, and
+the bounded R1 smoke run has completed successfully. The next computational
+action is the full R1 boundary-focused TCN warm-start described below. The
+corrected-v1 checkpoint and prepared data remain immutable. The decoder gate is
+recorded as **blocked** because the current TCN does not emit validated end
+events on the validation split; this is the measured training target, not a
+reason to claim product readiness.
 
-Training remains the next action after this handoff. Product release remains
+The full R1 run remains the next action after this handoff. Product release remains
 blocked until the decoder, quality supervision, target-population evidence, and
 native parity gates pass in their own artifacts.
 
@@ -131,6 +132,22 @@ The regenerated local calibration report is currently hashed
 Because the report is ignored by Git, the command above is the source of truth
 when the working tree or commit changes.
 
+## R1 smoke result
+
+The required two-epoch CPU smoke command completed after strict preflight. It
+trained only the 1,746 output-head parameters from the corrected-v1 parent and
+wrote `artifacts/r1-tcn-boundary/`. Epoch 1 was selected on validation with
+sequence score `0.6484946`; epoch 2 scored `0.6476718`. The best checkpoint had
+sequence boundary F1 `0.5561438`, repetition-end F1 `0.1180846`, and count MAE
+`0.1071429`. Losses were finite. The run took `848.13` training seconds plus
+`23.98` validation seconds on CPU.
+
+The checkpoints contain model/optimizer state, Python/NumPy/Torch RNG state,
+sampler epoch, effective `config`, trainable layers, parent checkpoint, and
+source commit. `test_evaluation_performed` is false and the metrics report has
+no test evaluation. Full checkpoint and report hashes are recorded in
+[training-execution-log.md](training-execution-log.md).
+
 ## R1 training handoff
 
 R1 is an isolated, validation-selected warm-start experiment. It retains the
@@ -148,12 +165,12 @@ prepared split, and writes only to `artifacts/r1-tcn-boundary/`.
 - latest resumable checkpoint enabled;
 - strict source paths with optional quality sources disabled.
 
-The first training run must be a bounded smoke run using `--max-epochs 2` and
-`--models tcn`. It must stop before any test evaluation and verify that the
-checkpoint contains model, optimizer, RNG, sampler epoch, effective config,
-trainable-layer list, parent checkpoint, and source commit. If it fails, record
-the failure in `docs/training-execution-log.md` and do not start the full R1
-budget.
+The bounded smoke run is complete and passed its provenance gate. The full R1
+budget is now eligible, but it remains a separate action. Run it with the same
+config and `--models tcn` without the two-epoch override; keep
+`evaluate_test_after_training: false` so test evaluation remains locked.
+
+The completed smoke command was:
 
 ```bash
 python3 -m training.preflight \
@@ -166,11 +183,18 @@ python3 -m training.train \
   --max-epochs 2 --skip-test
 ```
 
-The smoke run is a training command and is intentionally the next action; this
-readiness pass has not launched it. A full R1 run is eligible only after the
-smoke checkpoint and provenance checks pass. Select the best R1 checkpoint on
-validation, calibrate the decoder again on validation, and evaluate the locked
-test split only once the candidate and decoder are frozen.
+The full R1 command, when authorized, is:
+
+```bash
+python3 -m training.train \
+  --config training/configs/experiments/r1_tcn_boundary_finetune.yaml \
+  --project-root /Users/devk/AdaptFit \
+  --models tcn --device auto --skip-test
+```
+
+The smoke checkpoint and provenance checks passed. Select the best full-R1
+checkpoint on validation, calibrate the decoder again on validation, and
+evaluate the locked test split only once the candidate and decoder are frozen.
 
 ## Stop conditions
 
@@ -189,7 +213,7 @@ Stop before or during R1 if any of the following occurs:
 
 ## What remains after the training handoff
 
-Training is the next action, but it is not the final product gate. After R1,
+The full R1 run is the next action, but it is not the final product gate. After R1,
 the remaining evidence work is: validation-only decoder recalibration;
 supervised-only versus teacher-assisted comparison if a measured gap remains;
 quality-label acquisition; target-population collection; native export and

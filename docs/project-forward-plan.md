@@ -457,7 +457,7 @@ gantt
     Official CAC Deadline (12 PM EDT) :milestone, 2026-10-26, 0d
 ```
 
-*Status Alignment with Execution Log*: As documented in `docs/training-execution-log.md`, the Python decoder and validation-only R0 calibration are complete as an audit, but the declared end-event gate is blocked. Warm-start/freeze/resume controls and isolated R0/R1 configs are implemented and tested; no R1 training run has been launched. Downstream data ingestion, teacher, recommendation, and distillation phases remain scheduled rather than active.
+*Status Alignment with Execution Log*: As documented in `docs/training-execution-log.md`, the Python decoder and validation-only R0 calibration are complete as an audit, but the declared end-event gate is blocked. Warm-start/freeze/resume controls and isolated R0/R1 configs are implemented and tested; the bounded R1 smoke run has completed, while the full R1 training budget has not been launched. Downstream data ingestion, teacher, recommendation, and distillation phases remain scheduled rather than active.
 
 - **Key Dates**:
   - **Internal Submission Freeze**: **October 23, 2026** (3-day safety buffer).

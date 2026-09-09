@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `627283b` (R1 smoke-run evidence; baseline and pre-training gate)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -27,8 +27,8 @@ current-state snapshot.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Repository revision at last verification | `847fd5de7bf736d30adb1eb37d5684cc62936525` | Pre-training gate commit; run `git rev-parse HEAD` before reproducing a run. |
-| Code baseline | `847fd5d` with the pre-training gate changes committed | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, and isolated configs are committed alongside the documentation. |
+| Repository revision at last verification | `627283bec6851d95cba988a0235931c158465eab` | Commit used for the R1 smoke run; run `git rev-parse HEAD` before reproducing a run. |
+| Code baseline | `627283b` with the pre-training gate changes committed | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, and isolated configs are committed alongside the documentation. |
 | Documentation revision baseline | `613ff12` | Latest pushed documentation revision audited before this repair; this is a provenance anchor, not a mutable HEAD claim. |
 | Working-tree state | Must be checked | Run `git status --short`; this snapshot never treats an unverified tree as clean. |
 | Test suite | 132 tests passed in the last verified run (`python3 -m pytest -q`) | Documentation validator and full test suite pass at the pre-training gate commit. |
@@ -86,6 +86,7 @@ Current label facts:
 | `artifacts/v2-quality/` | Prepared data only | Preparation and manifests exist; no completed model comparison. |
 | `artifacts/v2-quality-fixed/` | Partial (TCN evaluated; GRU interrupted) | TCN training completed through 72 epochs (best epoch 42) and has been evaluated on the test split with sequence and window metrics; the GRU checkpoint is an interrupted intermediate run at epoch 52. It is not a complete TCN/GRU comparison. |
 | `artifacts/r0-baseline/` | Local evaluation-only audit (ignored by Git) | Fresh corrected-v1 test reports, model manifests, and validation-only decoder calibration; regenerate if absent. It contains no trained model. |
+| `artifacts/r1-tcn-boundary/` | Local smoke artifact (ignored by Git) | Two-epoch CPU heads-only warm-start from corrected-v1; validation-only metrics and complete checkpoint provenance; full R1 not run. |
 
 Checkpoint-level status at this verification:
 
@@ -97,6 +98,9 @@ Checkpoint-level status at this verification:
   window evaluation (`metrics/tcn_evaluation.json`, predictions, and sequence
   metadata); `gru_baseline.pt` remains an interrupted intermediate state (epoch 52).
   See [training-execution-log.md](training-execution-log.md) for full metrics.
+- R1: `artifacts/r1-tcn-boundary/checkpoints/tcn_best.pt` is a two-epoch
+  validation-only smoke checkpoint. It is not a selected full-run model and has
+  no test metrics. See [training-execution-log.md](training-execution-log.md).
 
 Corrected-v1 evidence includes 617 logical test sequences and 7,592 windows
 with zero identity collisions. The fresh R0 report, using the current masked
@@ -130,9 +134,9 @@ metric provenance.
 1. Quality supervision is absent for all four dimension-specific quality heads.
 2. Target-population validation is absent.
 3. The runner now exposes warm-start, exact-resume, frozen-backbone,
-   partial-block, separate-learning-rate, isolated-root, and test-lock controls;
-   these controls are covered by the pre-training handoff but have not been
-   used for a completed training experiment in this working tree.
+   partial-block, separate-learning-rate, isolated-root, and test-lock controls.
+   The R1 smoke exercised warm-start and frozen-backbone behavior; full-run
+   selection and exact interruption/resume remain unverified.
 4. Repetition-end performance is materially weaker than repetition-start
    performance and needs boundary/decoder review before product use.
 5. A production model bundle and native runtime contract do not exist.
