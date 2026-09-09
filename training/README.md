@@ -4,7 +4,7 @@
 > - **Status:** canonical-active
 > - **Authority:** training entry point; [the full runbook](../docs/efficient-training-strategy.md) and runner/config are authoritative for commands
 > - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** short operational quickstart; rationale and staged workflow live in the linked runbook
 > - **Review trigger:** command/config/runner change or new artifact layout
