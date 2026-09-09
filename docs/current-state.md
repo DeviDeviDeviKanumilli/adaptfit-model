@@ -157,12 +157,12 @@ metric provenance.
 
 ## Next validated actions
 
-1. Use the [pre-training readiness handoff](pretraining-readiness.md) to run
-   the bounded R1 TCN smoke training in its isolated artifact root.
-2. Select on validation, recalibrate the decoder on validation, and keep the
-   corrected-v1 test split locked until the candidate is frozen.
-3. Use the implemented provenance-aware fine-tuning controls for the isolated
-   pilot before any teacher or density experiment.
+1. Run validation-only decoder calibration on the R1 epoch-12 checkpoint.
+2. If the decoder gate passes, freeze the candidate and decoder, then evaluate
+   the locked test split once and compare R1 with corrected-v1 under the same
+   protocol.
+3. If calibration is blocked, inspect boundary labels and decoded failures and
+   run one isolated targeted boundary experiment; do not launch broad training.
 4. Obtain reviewed quality labels and consented target-population recordings.
 5. Define and test the model bundle, Python/native golden fixtures, and mobile
    release gates before describing deployment as available.

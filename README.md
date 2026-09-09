@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** top-level repository index and operational entry point
-> - **Last verified:** 2026-09-08
-> - **Source commit:** `ba8bf1a` (code baseline) / `613ff12` (documentation revision base)
+> - **Last verified:** 2026-09-09
+> - **Source commit:** `c766ca1` (current documentation and R1 status)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** project root README; points to canonical docs/ and training/
 > - **Review trigger:** new run, artifact layout, or entry point change
@@ -36,6 +36,7 @@ remain readable.
 
 ## Documentation
 
+- [Current handoff](HANDOFF.md)
 - [Documentation index](docs/README.md)
 - [System context and data flow](docs/system-context-and-dataflow.md)
 - [Repository and implementation map](docs/repository-and-implementation-map.md)
