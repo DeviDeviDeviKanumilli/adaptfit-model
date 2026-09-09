@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** artifact paths, lineage, status, provenance, and metric evidence
-> - **Last verified:** 2026-09-08
-> - **Source commit:** `627283b` (R1 smoke-run evidence; baseline and pre-training gate)
+> - **Last verified:** 2026-09-09
+> - **Source commit:** `d7848e2` (R1 full-run evidence; smoke and pre-training gate history)
 > - **Owner:** AdaptFit training and release engineering
 > - **Supersedes or supports:** consolidates artifact status from `current-state.md`, `training-execution-log.md`, and historical benchmark reports
 > - **Review trigger:** new run, checkpoint, manifest, evaluation, export, or path change
@@ -22,7 +22,7 @@ training log alone does not establish a release candidate.
 | `v2-quality-fixed` | `artifacts/v2-quality-fixed/` | partial | `training/configs/v2_quality_fixed.yaml` | TCN evaluated; GRU interrupted; quality-4 target coverage remains zero |
 | `v2-diagnostics` | `artifacts-v2-diagnostics/` | diagnostic variant | `training/configs/v2_diagnostics.yaml` | 378-feature diagnostic schema; not a replacement for the 283-feature contract |
 | `r0-baseline` | `artifacts/r0-baseline/` (local, ignored) | evaluation-only audit | `training/configs/experiments/r0_baseline.yaml`; parent `corrected-v1` | Fresh TCN/GRU reports and manifests plus validation-only decoder calibration; no trained child checkpoint |
-| `r1-tcn-boundary-finetune` | `artifacts/r1-tcn-boundary/` (local, ignored) | smoke complete; full run not started | `training/configs/experiments/r1_tcn_boundary_finetune.yaml`; parent `corrected-v1/tcn_best.pt` | Two-epoch CPU head-only warm-start; best epoch 1; no test evaluation; full R1 candidate selection remains pending |
+| `r1-tcn-boundary-finetune` | `artifacts/r1-tcn-boundary/` (local, ignored) | full training complete; validation-only | `training/configs/experiments/r1_tcn_boundary_finetune.yaml`; parent `corrected-v1/tcn_best.pt` | MPS head-only run stopped at epoch 27 with best epoch 12; no test evaluation; decoder calibration and candidate release gates remain pending |
 
 The current-state and training execution log remain the human-readable snapshot;
 this table is the canonical inventory to extend after every run.

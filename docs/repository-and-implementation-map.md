@@ -3,7 +3,7 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** repository entrypoints, source/config/test ownership, and artifact handoff map
-> - **Last verified:** 2026-09-08
+> - **Last verified:** 2026-09-09
 > - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports `system-context-and-dataflow.md`, `current-state.md`, and the training/deployment runbooks
@@ -30,7 +30,7 @@ is not evidence that a component exists.
 | Decoder | `training/src/decoder.py` | `training/configs/decoder_v1.yaml` | deterministic `WorkoutEventV1` events, pause/reset/abstention reasons | `training/tests/test_decoder.py` | Runtime engineering / Python reference active; native unavailable |
 | Decoder calibration | `training/calibrate_decoder.py` | R0 config + decoder config | validation-only threshold report and gate status | `training/tests/test_decoder.py` plus report inspection | Evaluation / active audit tool |
 | Provenance | `training/src/provenance.py` | effective config and artifact paths | hashes, environment summary, model manifest | `training/tests/test_integrity_and_artifacts.py` | Training/release / active |
-| Staged training controls | `training/src/runner.py`, `training/train.py` | `training/configs/experiments/*.yaml` | isolated warm-start/resume checkpoints and experiment record | `training/tests/test_staged_training.py`, `test_streaming_and_training.py` | Training / active controls; R1 smoke complete, full R1 pending |
+| Staged training controls | `training/src/runner.py`, `training/train.py` | `training/configs/experiments/*.yaml` | isolated warm-start/resume checkpoints and experiment record | `training/tests/test_staged_training.py`, `test_streaming_and_training.py` | Training / active controls; R1 full run complete, decoder evaluation pending |
 | Recipe feasibility | `docs/exercise-and-capability-schema.md` | recipe catalog/hash | eligible candidate set | planned recommendation fixtures | Product/safety / planned |
 | Recommendation | `docs/recommendation-model-plan.md` | planned request/config | ranked workout recommendation | planned recommendation fixtures | Product/ML / planned |
 | Mobile bundle | `docs/on-device-deployment.md` | planned artifact manifest | native model bundle | no native tests | Release engineering / unavailable |

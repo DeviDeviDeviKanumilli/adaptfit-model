@@ -3,32 +3,31 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** reproducibility gate for the next training run; source code, configs, and generated reports remain authoritative
-> - **Last verified:** 2026-09-08
-> - **Source commit:** `627283bec6851d95cba988a0235931c158465eab` (R1 smoke evidence; pre-training gate baseline)
+> - **Last verified:** 2026-09-09
+> - **Source commit:** `d7848e2b12322e40e83758abd5e12ae6c7727e80` (R1 full-run evidence; smoke and pre-training gate history)
 > - **Owner:** AdaptFit training and evaluation engineering
 > - **Supersedes or supports:** supports `current-state.md`, `efficient-training-strategy.md`, `training-execution-log.md`, and `artifact-registry.md`
 > - **Review trigger:** any change to the selected config, prepared split, checkpoint, decoder, label policy, or training runner
 
 This document is the handoff between preparation and the next authorized model
 training run. It freezes the evidence already checked and gives Luna one
-ordered path. It does **not** start training, select a product release, or
-promote the decoder. The only generated artifacts referenced here are local
-evaluation reports under `artifacts/r0-baseline/`; that directory is ignored by
-Git and must be regenerated when it is absent.
+ordered path. It does **not** select a product release or promote the decoder.
+The generated artifacts referenced here are local, ignored R0/R1 reports and
+checkpoints; they must be regenerated when absent.
 
 ## Current decision
 
 The repository is mechanically ready for an isolated training experiment, and
-the bounded R1 smoke run has completed successfully. The next computational
-action is the full R1 boundary-focused TCN warm-start described below. The
+both the bounded smoke run and the full R1 heads-only run have completed. The
+next computational action is validation-only decoder recalibration. The
 corrected-v1 checkpoint and prepared data remain immutable. The decoder gate is
-recorded as **blocked** because the current TCN does not emit validated end
-events on the validation split; this is the measured training target, not a
-reason to claim product readiness.
+recorded as **blocked** because the current R1 checkpoint does not yet have a
+validated decoder result; this is a measured training target, not a reason to
+claim product readiness.
 
-The full R1 run remains the next action after this handoff. Product release remains
-blocked until the decoder, quality supervision, target-population evidence, and
-native parity gates pass in their own artifacts.
+Validation-only decoder calibration is the next action after this handoff.
+Product release remains blocked until the decoder, quality supervision,
+target-population evidence, and native parity gates pass in their own artifacts.
 
 ## Frozen baseline and provenance
 
@@ -148,6 +147,16 @@ source commit. `test_evaluation_performed` is false and the metrics report has
 no test evaluation. Full checkpoint and report hashes are recorded in
 [training-execution-log.md](training-execution-log.md).
 
+## R1 full-run result
+
+The full heads-only R1 run completed on Apple MPS with 27 epochs before early
+stopping; epoch 12 was selected on the validation sequence score `0.6603763`.
+The selected checkpoint has sequence family macro-F1 `0.902795`, phase
+macro-F1 `0.569988`, boundary F1 `0.548749`, repetition-end F1 `0.109059`, and
+count MAE `0.155134`. These are validation-only training metrics. Test
+evaluation remains locked, quality-head coverage remains zero, and the
+checkpoint is not a release candidate.
+
 ## R1 training handoff
 
 R1 is an isolated, validation-selected warm-start experiment. It retains the
@@ -165,10 +174,10 @@ prepared split, and writes only to `artifacts/r1-tcn-boundary/`.
 - latest resumable checkpoint enabled;
 - strict source paths with optional quality sources disabled.
 
-The bounded smoke run is complete and passed its provenance gate. The full R1
-budget is now eligible, but it remains a separate action. Run it with the same
-config and `--models tcn` without the two-epoch override; keep
-`evaluate_test_after_training: false` so test evaluation remains locked.
+The full R1 budget has completed and passed its checkpoint/provenance gate.
+Select the epoch-12 checkpoint for the next validation-only decoder
+calibration; keep `evaluate_test_after_training: false` until the decoder and
+candidate are frozen.
 
 The completed smoke command was:
 
@@ -183,7 +192,7 @@ python3 -m training.train \
   --max-epochs 2 --skip-test
 ```
 
-The full R1 command, when authorized, is:
+The full R1 command that produced the current artifact was:
 
 ```bash
 python3 -m training.train \
@@ -192,9 +201,9 @@ python3 -m training.train \
   --models tcn --device auto --skip-test
 ```
 
-The smoke checkpoint and provenance checks passed. Select the best full-R1
-checkpoint on validation, calibrate the decoder again on validation, and
-evaluate the locked test split only once the candidate and decoder are frozen.
+The smoke and full-R1 checkpoint/provenance checks passed. Calibrate the
+decoder on validation, then evaluate the locked test split only once the
+candidate and decoder are frozen.
 
 ## Stop conditions
 
@@ -213,7 +222,7 @@ Stop before or during R1 if any of the following occurs:
 
 ## What remains after the training handoff
 
-The full R1 run is the next action, but it is not the final product gate. After R1,
+Decoder calibration remains the next action after this handoff, but it is not the final product gate. After R1,
 the remaining evidence work is: validation-only decoder recalibration;
 supervised-only versus teacher-assisted comparison if a measured gap remains;
 quality-label acquisition; target-population collection; native export and

@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** training execution ledger, checkpoint provenance, and audit record
-> - **Last verified:** 2026-09-08
-> - **Source commit:** `627283b` (R1 smoke-run evidence; baseline and pre-training gate)
+> - **Last verified:** 2026-09-09
+> - **Source commit:** `d7848e2` (R1 full-run evidence; smoke and pre-training gate history)
 > - **Owner:** AdaptFit training engineering
 > - **Supersedes or supports:** satisfies the execution log requirement from [documentation-validation.md](documentation-validation.md) and [efficient-training-strategy.md](efficient-training-strategy.md)
 > - **Review trigger:** after every experiment run, checkpoint evaluation, data preparation, or task transition
@@ -31,15 +31,14 @@ started.
 | Strict source/config preflight | **PASS** | `r0_baseline.yaml` and `r1_tcn_boundary_finetune.yaml`; enabled sources decode successfully; optional quality sources are disabled |
 | R0 test audit | **PASS (audit only)** | `artifacts/r0-baseline/metrics/*_evaluation.json` and model manifests; test was read, never used for calibration |
 | Validation-only decoder calibration | **BLOCKED** | `artifacts/r0-baseline/decoder/decoder_calibration.json`; count MAE `0.3649554`, end F1 `0.0`, false empty-sequence events `0` |
-| Warm-start/freeze/resume controls | **PASS (smoke exercised)** | `training/src/runner.py`, `training/train.py`, staged config, staged-training tests, and the R1 smoke checkpoint; full R1 not run |
-| Next eligible action | **Full R1 heads-only training** | Smoke passed with finite losses and complete provenance; keep test evaluation locked |
+| Warm-start/freeze/resume controls | **PASS (full run exercised)** | `training/src/runner.py`, `training/train.py`, staged config, staged-training tests, and the R1 full-run checkpoint; exact interruption/resume not run |
+| Next eligible action | **Validation-only decoder calibration** | Full R1 completed with test evaluation locked; calibrate `decoder.v1` before test evaluation |
 
 The decoder block is a measured baseline limitation. It does not authorize
 changing the test split, relaxing label masks, or presenting the decoder as a
-release component. The full R1 run is now the next computational action because
-R1 is the declared experiment for improving the boundary signal; product
-release remains blocked until the decoder gate is rechecked and all other
-release gates pass.
+release component. Validation-only decoder calibration is now the next
+computational action; product release remains blocked until the decoder gate is
+rechecked and all other release gates pass.
 
 ## 2B. R1 smoke training verification (2026-09-08)
 
@@ -67,10 +66,42 @@ the ignored `artifacts/r1-tcn-boundary/` root. No test evaluation was performed.
 Both checkpoints contain model and optimizer state, Python/NumPy/Torch RNG
 state, sampler epoch, effective `config`, trainable-layer list, parent
 checkpoint, and source commit. The smoke result is a readiness/provenance gate,
-not a model-selection result or product claim. The full R1 run is eligible, but
-its candidate must still be selected on validation, recalibrated with
-`decoder.v1`, and evaluated on the locked test split only after those choices
-are frozen.
+not a model-selection result or product claim. The full R1 run is recorded
+below; its checkpoint still needs validation-only decoder recalibration before
+any locked-test evaluation.
+
+The local artifact root was subsequently reused for the full R1 run. The smoke
+hashes above preserve that earlier state; the files currently present under
+`artifacts/r1-tcn-boundary/` are the full-run files recorded below.
+
+## 2C. R1 full heads-only training (2026-09-09)
+
+The full R1 training command completed on Apple MPS with the same corrected-v1
+parent, frozen temporal backbone, and 1,746 trainable head parameters. The
+configured maximum was 100 epochs with patience 15; validation stopped the run
+at epoch 27 and selected epoch 12. Test evaluation remained disabled.
+
+| Item | Result |
+|---|---|
+| Effective source commit | `d7848e2b12322e40e83758abd5e12ae6c7727e80` |
+| Config hash | `sha256:73dadb643781fd39630729d8a5e347ea98384b9455d1894589d3061c8d031c04` |
+| Device | Apple MPS; float32 |
+| Epochs | 27 completed; early stopping at epoch 27; best epoch 12 |
+| Best validation sequence score | `0.6603763` |
+| Best validation sequence metrics | family macro-F1 `0.902795`; phase macro-F1 `0.569988`; boundary F1 `0.548749`; repetition-start F1 `0.988439`; repetition-end F1 `0.109059`; count MAE `0.155134` |
+| Quality-label coverage | `0.0%` for the four dimension-specific quality heads |
+| Training/validation compute | `4,455.76` / `111.25` seconds |
+| Test evaluation | **Not performed** (`test_evaluation_performed=false`) |
+| Best checkpoint | `artifacts/r1-tcn-boundary/checkpoints/tcn_best.pt`; SHA-256 `e74679f9ebe0b012d4ed8729120aa8e3489c960ea7941a24d7e94f9e8ff45cbf` |
+| Latest checkpoint | `artifacts/r1-tcn-boundary/checkpoints/tcn_latest.pt`; SHA-256 `d0c4a369d0229db4d1932ed763abaf688b29e1ebf1197124fba02624f9f57810` |
+| Current run report | `artifacts/r1-tcn-boundary/metrics.json`; SHA-256 `7d340a204b924d1d46bffa68f2833a83cdcaf2df3be764b985856c77cccd3c4d` |
+| Run status | **Full training complete; validation-only; not a release candidate** |
+
+The full run is a training result, not a decoder or product result. The best
+checkpoint must go through validation-only decoder recalibration before any
+locked-test evaluation. The validation boundary/end metrics do not by
+themselves establish an improvement over corrected-v1 because the comparison
+must use the same split, decoder, and artifact protocol.
 
 ---
 
@@ -81,7 +112,7 @@ are frozen.
 | `artifacts/corrected-v1/` | `training/configs/v1_corrected.yaml` | `tcn_best.pt` (epoch 35)<br>`gru_baseline.pt` (epoch 34) | **Training complete** (50 / 49 epochs) | **Evaluated** (Sequence & Window)<br>Family Acc: 91.25% (TCN) / 89.47% (GRU)<br>Start F1: 99.54% (TCN) / 83.50% (GRU)<br>End F1: 18.47% (TCN) / 5.53% (GRU)<br>Rep Count MAE: 0.31 (TCN) / 30.63 (GRU) | Causal TCN (307,410)<br>Causal GRU (68,178)<br>283 inputs, 128 frames | 50 train / 11 val / 11 test participant groups.<br>Zero identity collisions.<br>Sources: REHAB24-6, IntelliRehabDS, MM-Fit, UL-RED, procedural seed. |
 | `artifacts/v2-quality/` | `training/configs/v2_quality.yaml` | None | **Prepared data only** | **Not trained / not evaluated** | Target: Causal TCN / GRU with expert quality head | 69 train / 15 val / 15 test groups.<br>Adds UCOPhyRehab++ (exact spans, composite score). |
 | `artifacts/v2-quality-fixed/` | `training/configs/v2_quality_fixed.yaml` | `tcn_best.pt` (epoch 42 / 72)<br>`gru_baseline.pt` (interrupted epoch 52) | **TCN training complete** (72 epochs, best 42).<br>**GRU interrupted** (epoch 52). | **TCN Evaluated on Test** (Sequence & Window):<br>Family Acc: 90.47%, Macro-F1: 83.91%<br>Phase Acc: 81.36%, Macro-F1: 54.92%<br>Start F1: 66.96%, End F1: 12.26%<br>Rep Count MAE: 2.03<br>Expert Quality Acc: 56.92% (MAE: 0.43)<br>Quality-4 heads: 0% coverage (masked) | Causal TCN (307,410)<br>Causal GRU (68,178)<br>283 inputs, float16 memmaps | Reuses `data/processed-v2-quality`.<br>1,007 logical test sequences.<br>Tested on UL-RED, UCO, wheelchair-positions. |
-| `artifacts/r1-tcn-boundary/` | `training/configs/experiments/r1_tcn_boundary_finetune.yaml` | `tcn_best.pt` (epoch 1 / 2)<br>`tcn_latest.pt` (epoch 2) | **Smoke complete; full R1 not run** | Validation-only sequence metrics; no test evaluation. Best sequence boundary F1 `0.5561`, repetition-end F1 `0.1181`, count MAE `0.1071`. | Causal TCN (307,410)<br>1,746 trainable head parameters<br>283 inputs, 128 frames | Corrected-v1 prepared split; parent `corrected-v1/tcn_best.pt`; CPU smoke run. |
+| `artifacts/r1-tcn-boundary/` | `training/configs/experiments/r1_tcn_boundary_finetune.yaml` | `tcn_best.pt` (epoch 12 / 27)<br>`tcn_latest.pt` (epoch 27) | **Full training complete; test locked** | Validation-only sequence metrics. Best sequence boundary F1 `0.5487`, repetition-end F1 `0.1091`, count MAE `0.1551`; decoder calibration and test evaluation pending. | Causal TCN (307,410)<br>1,746 trainable head parameters<br>283 inputs, 128 frames | Corrected-v1 prepared split; parent `corrected-v1/tcn_best.pt`; Apple MPS heads-only run. |
 
 ---
 
@@ -113,7 +144,7 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | **A3** | Establish baseline & failure inventory | **COMPLETED** | Sequence evaluation generated for `v2-quality-fixed/tcn_best.pt` on test split (1,007 sequences); compared with `corrected-v1`. |
 | **A4** | Prepare focused launch supervision | **PENDING** | Define launch-exercise rep boundary conventions (curls, rows, extensions, marches, reach). |
 | **B1** | Safe warm-start weight initialization | **COMPLETED (smoke verified)** | `--init-checkpoint` and `training.init_checkpoint` loaded the corrected-v1 parent and recorded its path and source commit in the R1 checkpoint. |
-| **B2** | Trainable-layer selection & resume | **COMPLETED (smoke verified)** | Frozen-backbone head training produced 1,746 trainable parameters and checkpoints with optimizer/RNG/sampler/trainable-layer state; exact resume remains untested on a real interruption. |
+| **B2** | Trainable-layer selection & resume | **COMPLETED (full run verified)** | Frozen-backbone head training produced 1,746 trainable parameters and checkpoints with optimizer/RNG/sampler/trainable-layer state; exact resume remains untested on a real interruption. |
 | **B3** | Redundant work reduction (stride/sampler) | **PENDING** | Evaluate stride-16/32 training sampling while preserving validation reconstruction. |
 | **B4** | Bounded experiment configuration | **COMPLETED** | `training/configs/experiments/r0_baseline.yaml` and `r1_tcn_boundary_finetune.yaml`; both validate and use isolated roots. |
 | **C1** | Improve decoding without gradient updates | **COMPLETED (blocked gate)** | Python `decoder.v1` and validation-only calibration are implemented; baseline end-event gate failed and is recorded, not hidden. |
@@ -133,3 +164,4 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | 2026-09-08 | `613ff12` | Documentation revision (prior canonical HEAD) | Expand dataset catalog and formalize operational documentation contracts | Passed (124 tests) | Pushed baseline audited before the documentation correctness repair; expanded dataset registry and operational contracts. |
 | 2026-09-08 | `847fd5d` | Pre-training gate implementation | Decoder, provenance, staged runner controls, R0/R1 configs, and readiness docs | Passed (132 tests; docs validator) | Corrected-v1 hashes unchanged; R0 manifests/calibration regenerated; R1 training intentionally not launched. |
 | 2026-09-08 | `627283b` | R1 smoke verification | Two-epoch CPU heads-only warm-start with test evaluation disabled | Passed | Finite losses; validation-only metrics and provenance complete; full R1 remains unrun. |
+| 2026-09-09 | `d7848e2` | R1 full heads-only training | 27-epoch Apple MPS run with early stopping and test lock | Completed | Best epoch 12; validation-only metrics and provenance complete; decoder calibration and test evaluation remain pending. |

@@ -3,7 +3,7 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** exhaustive dependency-ordered engineering master plan and delivery roadmap
-> - **Last verified:** 2026-09-08
+> - **Last verified:** 2026-09-09
 > - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
 > - **Owner:** AdaptFit engineering & machine learning team
 > - **Supersedes or supports:** canonical forward plan and engineering roadmap; supersedes earlier high-level implementation outlines
@@ -457,7 +457,7 @@ gantt
     Official CAC Deadline (12 PM EDT) :milestone, 2026-10-26, 0d
 ```
 
-*Status Alignment with Execution Log*: As documented in `docs/training-execution-log.md`, the Python decoder and validation-only R0 calibration are complete as an audit, but the declared end-event gate is blocked. Warm-start/freeze/resume controls and isolated R0/R1 configs are implemented and tested; the bounded R1 smoke run has completed, while the full R1 training budget has not been launched. Downstream data ingestion, teacher, recommendation, and distillation phases remain scheduled rather than active.
+*Status Alignment with Execution Log*: As documented in `docs/training-execution-log.md`, the Python decoder and validation-only R0 calibration are complete as an audit, but the declared end-event gate remains blocked. Warm-start/freeze/resume controls and isolated R0/R1 configs are implemented and tested; the full R1 heads-only run has completed with test evaluation locked. Decoder calibration and candidate selection remain before downstream data ingestion, teacher, recommendation, and distillation phases.
 
 - **Key Dates**:
   - **Internal Submission Freeze**: **October 23, 2026** (3-day safety buffer).
