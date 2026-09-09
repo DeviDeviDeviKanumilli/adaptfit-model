@@ -18,15 +18,17 @@ Read [system context and data flow](system-context-and-dataflow.md) for the
 end-to-end boundary, [repository and implementation map](repository-and-implementation-map.md)
 for source/test ownership, and [model registry](model-registry.md) for the
 current-versus-planned model roster. The [artifact registry](artifact-registry.md)
-is the canonical path inventory; this file remains the current-state snapshot.
+is the canonical path inventory. The [pre-training readiness handoff](pretraining-readiness.md)
+is the reproducibility gate for the next isolated run; this file remains the
+current-state snapshot.
 
 ## Repository and verification
 
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Repository revision at last verification | `613ff12` | Parent revision audited for this repair; run `git rev-parse HEAD` before reproducing a run. |
-| Code baseline | `ba8bf1a` | Last commit modifying model code, streaming runtime, tests, or shell scripts (124/124 tests passing). |
+| Repository revision at last verification | `8e1db4010257a3ac7211546e3e08d777bba3ef22` | Baseline revision before the current pre-training gate changes; run `git rev-parse HEAD` before reproducing a run. |
+| Code baseline | `ba8bf1a` plus current working-tree gate changes | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, and isolated configs are new working-tree changes. |
 | Documentation revision baseline | `613ff12` | Latest pushed documentation revision audited before this repair; this is a provenance anchor, not a mutable HEAD claim. |
 | Working-tree state | Must be checked | Run `git status --short`; this snapshot never treats an unverified tree as clean. |
 | Test suite | 124 tests passed in the last verified run (`python3 -m pytest -q`) | Re-run after code changes. |
@@ -52,7 +54,9 @@ is the canonical path inventory; this file remains the current-state snapshot.
   is optional and must remain masked unless its target is present.
 - Capability-aware filtering, exercise eligibility, confidence thresholds,
   abstention, decoding, and event emission are deterministic product/runtime
-  responsibilities. They are not silently learned by the current network.
+  responsibilities. The Python reference decoder is implemented in
+  `training/src/decoder.py` as `decoder.v1`; a native bridge and production
+  bundle are still unavailable.
 
 ## Data adapters and label state
 
@@ -81,6 +85,7 @@ Current label facts:
 | `artifacts/corrected-v1/` | Complete benchmark | TCN and GRU were trained/evaluated and overlapping windows were merged to sequence metrics. This is the current baseline. |
 | `artifacts/v2-quality/` | Prepared data only | Preparation and manifests exist; no completed model comparison. |
 | `artifacts/v2-quality-fixed/` | Partial (TCN evaluated; GRU interrupted) | TCN training completed through 72 epochs (best epoch 42) and has been evaluated on the test split with sequence and window metrics; the GRU checkpoint is an interrupted intermediate run at epoch 52. It is not a complete TCN/GRU comparison. |
+| `artifacts/r0-baseline/` | Local evaluation-only audit (ignored by Git) | Fresh corrected-v1 test reports, model manifests, and validation-only decoder calibration; regenerate if absent. It contains no trained model. |
 
 Checkpoint-level status at this verification:
 
@@ -94,12 +99,13 @@ Checkpoint-level status at this verification:
   See [training-execution-log.md](training-execution-log.md) for full metrics.
 
 Corrected-v1 evidence includes 617 logical test sequences and 7,592 windows
-with zero identity collisions. Reported baseline metrics are family accuracy
-91.25%, family macro-F1 87.57%, phase accuracy 82.48%, phase macro-F1 58.26%,
-repetition-start F1 99.54%, repetition-end F1 18.47%, and repetition-count MAE
-0.31. These values are historical run results, not a release claim; use the
-artifact manifest and [evaluation-protocol.md](evaluation-protocol.md) for
-the required split and metric provenance.
+with zero identity collisions. The fresh R0 report, using the current masked
+phase policy, records family accuracy 91.25%, family macro-F1 87.57%, phase
+accuracy 86.10%, phase macro-F1 60.24%, repetition-start F1 99.54%,
+repetition-end F1 18.47%, and repetition-count MAE 0.31. These values are
+benchmark evidence, not a release claim; use the artifact manifest and
+[evaluation-protocol.md](evaluation-protocol.md) for the required split and
+metric provenance.
 
 ## Product and deployment status
 
@@ -123,9 +129,10 @@ the required split and metric provenance.
 
 1. Quality supervision is absent for all four dimension-specific quality heads.
 2. Target-population validation is absent.
-3. The current runner builds fresh models and does not yet expose exact resume,
-   warm-start, frozen-layer selection, or staged fine-tuning as a documented
-   command contract.
+3. The runner now exposes warm-start, exact-resume, frozen-backbone,
+   partial-block, separate-learning-rate, isolated-root, and test-lock controls;
+   these controls are covered by the pre-training handoff but have not been
+   used for a completed training experiment in this working tree.
 4. Repetition-end performance is materially weaker than repetition-start
    performance and needs boundary/decoder review before product use.
 5. A production model bundle and native runtime contract do not exist.
@@ -145,12 +152,12 @@ the required split and metric provenance.
 
 ## Next validated actions
 
-1. Freeze this state and the [contracts](contracts-and-schemas.md) before
-   changing training or data schemas.
-2. Run the evaluation and decoder audit on corrected-v1 without touching the
-   locked test set.
-3. Add provenance-aware fine-tuning controls and an isolated pilot before any
-   teacher or density experiment.
+1. Use the [pre-training readiness handoff](pretraining-readiness.md) to run
+   the bounded R1 TCN smoke training in its isolated artifact root.
+2. Select on validation, recalibrate the decoder on validation, and keep the
+   corrected-v1 test split locked until the candidate is frozen.
+3. Use the implemented provenance-aware fine-tuning controls for the isolated
+   pilot before any teacher or density experiment.
 4. Obtain reviewed quality labels and consented target-population recordings.
 5. Define and test the model bundle, Python/native golden fixtures, and mobile
    release gates before describing deployment as available.

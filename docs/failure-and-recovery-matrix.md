@@ -15,14 +15,15 @@ observation is not converted into a confident prediction.
 ## Implementation boundary
 
 This document is the canonical failure and recovery **contract**, not a claim
-that every row is already shipped. As of code baseline `ba8bf1a`,
-`training/src/models/streaming.py` only validates feature chunks and timestamps,
-maintains causal TCN/GRU state, resets on session or exercise changes, and
-returns model tensors. It does not implement a decoder/FSM, `WorkoutEventV1`
-emission, camera UI, product fallback, or real-time quality guidance. Rows below
-marked `planned` are acceptance behavior for the future decoder/product path;
-they must not be described as current runtime behavior until code, fixtures, and
-evidence exist.
+that every row is already shipped. `training/src/models/streaming.py` validates
+feature chunks and timestamps, maintains causal TCN/GRU state, resets on
+session or exercise changes, and returns model tensors. The standalone Python
+`decoder.v1` in `training/src/decoder.py` now implements the deterministic FSM,
+duplicate suppression, timestamp-gap handling, low-tracking abstention, and
+`WorkoutEventV1` serialization. It is not integrated with a camera UI, native
+bridge, or production product fallback. Rows marked `planned` remain acceptance
+behavior for those unavailable product paths; the standalone decoder's tests do
+not establish mobile or clinical evidence.
 
 | Failure | Detection | Reason code | User behavior/fallback | Telemetry | Fixture/owner |
 |---|---|---|---|---|---|
@@ -36,27 +37,26 @@ evidence exist.
 | Planned — bundle/schema mismatch | load-time compatibility check | `bundle_incompatible` | fail closed; use explicit compatible fallback | versions/hashes, no pose | bundle fixture / release |
 | Planned — dropped frames | timestamp gap | `timestamp_gap` | preserve time; pause or abstain per decoder policy | gap duration | runtime fixture / runtime |
 | Planned — duplicate overlapping windows | decoder event identity | `duplicate_event` | suppress duplicate count delta | decoder version and event key | decoder fixture / runtime |
-| Partial — decoder reset/pause | state transition | `decoder_reset` | close or pause event with explicit state | reset reason | decoder fixture / runtime |
+| Implemented reference — decoder reset/pause | state transition | `decoder_reset` | close or pause event with explicit state in Python reference | reset reason | `training/tests/test_decoder.py` / runtime |
 | Planned — corrupt dataset/manifest | checksum/schema/identity check | `data_invalid` | stop preparation/training; no artifact promotion | manifest/checksum | preflight fixture / data |
 | Implemented in training — missing label | label mask | `label_unavailable` | zero loss weight; report coverage | task valid count | training tests / evaluation |
-| Planned — low tracking confidence | `tracking_confidence` drops below recipe floor (`confidence_floor`) or $p_{track} < 0.60$ for $\ge 30$ frames (1.0s) during active rep | `low_tracking` | planned decoder emits abstention; freezes FSM in `PAUSED`; suppresses rep count; prompts camera repositioning | confidence floor delta and duration only; no raw pose | streaming fixture / runtime |
+| Implemented reference — low tracking confidence | `tracking_confidence` drops below decoder floor for $\ge 30$ frames during active rep | `low_tracking` | Python decoder emits abstention, enters `PAUSED`, and suppresses rep count; UI prompt/native fallback remain planned | confidence floor delta and duration only; no raw pose | `training/tests/test_decoder.py` / runtime |
 | Planned — ambiguous repetition boundary | Start/end logits exceed threshold simultaneously or peak separation < minimum window | `ambiguous_boundary` | suppress count increment; maintain active set count until unambiguous boundary is observed | boundary event confidence and peak distance | decoder fixture / runtime |
 | Planned — cadence out of bounds | Repetition cycle duration faster than minimum physiological duration or slower than maximum duration in recipe dose constraints | `cadence_out_of_bounds` | disregard spurious cycle or emit cadence pacing prompt; do not increment valid rep count | measured repetition cycle duration and recipe ID | decoder fixture / runtime |
 | Unavailable/planned — excessive compensation | Biomechanical compensation metric (e.g., trunk lean $\theta_{trunk} \ge \tau_{trunk}$) exceeds recipe safety threshold | `excessive_compensation` | future quality/product path may provide form guidance; unavailable while labels and runtime are missing | compensation dimension and threshold delta only | quality fixture / product |
 | Planned — consent withdrawn | User toggles off telemetry/diagnostics in profile or requests session data deletion | `consent_withdrawn` | immediately purge local session cache, disable diagnostic recording, fail-safe to strictly stateless on-device execution | zero telemetry emitted (all logging disabled) | privacy fixture / privacy review |
 
-## Planned runtime camera occlusion and tracking abstention specification
+## Reference decoder camera occlusion and tracking abstention specification
 
-When a decoder is implemented, it should prevent false-positive repetitions and
-corrupted quality feedback during transient camera occlusions or participant
-framing loss by applying the following versioned acceptance rules. These rules
-are not currently enforced by the Python streaming runtime.
+The Python reference decoder prevents false-positive repetitions and corrupted
+feedback during transient tracking loss using the following versioned rules.
+Its events are not yet wired to a mobile UI or native streaming bridge.
 
 1. **Active Repetition Occlusion Trigger**:
    If the landmark tracking confidence $p_{track} < 0.60$ for $\ge 30$ consecutive frames (1.0 second at 30 FPS) while the decoder is in an active repetition state (`CONCENTRIC_DRIVE`, `APEX_HOLD`, or `ECCENTRIC_RETURN`):
-   - The planned decoder suppresses repetition count accumulation.
-   - The planned FSM transitions into the `PAUSED` state.
-   - The planned runtime emits a valid `WorkoutEventV1` with:
+   - The reference decoder suppresses repetition count accumulation.
+   - The reference FSM transitions into the `PAUSED` state.
+   - The reference runtime emits a valid `WorkoutEventV1` with:
      ```json contract=workout-event-v1
      {
        "schema_version": "workout-event.v1",
@@ -72,7 +72,7 @@ are not currently enforced by the Python streaming runtime.
        "reason_code": "low_tracking",
        "tracking_confidence": 0.42,
        "model_version": "movement-tcn-v1",
-       "feature_schema_version": "feature.v1",
+       "feature_schema_version": "adaptfit.features.v1",
        "decoder_version": "decoder.v1"
      }
      ```
@@ -82,9 +82,15 @@ are not currently enforced by the Python streaming runtime.
    - Angular displacement accumulation for range-of-motion (ROM) is frozen to prevent corrupted joint predictions from inflating or failing the repetition quality score.
 
 2. **Recovery & Resumption Protocol**:
-   - The planned FSM remains in `PAUSED` until $p_{track} \ge 0.60$ persists for a stabilization warmup period of $\ge 5$ consecutive frames.
-   - Upon recovery within 300 frames (10.0 seconds), the planned decoder restores the prior active state and unfreezes the timer.
-   - If tracking confidence remains below $0.60$ for $> 300$ consecutive frames (10.0 seconds), the planned decoder marks the current repetition aborted internally with `reason_code = "tracking_timeout"`, flushes the active repetition buffer, and transitions to `IDLE_REST`. `aborted` is not a `WorkoutEventV1` field; adding it requires a schema revision.
+   - The current reference FSM resumes on the first frame above the configured
+     floor. A five-frame stabilization warmup remains a planned native/product
+     hardening gate and must not be claimed as implemented.
+   - Upon recovery within 300 frames (10.0 seconds), the reference decoder
+     restores the prior active state and unfreezes the timer.
+   - If tracking remains below the floor for more than 300 frames, the
+     reference decoder flushes the active repetition and emits an explicit
+     abstention/reset path. `aborted` is not a `WorkoutEventV1` field; adding
+     it requires a schema revision.
 
 ## Recovery rules
 

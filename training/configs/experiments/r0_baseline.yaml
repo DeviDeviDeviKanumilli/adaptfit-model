@@ -1,0 +1,138 @@
+project:
+  name: adaptfit-r0-baseline
+  seed: 42
+  feature_schema_version: adaptfit.features.v1
+  data_root: data
+  artifacts_root: artifacts/r0-baseline
+  experiment_id: r0-baseline
+  decoder_version: decoder.v1
+  parent_artifact_root: artifacts/corrected-v1
+data:
+  target_fps: 30
+  num_joints: 33
+  processed_root: data/processed-corrected-v1
+  window_frames: 128
+  window_stride: 8
+  max_interpolation_gap: 5
+  split:
+    train: 0.7
+    validation: 0.15
+    test: 0.15
+    required_test_sources:
+    - ul_red
+    required_test_positions:
+    - wheelchair
+    enforce_required_test_coverage: true
+  required_roles:
+  - rep_labeled
+  - seated_or_wheelchair
+  sources:
+  - name: rehab24_6
+    path: data/raw/rehab24_6
+    role: rep_labeled
+    license: academic_or_nonprofit_noncommercial
+    url: https://zenodo.org/records/13305826
+    enabled: true
+  - name: intellirehabds
+    path: data/raw/intellirehabds
+    role: seated_or_wheelchair
+    license: cc_by_4_0_dataset_record
+    url: https://zenodo.org/records/4610859
+    enabled: true
+  - name: mmfit
+    path: data/raw/mmfit
+    role: exercise_set_labeled
+    license: verify_dataset_terms_before_redistribution
+    url: https://mmfit.github.io/
+    archive_url: https://s3.eu-west-2.amazonaws.com/vradu.uk/mm-fit.zip
+    enabled: true
+  - name: ul_red
+    path: data/raw/ul_red
+    role: temporal_rehab_optional
+    license: cc_by_4_0_dataset_record
+    url: https://datacat.liverpool.ac.uk/2729/
+    enabled: true
+  - name: fitness_aqa
+    path: data/raw/fitness_aqa
+    role: quality_optional
+    license: verify_before_use
+    url: https://github.com/ParitoshParmar/Fitness-AQA
+    enabled: false
+  - name: wheelpose
+    path: data/raw/wheelpose
+    role: wheelchair_robustness_optional
+    license: verify_before_use
+    url: https://github.com/hilab-open-source/wheelpose
+    enabled: false
+  - name: ui_prmd
+    path: data/raw/ui_prmd
+    role: quality_optional
+    license: verify_before_use
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC5773117/
+    enabled: false
+  - name: kimore
+    path: data/raw/kimore
+    role: quality_optional
+    license: verify_before_use
+    url: https://doi.org/10.1109/TNSRE.2019.2923060
+    enabled: false
+  synthetic:
+    enabled: true
+    copies_per_sequence: 2
+    random_seed: 42
+    occlusion_probability: 0.2
+    noise_std: 0.008
+    reduced_rom_scale: 0.75
+  synthetic_seed:
+    enabled: true
+    participant_count: 12
+    exercises_per_participant: 5
+    random_seed: 4242
+  label_policy:
+    allow_single_clip_boundaries: false
+    allow_procedural_quality: false
+  strict_source_paths: true
+  normalization_version: normalization.corrected-v1
+features:
+  input_dim: 283
+  continuous_dim: 193
+  include_diagnostics: false
+  angle_count: 14
+  profile_context_dim: 20
+  position_context_dim: 4
+model:
+  tcn:
+    channels: 96
+    kernel_size: 3
+    dilations:
+    - 1
+    - 2
+    - 4
+    - 8
+    - 16
+    dropout: 0.1
+  gru:
+    hidden_size: 64
+    num_layers: 1
+  family_classes: 6
+  phase_classes: 5
+  quality_outputs: 4
+  pooling: masked_mean
+training:
+  batch_size: 64
+  max_epochs: 100
+  early_stopping_patience: 15
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  gradient_clip_norm: 1.0
+  num_workers: 0
+  device: auto
+  float32: true
+  loss_weights:
+    family: 0.5
+    phase: 1.0
+    boundary: 2.0
+    quality: 1.0
+    tracking: 0.2
+  evaluate_test_after_training: false
+  save_latest: true

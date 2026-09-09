@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .src.config import load_config, resolve_project_root, validate_config
+from .src.provenance import environment_summary, git_commit, sha256_file, sha256_value
 from .src.reporting import atomic_json_write, initial_run_report
 from .src.runner import train_model
 
@@ -21,9 +22,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-epochs", default=None, type=int, help="Optional override for a short smoke run")
     parser.add_argument("--batch-size", default=None, type=int, help="Optional batch-size override")
     parser.add_argument("--num-workers", default=None, type=int, help="Optional DataLoader worker override")
+    parser.add_argument("--init-checkpoint", default=None, type=Path, help="Warm-start model weights without optimizer state")
+    parser.add_argument("--resume-checkpoint", default=None, type=Path, help="Resume an exact interrupted run")
+    parser.add_argument("--freeze-backbone", action="store_true", help="Train heads while freezing the temporal backbone")
+    parser.add_argument("--unfreeze-last-blocks", default=None, type=int, help="Additionally unfreeze this many final TCN blocks")
+    test_group = parser.add_mutually_exclusive_group()
+    test_group.add_argument("--evaluate-test", dest="evaluate_test", action="store_true")
+    test_group.add_argument("--skip-test", dest="evaluate_test", action="store_false")
+    parser.set_defaults(evaluate_test=None)
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
+    config_path = args.config.expanduser().resolve()
     project_root = resolve_project_root(args.config, args.project_root)
     if args.max_epochs is not None:
         config["training"]["max_epochs"] = args.max_epochs
@@ -31,6 +41,16 @@ def main(argv: list[str] | None = None) -> int:
         config["training"]["batch_size"] = args.batch_size
     if args.num_workers is not None:
         config["training"]["num_workers"] = args.num_workers
+    if args.init_checkpoint is not None:
+        config["training"]["init_checkpoint"] = str(args.init_checkpoint)
+    if args.resume_checkpoint is not None:
+        config["training"]["resume_checkpoint"] = str(args.resume_checkpoint)
+    if args.freeze_backbone:
+        config["training"]["freeze_backbone"] = True
+    if args.unfreeze_last_blocks is not None:
+        config["training"]["unfreeze_last_blocks"] = args.unfreeze_last_blocks
+    if args.evaluate_test is not None:
+        config["training"]["evaluate_test_after_training"] = args.evaluate_test
     # CLI overrides are part of the effective run configuration and must pass
     # the same contract checks as the YAML file.
     config = validate_config(config)
@@ -64,6 +84,18 @@ def main(argv: list[str] | None = None) -> int:
         artifacts_root=artifacts_root,
         processed_root=processed_root,
     )
+    report["run"].update(
+        {
+            "experiment_id": config["project"].get("experiment_id", config["project"].get("name", "unknown")),
+            "source_commit": git_commit(project_root),
+            "config_hash": sha256_value(config),
+            "config_path_hash": sha256_file(config_path) if config_path.exists() else "unavailable",
+            "environment": environment_summary(),
+            "test_evaluation_performed": all(
+                result.get("test_evaluation_performed", False) for result in results.values()
+            ) if results else False,
+        }
+    )
     report["models"] = results
     report["artifacts"] = {
         "metrics": str(artifacts_root / "metrics.json"),
@@ -74,6 +106,25 @@ def main(argv: list[str] | None = None) -> int:
         },
     }
     atomic_json_write(artifacts_root / "metrics.json", report)
+    first_result = next(iter(results.values()), {})
+    experiment_record = {
+        "schema_version": "experiment-record.v1",
+        "experiment_id": config["project"].get("experiment_id", config["project"].get("name", "unknown")),
+        "git_commit": git_commit(project_root),
+        "config_hash": sha256_value(config),
+        "dataset_manifest_ids": [str(config["data"].get("processed_root", "unavailable"))],
+        "seed": seed,
+        "parent_checkpoint": first_result.get("parent_checkpoint"),
+        "trainable_layers": first_result.get("trainable_layers", []),
+        "status": "complete",
+        "artifact_path": str(artifacts_root),
+        "metrics": {
+            "models": sorted(results),
+            "test_evaluation_performed": report["run"]["test_evaluation_performed"],
+            "environment": report["run"]["environment"],
+        },
+    }
+    atomic_json_write(artifacts_root / "experiment_record.json", experiment_record)
     model_card = """# AdaptFit temporal model card\n\n"""
     model_card += "This is a research-only movement model trained on public skeleton data, optional UL-RED marker-less rehabilitation sequences, and procedural/synthetic examples.\n\n"
     model_card += "It is not clinical validation and must not diagnose disability, injury, force, muscle activation, or safety.\n\n"
@@ -121,7 +172,11 @@ def main(argv: list[str] | None = None) -> int:
     model_card += "Window-level scores can be optimistic because overlapping windows are correlated. Use the sequence-level report after evaluation. Weak, procedural, and synthetic label provenance is reported separately.\n\n"
     model_card += "## Models\n\n"
     for name, result in results.items():
-        model_card += f"- `{name}`: {result['parameter_count']:,} parameters; checkpoint `{result['checkpoint']}`.\n"
+        model_card += (
+            f"- `{name}`: {result['parameter_count']:,} total parameters, "
+            f"{result.get('trainable_parameter_count', result['parameter_count']):,} trainable; "
+            f"checkpoint `{result['checkpoint']}`.\n"
+        )
     model_card += "\n## Data limitations\n\nNo real amputee, limb-difference, or wheelchair-user participant recordings were available for this run. Synthetic limb masking, procedural motion, and wheelchair-position labels are robustness aids or public-data proxies only. These results are public-data research benchmarks, not clinical validation. Target-population recordings and expert labels are required before making claims about individualized exercise adaptation.\n"
     (artifacts_root / "model_card.md").write_text(model_card, encoding="utf-8")
     print(json.dumps({name: result["test_metrics"] for name, result in results.items()}, indent=2))

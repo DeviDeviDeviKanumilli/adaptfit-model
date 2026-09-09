@@ -25,9 +25,12 @@ is not evidence that a component exists.
 | Model construction | `training/src/models/build.py`, `tcn.py`, `gru.py`, `heads.py` | model section in config | TCN/GRU modules and parameter counts | `training/tests/test_models.py` | ML engineering / active |
 | Training | `training/train.py`, `training/src/runner.py` | `training/configs/*.yaml` | checkpoints, histories, model card | `training/tests/test_streaming_and_training.py` | Training engineering / active |
 | Preparation | `training/prepare_data.py`, `training/src/data/prepare.py` | config and manifest | processed data, normalization, audit | `training/tests/test_pipeline.py` | Data engineering / active |
-| Evaluation | `training/evaluate.py`, `training/src/evaluation.py` | checkpoint plus split manifest | metrics, predictions, reports | `training/tests/test_corrected_benchmark.py`, `test_v2_quality_pipeline.py` | Evaluation / active |
+| Evaluation | `training/evaluate.py`, `training/src/evaluation.py` | checkpoint plus split manifest | metrics, predictions, reports, model artifact manifest | `training/tests/test_corrected_benchmark.py`, `test_v2_quality_pipeline.py` | Evaluation / active |
 | Streaming | `training/src/models/streaming.py` | feature/model schema | rolling predictions and runtime state | `training/tests/test_streaming_runtime.py` | Runtime engineering / Python only |
-| Decoder | project-forward decoder work package | planned decoder manifest | `WorkoutEventV1` events | planned fixtures | Runtime engineering / planned |
+| Decoder | `training/src/decoder.py` | `training/configs/decoder_v1.yaml` | deterministic `WorkoutEventV1` events, pause/reset/abstention reasons | `training/tests/test_decoder.py` | Runtime engineering / Python reference active; native unavailable |
+| Decoder calibration | `training/calibrate_decoder.py` | R0 config + decoder config | validation-only threshold report and gate status | `training/tests/test_decoder.py` plus report inspection | Evaluation / active audit tool |
+| Provenance | `training/src/provenance.py` | effective config and artifact paths | hashes, environment summary, model manifest | `training/tests/test_integrity_and_artifacts.py` | Training/release / active |
+| Staged training controls | `training/src/runner.py`, `training/train.py` | `training/configs/experiments/*.yaml` | isolated warm-start/resume checkpoints and experiment record | `training/tests/test_staged_training.py`, `test_streaming_and_training.py` | Training / active controls; no R1 run yet |
 | Recipe feasibility | `docs/exercise-and-capability-schema.md` | recipe catalog/hash | eligible candidate set | planned recommendation fixtures | Product/safety / planned |
 | Recommendation | `docs/recommendation-model-plan.md` | planned request/config | ranked workout recommendation | planned recommendation fixtures | Product/ML / planned |
 | Mobile bundle | `docs/on-device-deployment.md` | planned artifact manifest | native model bundle | no native tests | Release engineering / unavailable |
@@ -57,6 +60,19 @@ training/train.py
   → training/src/models/heads.py
   → training/src/runner.py
   → checkpoint + history + model card
+
+### Pre-training audit and decoder gate
+
+```text
+training/preflight.py
+  → strict source/config checks
+training/evaluate.py
+  → corrected-v1 checkpoint + locked split
+  → metrics + model artifact manifests
+training/calibrate_decoder.py
+  → validation-only predictions
+  → decoder.v1 threshold grid + gate report
+```
 ```
 
 ### Evaluation
@@ -77,7 +93,8 @@ pose adapter
   → features/anatomy.py-compatible 283 layout
   → models/streaming.py
   → prediction heads
-  → planned decoder and WorkoutEventV1
+  → Python decoder.v1 reference and WorkoutEventV1
+  → native/mobile bridge (planned; unavailable)
 ```
 
 ## Edit boundaries
@@ -102,5 +119,6 @@ pose adapter
 | Which model should be used? | `docs/model-registry.md` | checkpoint manifest and evaluation |
 | How is data labeled? | `docs/annotation-handbook.md` | adapter and label masks |
 | Can a recipe be offered? | `docs/recipe-catalog-and-review.md` | reviewed catalog and capability profile |
+| Is the next training run mechanically ready? | `docs/pretraining-readiness.md` | R0 reports, R1 config, and immutable baseline hashes |
 | Why did a run or event fail? | `docs/failure-and-recovery-matrix.md` | logs and fixture |
 | Is a claim releasable? | `docs/requirements-traceability.md` | artifact, split, and gate |

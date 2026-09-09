@@ -18,6 +18,26 @@ The normalized checkpoint inventory is also recorded in the [artifact
 registry](artifact-registry.md). Add a manifest entry after every run; do not
 use this log to promote a partial checkpoint or overwrite a historical result.
 
+## 2A. Pre-training gate verification (2026-09-08 working tree)
+
+This gate was completed without running a new model-training job. The detailed
+handoff is [pretraining-readiness.md](pretraining-readiness.md).
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Immutable corrected-v1 hashes | **PASS** | TCN `e69ff69d…`, GRU `4105bf23…`; no files under `artifacts/corrected-v1/` changed |
+| Strict source/config preflight | **PASS** | `r0_baseline.yaml` and `r1_tcn_boundary_finetune.yaml`; enabled sources decode successfully; optional quality sources are disabled |
+| R0 test audit | **PASS (audit only)** | `artifacts/r0-baseline/metrics/*_evaluation.json` and model manifests; test was read, never used for calibration |
+| Validation-only decoder calibration | **BLOCKED** | `artifacts/r0-baseline/decoder/decoder_calibration.json`; count MAE `0.3649554`, end F1 `0.0`, false empty-sequence events `0` |
+| Warm-start/freeze/resume controls | **PASS (code/tests)** | `training/src/runner.py`, `training/train.py`, staged config, and staged-training tests; no R1 training run yet |
+| Next eligible action | **R1 smoke training** | `training/configs/experiments/r1_tcn_boundary_finetune.yaml`, max two epochs, `--skip-test` |
+
+The decoder block is a measured baseline limitation. It does not authorize
+changing the test split, relaxing label masks, or presenting the decoder as a
+release component. Training is the next computational action because R1 is the
+declared experiment for improving the boundary signal; product release remains
+blocked until the decoder gate is rechecked and all other release gates pass.
+
 ---
 
 ## 1. Candidate Checkpoint & Run Inventory (Task A1)
@@ -57,11 +77,11 @@ Across both `corrected-v1` and `v2-quality-fixed`:
 | **A2** | Define valid comparison cohort | **IN PROGRESS** | Training participant IDs isolated; test splits locked. Union overlap checks enforced by `training.audit`. |
 | **A3** | Establish baseline & failure inventory | **COMPLETED** | Sequence evaluation generated for `v2-quality-fixed/tcn_best.pt` on test split (1,007 sequences); compared with `corrected-v1`. |
 | **A4** | Prepare focused launch supervision | **PENDING** | Define launch-exercise rep boundary conventions (curls, rows, extensions, marches, reach). |
-| **B1** | Safe warm-start weight initialization | **PENDING** | Expose `--warm-start` in `training.train` with parameter allowlist. |
-| **B2** | Trainable-layer selection & resume | **PENDING** | Add head-only and partial-backbone freeze modes with explicit learning rates. |
+| **B1** | Safe warm-start weight initialization | **COMPLETED (not run)** | `--init-checkpoint` and `training.init_checkpoint` load weights only, record parent, and enforce model/schema compatibility. |
+| **B2** | Trainable-layer selection & resume | **COMPLETED (not run)** | `--freeze-backbone`, `--unfreeze-last-blocks`, separate head/backbone rates, exact optimizer/RNG/sampler/trainable-layer state; covered by staged-training tests. |
 | **B3** | Redundant work reduction (stride/sampler) | **PENDING** | Evaluate stride-16/32 training sampling while preserving validation reconstruction. |
-| **B4** | Bounded experiment configuration | **PENDING** | Prepare isolated fine-tuning config under `training/configs/`. |
-| **C1** | Improve decoding without gradient updates | **READY** | Tune boundary threshold, debouncing window, and pause/reset heuristics on validation set. |
+| **B4** | Bounded experiment configuration | **COMPLETED** | `training/configs/experiments/r0_baseline.yaml` and `r1_tcn_boundary_finetune.yaml`; both validate and use isolated roots. |
+| **C1** | Improve decoding without gradient updates | **COMPLETED (blocked gate)** | Python `decoder.v1` and validation-only calibration are implemented; baseline end-event gate failed and is recorded, not hidden. |
 
 ---
 

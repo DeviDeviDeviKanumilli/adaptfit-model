@@ -17,10 +17,13 @@ class ConfigError(ValueError):
 
 class ProjectConfig(TypedDict, total=False):
     name: str
+    experiment_id: str
     seed: int
     feature_schema_version: str
+    decoder_version: str
     data_root: str
     artifacts_root: str
+    parent_artifact_root: str
 
 
 class SourceConfig(TypedDict, total=False):
@@ -61,6 +64,8 @@ class DataConfig(TypedDict, total=False):
     window_stride: int
     max_interpolation_gap: int
     feature_storage_dtype: str
+    normalization_version: str
+    strict_source_paths: bool
     split: SplitConfig
     required_roles: list[str]
     sources: list[SourceConfig]
@@ -124,6 +129,15 @@ class TrainingConfig(TypedDict, total=False):
     validate_on_final_epoch: bool
     device: str
     float32: bool
+    head_learning_rate: float
+    backbone_learning_rate: float
+    init_checkpoint: str
+    resume_checkpoint: str
+    freeze_backbone: bool
+    unfreeze_last_blocks: int
+    trainable_patterns: list[str]
+    evaluate_test_after_training: bool
+    save_latest: bool
     loss_weights: LossWeightsConfig
 
 
@@ -167,6 +181,13 @@ def validate_config(config: Mapping[str, Any]) -> Config:
         raise ConfigError("data.window_frames and data.window_stride must be positive")
     if data.get("feature_storage_dtype", "float32") not in {"float16", "float32"}:
         raise ConfigError("data.feature_storage_dtype must be 'float16' or 'float32'")
+    if "normalization_version" in data and (
+        not isinstance(data["normalization_version"], str)
+        or not data["normalization_version"].strip()
+    ):
+        raise ConfigError("data.normalization_version must be a non-empty string")
+    if "strict_source_paths" in data and not isinstance(data["strict_source_paths"], bool):
+        raise ConfigError("data.strict_source_paths must be boolean")
     split = data.get("split", {})
     train_fraction = float(split.get("train", 0.0))
     validation_fraction = float(split.get("validation", 0.0))
@@ -229,6 +250,32 @@ def validate_config(config: Mapping[str, Any]) -> Config:
         raise ConfigError("training.prefetch_factor must be positive")
     if int(training.get("validation_interval", 1)) <= 0:
         raise ConfigError("training.validation_interval must be positive")
+    for name in ("head_learning_rate", "backbone_learning_rate"):
+        if name in training:
+            value = float(training[name])
+            if not math.isfinite(value) or value <= 0.0:
+                raise ConfigError(f"training.{name} must be finite and positive")
+    for name in ("freeze_backbone", "evaluate_test_after_training", "save_latest"):
+        if name in training and not isinstance(training[name], bool):
+            raise ConfigError(f"training.{name} must be boolean")
+    if "unfreeze_last_blocks" in training:
+        try:
+            unfreeze_last_blocks = int(training["unfreeze_last_blocks"])
+        except (TypeError, ValueError) as error:
+            raise ConfigError("training.unfreeze_last_blocks must be a non-negative integer") from error
+        if unfreeze_last_blocks < 0:
+            raise ConfigError("training.unfreeze_last_blocks must be a non-negative integer")
+    for name in ("init_checkpoint", "resume_checkpoint"):
+        if name in training and training[name] is not None and (
+            not isinstance(training[name], str) or not training[name].strip()
+        ):
+            raise ConfigError(f"training.{name} must be a non-empty path or omitted")
+    if training.get("init_checkpoint") and training.get("resume_checkpoint"):
+        raise ConfigError("training.init_checkpoint and training.resume_checkpoint are mutually exclusive")
+    if "trainable_patterns" in training:
+        patterns = training["trainable_patterns"]
+        if not isinstance(patterns, list) or any(not isinstance(item, str) or not item for item in patterns):
+            raise ConfigError("training.trainable_patterns must be a list of non-empty strings")
     for name in (
         "persistent_workers",
         "validate_on_first_epoch",
@@ -307,6 +354,17 @@ def validate_checkpoint_compatibility(
         saved_project.get("feature_schema_version"),
         config["project"].get("feature_schema_version"),
     )
+    # Legacy corrected-v1 checkpoints predate explicit normalization/decoder
+    # fields. Compare these fields whenever both sides declare them; a new
+    # checkpoint cannot silently claim compatibility with two declared values.
+    saved_normalization = saved_config.get("data", {}).get("normalization_version")
+    current_normalization = config["data"].get("normalization_version")
+    if saved_normalization is not None and current_normalization is not None:
+        compare("data.normalization_version", saved_normalization, current_normalization)
+    saved_decoder = saved_project.get("decoder_version")
+    current_decoder = config["project"].get("decoder_version")
+    if saved_decoder is not None and current_decoder is not None:
+        compare("project.decoder_version", saved_decoder, current_decoder)
     for name in ("input_dim", "continuous_dim", "include_diagnostics"):
         compare(f"features.{name}", saved_features.get(name), config["features"].get(name))
     for name in (

@@ -132,11 +132,18 @@ def run_preflight(
     warnings: list[str] = []
     roles_present: set[str] = set()
     source_status = []
+    strict_source_paths = bool(config["data"].get("strict_source_paths", False))
     for source in config["data"]["sources"]:
         status = _inspect_source(source, project_root, config, inspect_sequences=inspect_sequences)
         source_status.append(status)
         if status["available"]:
             roles_present.add(source["role"])
+        elif strict_source_paths and source.get("enabled", True):
+            detail = status.get("inspection_error") or "enabled source files are missing or invalid"
+            errors.append(
+                f"Enabled source is unavailable under strict_source_paths: {source['name']} at "
+                f"{project_root / source['path']} ({detail})"
+            )
         elif source.get("required", False):
             detail = status.get("inspection_error") or "required files are missing"
             errors.append(

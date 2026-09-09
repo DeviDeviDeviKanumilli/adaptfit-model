@@ -393,9 +393,11 @@ class StreamingAndTrainingTests(unittest.TestCase):
             summary = prepare_dataset(config, project_root)
             result = train_model("gru", config, project_root, seed=42, requested_device="cpu")
             checkpoint_path = project_root / "artifacts/checkpoints/gru_baseline.pt"
+            latest_checkpoint_path = project_root / "artifacts/checkpoints/gru_latest.pt"
             history_path = project_root / "artifacts/metrics/gru_history.json"
             self.assertGreater(summary["window_counts"]["test"], 0)
             self.assertTrue(checkpoint_path.exists())
+            self.assertTrue(latest_checkpoint_path.exists())
             self.assertTrue(history_path.exists())
             self.assertGreater(result["test_metrics"]["samples"], 0)
             self.assertIn("validation_sequence_metrics", result["history"][0])
@@ -410,6 +412,10 @@ class StreamingAndTrainingTests(unittest.TestCase):
             )
             loader = DataLoader(dataset, batch_size=64, shuffle=False)
             checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+            self.assertEqual(checkpoint["checkpoint_schema_version"], "adaptfit.checkpoint.v2")
+            self.assertIn("optimizer_state_dict", checkpoint)
+            self.assertIn("rng_state_torch", checkpoint)
+            self.assertIn("sampler_epoch", checkpoint)
             restored = build_model("gru", config)
             restored.load_state_dict(checkpoint["model_state_dict"])
             outputs, targets = collect_predictions(restored, loader, torch.device("cpu"))

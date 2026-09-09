@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import fnmatch
 from pathlib import Path
 import random
 import time
@@ -24,6 +25,7 @@ from .evaluation import aggregate_sequence_predictions
 from .losses import LossWeights, compute_loss, positive_weight_from_binary
 from .metrics import composite_score, compute_metrics
 from .models import build_model, parameter_count
+from .provenance import git_commit, sha256_file, sha256_value
 from .reporting import atomic_json_write
 
 
@@ -196,6 +198,14 @@ def _run_epoch(
 ) -> dict[str, float]:
     training = optimizer is not None
     model.train(training)
+    # A frozen backbone must not update BatchNorm/dropout-style state during a
+    # head-only experiment. The current models do not use BatchNorm, but this
+    # invariant keeps future backbones safe and makes cached features valid.
+    if training:
+        for name, module in model.named_children():
+            parameters = list(module.parameters())
+            if parameters and not any(parameter.requires_grad for parameter in parameters):
+                module.eval()
     totals: defaultdict[str, float] = defaultdict(float)
     batches = 0
     for batch in loader:
@@ -215,6 +225,172 @@ def _run_epoch(
     if batches == 0:
         raise RuntimeError("DataLoader produced no batches")
     return {key: value / batches for key, value in totals.items()}
+
+
+def configure_trainable_parameters(model: torch.nn.Module, config: Config) -> list[str]:
+    """Apply the explicit warm-start/freeze contract and return trainable names."""
+
+    training = config["training"]
+    for parameter in model.parameters():
+        parameter.requires_grad = True
+
+    freeze_backbone = bool(training.get("freeze_backbone", False))
+    unfreeze_last_blocks = int(training.get("unfreeze_last_blocks", 0))
+    if freeze_backbone or unfreeze_last_blocks:
+        for name, parameter in model.named_parameters():
+            parameter.requires_grad = name.startswith("heads.")
+        if unfreeze_last_blocks:
+            if hasattr(model, "blocks"):
+                blocks = getattr(model, "blocks")
+                count = len(blocks)
+                if unfreeze_last_blocks > count:
+                    raise ValueError(
+                        f"unfreeze_last_blocks={unfreeze_last_blocks} exceeds TCN block count {count}"
+                    )
+                first = count - unfreeze_last_blocks
+                for name, parameter in model.named_parameters():
+                    if name.startswith("blocks."):
+                        index = int(name.split(".", 2)[1])
+                        parameter.requires_grad = index >= first
+            elif hasattr(model, "gru"):
+                for parameter in getattr(model, "gru").parameters():
+                    parameter.requires_grad = True
+
+    patterns = training.get("trainable_patterns")
+    if patterns is not None:
+        pattern_values = [str(value) for value in patterns]
+        for name, parameter in model.named_parameters():
+            parameter.requires_grad = any(fnmatch.fnmatch(name, pattern) for pattern in pattern_values)
+
+    trainable = [name for name, parameter in model.named_parameters() if parameter.requires_grad]
+    if not trainable:
+        raise ValueError("training configuration leaves no trainable parameters")
+    return trainable
+
+
+def _optimizer_for_model(model: torch.nn.Module, config: Config) -> torch.optim.Optimizer:
+    """Build optimizer parameter groups with separate head/backbone rates."""
+
+    training = config["training"]
+    default_rate = float(training["learning_rate"])
+    head_rate = float(training.get("head_learning_rate", default_rate))
+    backbone_rate = float(training.get("backbone_learning_rate", default_rate))
+    head_parameters = []
+    backbone_parameters = []
+    for name, parameter in model.named_parameters():
+        if not parameter.requires_grad:
+            continue
+        (head_parameters if name.startswith("heads.") else backbone_parameters).append(parameter)
+    groups: list[dict[str, Any]] = []
+    if backbone_parameters:
+        groups.append({"params": backbone_parameters, "lr": backbone_rate})
+    if head_parameters:
+        groups.append({"params": head_parameters, "lr": head_rate})
+    if not groups:
+        raise ValueError("optimizer received no trainable parameters")
+    return torch.optim.AdamW(
+        groups,
+        weight_decay=float(training["weight_decay"]),
+    )
+
+
+def _move_optimizer_state(optimizer: torch.optim.Optimizer, device: torch.device) -> None:
+    for state in optimizer.state.values():
+        for name, value in state.items():
+            if isinstance(value, torch.Tensor):
+                state[name] = value.to(device)
+
+
+def _restore_rng_state(checkpoint: dict[str, Any]) -> None:
+    """Restore all RNG streams captured by an exact-resume checkpoint."""
+
+    torch_state = checkpoint.get("rng_state_torch")
+    if torch_state is not None:
+        torch.set_rng_state(torch_state)
+    numpy_state = checkpoint.get("rng_state_numpy")
+    if numpy_state is not None:
+        np.random.set_state(numpy_state)
+    python_state = checkpoint.get("rng_state_python")
+    if python_state is not None:
+        random.setstate(python_state)
+
+
+def _resolve_checkpoint_path(raw_path: str | None, project_root: Path) -> Path | None:
+    if not raw_path:
+        return None
+    path = Path(raw_path).expanduser()
+    return path if path.is_absolute() else project_root / path
+
+
+def _load_model_checkpoint(
+    path: Path,
+    model: torch.nn.Module,
+    config: Config,
+    device: torch.device,
+    expected_model_name: str | None = None,
+) -> dict[str, Any]:
+    from .config import validate_checkpoint_compatibility
+
+    if not path.exists():
+        raise FileNotFoundError(f"checkpoint does not exist: {path}")
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+    validate_checkpoint_compatibility(checkpoint, config)
+    if checkpoint.get("model_name") not in {"tcn", "gru"}:
+        raise ValueError("checkpoint model_name is unsupported")
+    if expected_model_name is not None and checkpoint.get("model_name") != expected_model_name:
+        raise ValueError(
+            f"checkpoint model_name={checkpoint.get('model_name')!r} does not match "
+            f"requested model={expected_model_name!r}"
+        )
+    model.load_state_dict(checkpoint["model_state_dict"], strict=True)
+    return checkpoint
+
+
+def _checkpoint_payload(
+    *,
+    model: torch.nn.Module,
+    model_name: str,
+    config: Config,
+    seed: int,
+    device: torch.device,
+    epoch: int,
+    best_score: float,
+    best_epoch: int,
+    stale_epochs: int,
+    history: list[dict[str, Any]],
+    optimizer: torch.optim.Optimizer,
+    trainable_layers: list[str],
+    parent_checkpoint: str | None,
+    train_seconds_total: float,
+    validation_seconds_total: float,
+    project_root: Path,
+    sampler_epoch: int | None,
+) -> dict[str, Any]:
+    return {
+        "checkpoint_schema_version": "adaptfit.checkpoint.v2",
+        "model_name": model_name,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "config": config,
+        "seed": seed,
+        "device": str(device),
+        "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+        "trainable_parameter_count": parameter_count(model),
+        "epoch": epoch,
+        "best_score": best_score,
+        "best_epoch": best_epoch,
+        "stale_epochs": stale_epochs,
+        "history": history,
+        "trainable_layers": trainable_layers,
+        "parent_checkpoint": parent_checkpoint,
+        "rng_state_torch": torch.get_rng_state(),
+        "rng_state_numpy": np.random.get_state(),
+        "rng_state_python": random.getstate(),
+        "train_seconds_total": train_seconds_total,
+        "validation_seconds_total": validation_seconds_total,
+        "sampler_epoch": sampler_epoch,
+        "source_commit": git_commit(project_root),
+    }
 
 
 @torch.no_grad()
@@ -315,22 +491,47 @@ def train_model(
             "window-level validation scoring"
         )
     model = build_model(model_name, config).to(device)
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=float(config["training"]["learning_rate"]),
-        weight_decay=float(config["training"]["weight_decay"]),
-    )
+    trainable_layers = configure_trainable_parameters(model, config)
+    optimizer = _optimizer_for_model(model, config)
+    training_config = config["training"]
+    init_path = _resolve_checkpoint_path(training_config.get("init_checkpoint"), project_root)
+    resume_path = _resolve_checkpoint_path(training_config.get("resume_checkpoint"), project_root)
+    parent_checkpoint: str | None = None
+    resumed_checkpoint: dict[str, Any] | None = None
+    if init_path is not None:
+        _load_model_checkpoint(init_path, model, config, device, expected_model_name=model_name)
+        parent_checkpoint = str(init_path)
+    if resume_path is not None:
+        resumed_checkpoint = _load_model_checkpoint(
+            resume_path,
+            model,
+            config,
+            device,
+            expected_model_name=model_name,
+        )
+        if resumed_checkpoint.get("optimizer_state_dict") is None:
+            raise ValueError("exact resume requires optimizer_state_dict in the checkpoint")
+        optimizer.load_state_dict(resumed_checkpoint["optimizer_state_dict"])
+        _move_optimizer_state(optimizer, device)
+        saved_layers = resumed_checkpoint.get("trainable_layers")
+        if saved_layers is not None and list(saved_layers) != trainable_layers:
+            raise ValueError("resume checkpoint trainable layers do not match the requested configuration")
+        parent_checkpoint = str(resume_path)
+        _restore_rng_state(resumed_checkpoint)
+        saved_sampler_epoch = resumed_checkpoint.get("sampler_epoch")
+        if saved_sampler_epoch is not None and hasattr(train_loader.batch_sampler, "set_epoch"):
+            train_loader.batch_sampler.set_epoch(int(saved_sampler_epoch))
     loss_weights = LossWeights(**{
         key: float(value)
         for key, value in config["training"]["loss_weights"].items()
     })
     loss_support = _loss_support(train_dataset, config, device)
-    max_epochs = int(config["training"]["max_epochs"])
-    patience = int(config["training"]["early_stopping_patience"])
-    validation_interval = int(config["training"].get("validation_interval", 1))
-    validate_on_first = bool(config["training"].get("validate_on_first_epoch", True))
-    validate_on_final = bool(config["training"].get("validate_on_final_epoch", True))
-    gradient_clip_norm = float(config["training"].get("gradient_clip_norm", 1.0))
+    max_epochs = int(training_config["max_epochs"])
+    patience = int(training_config["early_stopping_patience"])
+    validation_interval = int(training_config.get("validation_interval", 1))
+    validate_on_first = bool(training_config.get("validate_on_first_epoch", True))
+    validate_on_final = bool(training_config.get("validate_on_final_epoch", True))
+    gradient_clip_norm = float(training_config.get("gradient_clip_norm", 1.0))
     checkpoint_root = project_root / config["project"].get("artifacts_root", "artifacts") / "checkpoints"
     metrics_root = project_root / config["project"].get("artifacts_root", "artifacts") / "metrics"
     checkpoint_root.mkdir(parents=True, exist_ok=True)
@@ -344,9 +545,54 @@ def train_model(
     validation_checks = 0
     train_seconds_total = 0.0
     validation_seconds_total = 0.0
+    start_epoch = 1
+    if resumed_checkpoint is not None:
+        start_epoch = int(resumed_checkpoint.get("epoch", 0)) + 1
+        best_score = float(resumed_checkpoint.get("best_score", resumed_checkpoint.get("validation_score", float("-inf"))))
+        best_epoch = int(resumed_checkpoint.get("best_epoch", 0))
+        stale_epochs = int(resumed_checkpoint.get("stale_epochs", 0))
+        history = list(resumed_checkpoint.get("history", []))
+        validation_checks = sum(1 for row in history if not row.get("validation_skipped", False))
+        train_seconds_total = float(resumed_checkpoint.get("train_seconds_total", 0.0))
+        validation_seconds_total = float(resumed_checkpoint.get("validation_seconds_total", 0.0))
 
-    print(f"[{model_name}] device={device} parameters={parameter_count(model):,}")
-    for epoch in range(1, max_epochs + 1):
+    latest_checkpoint_path = checkpoint_root / (
+        "gru_latest.pt" if model_name == "gru" else f"{model_name}_latest.pt"
+    )
+
+    def save_latest_checkpoint() -> None:
+        if not bool(training_config.get("save_latest", True)):
+            return
+        torch.save(
+            _checkpoint_payload(
+                model=model,
+                model_name=model_name,
+                config=config,
+                seed=seed,
+                device=device,
+                epoch=history[-1]["epoch"] if history else 0,
+                best_score=best_score,
+                best_epoch=best_epoch,
+                stale_epochs=stale_epochs,
+                history=history,
+                optimizer=optimizer,
+                trainable_layers=trainable_layers,
+                parent_checkpoint=parent_checkpoint,
+                train_seconds_total=train_seconds_total,
+                validation_seconds_total=validation_seconds_total,
+                project_root=project_root,
+                sampler_epoch=getattr(train_loader.batch_sampler, "epoch", None),
+            ),
+            latest_checkpoint_path,
+        )
+
+    total_parameter_count = sum(parameter.numel() for parameter in model.parameters())
+    trainable_parameter_count = parameter_count(model)
+    print(
+        f"[{model_name}] device={device} parameters={total_parameter_count:,} "
+        f"trainable={trainable_parameter_count:,}"
+    )
+    for epoch in range(start_epoch, max_epochs + 1):
         train_started = time.perf_counter()
         train_loss = _run_epoch(
             model,
@@ -383,6 +629,7 @@ def train_model(
                 f"[{model_name}] epoch={epoch:03d} loss={train_loss['total']:.4f} "
                 f"validation=skipped train_sps={len(train_loader.dataset) / max(train_seconds, 1e-9):.1f}"
             )
+            save_latest_checkpoint()
             continue
 
         validation_started = time.perf_counter()
@@ -437,36 +684,57 @@ def train_model(
             best_score = score
             best_epoch = epoch
             stale_epochs = 0
-            torch.save(
+            best_payload = _checkpoint_payload(
+                model=model,
+                model_name=model_name,
+                config=config,
+                seed=seed,
+                device=device,
+                epoch=epoch,
+                best_score=best_score,
+                best_epoch=best_epoch,
+                stale_epochs=stale_epochs,
+                history=history,
+                optimizer=optimizer,
+                trainable_layers=trainable_layers,
+                parent_checkpoint=parent_checkpoint,
+                train_seconds_total=train_seconds_total,
+                validation_seconds_total=validation_seconds_total,
+                project_root=project_root,
+                sampler_epoch=getattr(train_loader.batch_sampler, "epoch", None),
+            )
+            best_payload.update(
                 {
-                    "model_name": model_name,
-                    "model_state_dict": model.state_dict(),
-                    "config": config,
-                    "seed": seed,
-                    "device": str(device),
-                    "parameter_count": parameter_count(model),
                     "validation_metrics": validation_metrics,
                     "validation_sequence_metrics": validation_sequence_metrics,
                     "validation_window_score": validation_window_score,
                     "validation_sequence_score": validation_sequence_score,
                     "validation_score": score,
-                },
-                checkpoint_path,
+                }
             )
+            torch.save(best_payload, checkpoint_path)
         else:
             stale_epochs += 1
             if stale_epochs >= patience:
                 print(f"[{model_name}] early stopping at epoch {epoch}")
+                save_latest_checkpoint()
                 break
 
+        save_latest_checkpoint()
+
+    if not checkpoint_path.exists():
+        raise RuntimeError("training completed without producing a best checkpoint")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
-    test_outputs, test_targets = collect_predictions(model, test_loader, device)
-    test_metrics = compute_metrics(test_outputs, test_targets)
+    test_metrics: dict[str, float] | None = None
+    if bool(training_config.get("evaluate_test_after_training", True)):
+        test_outputs, test_targets = collect_predictions(model, test_loader, device)
+        test_metrics = compute_metrics(test_outputs, test_targets)
     result = {
         "model_name": model_name,
         "device": str(device),
-        "parameter_count": parameter_count(model),
+        "parameter_count": total_parameter_count,
+        "trainable_parameter_count": trainable_parameter_count,
         "best_epoch": best_epoch,
         "best_validation_score": best_score,
         "test_metrics": test_metrics,
@@ -476,6 +744,11 @@ def train_model(
         "train_seconds_total": train_seconds_total,
         "validation_seconds_total": validation_seconds_total,
         "phase_policy_reasons": dict(train_dataset.phase_policy_reasons),
+        "trainable_layers": trainable_layers,
+        "parent_checkpoint": parent_checkpoint,
+        "latest_checkpoint": str(latest_checkpoint_path) if latest_checkpoint_path.exists() else None,
+        "test_evaluation_performed": test_metrics is not None,
+        "config_hash": sha256_value(config),
     }
     atomic_json_write(metrics_root / f"{model_name}_history.json", result)
     return result

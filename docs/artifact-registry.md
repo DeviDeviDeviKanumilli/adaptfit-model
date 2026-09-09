@@ -21,6 +21,8 @@ training log alone does not establish a release candidate.
 | `v2-quality` | `artifacts/v2-quality/` | prepared only | `training/configs/v2_quality.yaml` | prepared data/manifests; no completed model comparison |
 | `v2-quality-fixed` | `artifacts/v2-quality-fixed/` | partial | `training/configs/v2_quality_fixed.yaml` | TCN evaluated; GRU interrupted; quality-4 target coverage remains zero |
 | `v2-diagnostics` | `artifacts-v2-diagnostics/` | diagnostic variant | `training/configs/v2_diagnostics.yaml` | 378-feature diagnostic schema; not a replacement for the 283-feature contract |
+| `r0-baseline` | `artifacts/r0-baseline/` (local, ignored) | evaluation-only audit | `training/configs/experiments/r0_baseline.yaml`; parent `corrected-v1` | Fresh TCN/GRU reports and manifests plus validation-only decoder calibration; no trained child checkpoint |
+| `r1-tcn-boundary-finetune` | `artifacts/r1-tcn-boundary/` (planned) | configured, not run | `training/configs/experiments/r1_tcn_boundary_finetune.yaml`; parent `corrected-v1/tcn_best.pt` | Head-only warm-start candidate; test evaluation is locked during training |
 
 The current-state and training execution log remain the human-readable snapshot;
 this table is the canonical inventory to extend after every run.
@@ -37,6 +39,7 @@ Each run/checkpoint must record `ModelArtifactManifestV1` fields:
 - checkpoint/config/schema/normalization hashes and artifact paths;
 - validation and test metrics with split, source, participant scope, and selection
   rule;
+- validation-only decoder calibration report and explicit gate status;
 - export/runtime/quantization state and parity-fixture results;
 - known limitations, unsupported claims, and reviewer/date.
 

@@ -1445,11 +1445,15 @@ def load_all_sources(config: Config, project_root: Path) -> list[CanonicalSequen
     """Load enabled source adapters and canonical NPZ files."""
 
     sequences: list[CanonicalSequence] = []
+    strict_source_paths = bool(config["data"].get("strict_source_paths", False))
     for source in config["data"]["sources"]:
         if not source.get("enabled", True):
             continue
         root = project_root / source["path"]
         name = source["name"]
+        if strict_source_paths and not root.exists():
+            raise FileNotFoundError(f"enabled source path does not exist: {root}")
+        before = len(sequences)
         if name == "rehab24_6":
             sequences.extend(load_rehab24_6(root))
         elif name == "intellirehabds":
@@ -1479,4 +1483,6 @@ def load_all_sources(config: Config, project_root: Path) -> list[CanonicalSequen
             )
         elif root.exists():
             sequences.extend(load_canonical_npz_files(root))
+        if strict_source_paths and len(sequences) == before:
+            raise RuntimeError(f"enabled source produced no canonical sequences: {name} ({root})")
     return sequences

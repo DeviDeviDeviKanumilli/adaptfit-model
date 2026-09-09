@@ -19,7 +19,7 @@ an invitation to infer.
 |---|---|---|---|---|---|
 | Recognize movement family | `MovementPredictionV1` | `training/src/models/heads.py` | model/pipeline tests | `artifacts/corrected-v1` evaluation | participant/source split; not clinical validation |
 | Estimate movement phase | `MovementPredictionV1` | `training/src/models/heads.py` | temporal/streaming tests | `v2-quality-fixed` evaluation | 5-class frame logits; requires phase ground truth |
-| Count repetitions | `WorkoutEventV1` | planned decoder over boundary heads | planned decoder fixtures | sequence predictions and metrics | end-boundary weakness must be debounced |
+| Count repetitions | `WorkoutEventV1` | Python `decoder.v1` over boundary heads; native bridge remains planned | `training/tests/test_decoder.py`; native replay fixtures planned | R0 validation calibration plus corrected-v1 sequence predictions | baseline decoder gate is blocked by end-event F1; no product claim |
 | Provide observable quality feedback | `MovementPredictionV1` (`quality_logits`) | 4-head quality outputs in `heads.py` | label-coverage tests | none with valid four-head coverage | unavailable while quality coverage is zero |
 | Provide expert composite quality score | `MovementPredictionV1` (`expert_quality_logits`) | expert quality head in `heads.py` | `test_v2_quality_pipeline.py` | `v2-quality-fixed` evaluation | source expert/composite scale; not clinical validation and not interchangeable with 4 observable heads |
 | Profile user physical capabilities | `CapabilityProfileV1` | `training/src/data/schema.py` | `test_data_contracts.py` | valid/invalid profile fixtures | self-reported on-device profile; not a medical diagnosis |

@@ -125,7 +125,12 @@ Personalize initial range/tempo and decoding through a short user calibration, w
 
 ## Changes needed before executing this strategy
 
-The current runner builds a fresh model and does not expose this staged fine-tuning workflow. Add explicit checkpoint initialization, schema/normalization checks, trainable-layer selection, separate learning rates and a controlled training sampler. Save optimizer/scheduler/RNG state for future exact resumption; current saved weights alone permit a warm start, not an exact interrupted-run resume.
+The staged fine-tuning workflow is now implemented for the next isolated run:
+checkpoint initialization, schema/normalization checks, trainable-layer
+selection, separate learning rates, strict source paths, test locking, and
+resumable optimizer/RNG/sampler state. The R1 config has not been trained yet;
+use [pretraining-readiness.md](pretraining-readiness.md) for the bounded smoke
+command and its stop conditions.
 
 Add density supervision only after the simpler experiment warrants it. Keep artifact directories isolated and verify weight loading, frozen-layer behavior and causal streaming parity. No training or source-code changes were performed to create this document.
 
@@ -152,11 +157,15 @@ portable hardware guarantee.
 | `python3 scripts/validate_docs.py` | repository paths and JSON fixtures | read-only documentation/fixture report | any link, metadata, schema, status, or claim-trace failure |
 
 Warm-start and exact resume remain different contracts. A warm-start restores
-weights only and records a parent checkpoint; an exact resume additionally
-restores optimizer, scheduler/scaler, sampler position, update count, RNG, and
-the compatible data/code environment. Neither is implied by the current fresh
-training command. Every run writes to a new artifact root and updates the
-[artifact registry](artifact-registry.md) after evaluation.
+weights only and records a parent checkpoint; an exact resume restores the
+model, optimizer, RNG streams, sampler epoch, update history, and compatible
+data/code environment (scheduler/scaler state are recorded when such state is
+introduced). The current runner exposes `--init-checkpoint`,
+`--resume-checkpoint`, `--freeze-backbone`, `--unfreeze-last-blocks`,
+`--skip-test`, and isolated experiment configs. Every run writes to a new
+artifact root and updates the [artifact registry](artifact-registry.md) after
+evaluation. The exact next command is in
+[pretraining-readiness.md](pretraining-readiness.md).
 
 This section turns the strategy into a repeatable gate sequence. A Luna agent
 must stop at the first failed gate, record the evidence, and avoid spending
@@ -336,6 +345,10 @@ This TODO list is a handoff specification, not an instruction to start training 
 
 #### B1. Add safe weight initialization
 
+The implementation is present in the working tree and covered by staged
+training tests. The checklist below now describes the verification expected
+for each future run; it is not a request to retrofit a legacy checkpoint.
+
 - [ ] Add an explicit warm-start option to the training configuration/CLI and load the selected checkpoint before optimization.
 - [ ] Check input schema, normalization, architecture and label meanings. Reject incompatible shared layers.
 - [ ] Allow intentionally new heads only through an explicit allowlist of missing/new parameters; report all loaded and initialized parameters.
@@ -346,6 +359,9 @@ This TODO list is a handoff specification, not an instruction to start training 
 **Done when:** a test shows loaded shared weights match the source, an incompatible checkpoint fails clearly, and unexpected missing keys cannot silently pass.
 
 #### B2. Add trainable-layer stages and recoverable checkpoints
+
+The runner now supports the requested modes and stores the resumable state in
+`adaptfit.checkpoint.v2`. No full R1 training run has been launched yet.
 
 - [ ] Support heads-only, heads-plus-last-blocks and full fine-tuning modes.
 - [ ] Keep frozen blocks in evaluation mode; configure the optimizer with only intended trainable parameters and separate head/backbone learning rates.

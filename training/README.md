@@ -21,7 +21,9 @@ fine-tuning, sampler/loss rules, stopping gates, and the Luna TODO list. Read
 [evaluation-protocol](../docs/evaluation-protocol.md) before changing a run.
 Use the [repository and implementation map](../docs/repository-and-implementation-map.md)
 to locate the source entrypoint and the [artifact registry](../docs/artifact-registry.md)
-to record its output.
+to record its output. Before any new run, follow the [pre-training readiness
+handoff](../docs/pretraining-readiness.md), which contains the frozen hashes,
+R0 audit, decoder gate, and exact R1 command.
 The proposed [Motion-JEPA plan](../docs/motion-jepa-world-model-plan.md) is a
 training-only research backlog; it does not add a current command or authorize
 pretraining.
@@ -93,9 +95,12 @@ python3 -m training.train --config training/configs/v1.yaml --models tcn,gru --d
 python3 -m training.evaluate --config training/configs/v1.yaml --checkpoint artifacts/checkpoints/tcn_best.pt
 ```
 
-The commands above are the current fresh-training path. They do not implement
-warm-start or exact interrupted-run resume; do not add `--resume` by inference.
-Copy the config and write to an isolated artifact root for every experiment.
+The commands above are the legacy fresh-training path. For current work, copy
+an experiment config and write to an isolated artifact root for every run.
+`--init-checkpoint`/`training.init_checkpoint` is a weight-only warm start;
+`--resume-checkpoint`/`training.resume_checkpoint` is an exact interrupted-run
+resume and requires the saved optimizer, RNG, sampler epoch, and trainable-layer
+state. Do not use either mode without the compatibility checks and parent hash.
 The run must record the Git commit, parent checkpoint (if any), dataset
 manifest, normalization/schema versions, seed, device, stopping reason, and
 metrics required by the evaluation protocol.
@@ -148,6 +153,11 @@ unexpected missing/unexpected keys, validation degradation beyond the declared
 patience, exhausted compute budget, or writes into an existing artifact.
 Record the failure and next eligible task in
 `docs/training-execution-log.md`; do not hide it by extending the run.
+
+The R1 pre-training handoff deliberately disables test evaluation during
+training. Select the candidate and recalibrate the decoder on validation first;
+read the locked test split only after the model, decoder, and preprocessing
+versions are frozen.
 
 ## Verification
 

@@ -35,6 +35,15 @@ participant split, commit, config hash, checkpoint, artifact paths, and limits.
    sequence coordinates using the stored offsets. Window metrics are
    diagnostics only because stride creates correlated examples.
 
+The deterministic Python decoder is evaluated separately from raw boundary
+logits. Thresholds, tracking floors, apex/pause rules, duplicate suppression,
+and timestamp-reset behavior are calibrated on validation only with
+`training/calibrate_decoder.py`. The report must include the decoder version,
+checkpoint/config hashes, target pair count, accepted event count, count MAE,
+start/end F1, false events on empty/rest sequences, abstention count, and a
+gate status. A conservative zero-event decoder is not a passing product
+result, even when its count MAE is below a threshold.
+
 ## Metric definitions
 
 ### Movement family and phase

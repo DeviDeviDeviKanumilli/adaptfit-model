@@ -49,6 +49,7 @@ commit/config/artifact that supports it. If evidence is missing, write
 For a fast implementation orientation, read [system context and data flow](system-context-and-dataflow.md),
 then [repository and implementation map](repository-and-implementation-map.md),
 [current state](current-state.md), [model registry](model-registry.md), and the
+[pre-training readiness handoff](pretraining-readiness.md), [model registry](model-registry.md), and the
 [research-backed methodology reuse report](research-method-reuse-report.md).
 
 | Question | Canonical answer |
@@ -73,6 +74,7 @@ then [repository and implementation map](repository-and-implementation-map.md),
 | How are local data and consent handled? | [Privacy and data lifecycle](privacy-and-data-lifecycle.md) |
 | What is the dependency-ordered delivery plan? | [Project forward plan](project-forward-plan.md) |
 | What is the training execution state and checkpoint inventory? | [Training execution log](training-execution-log.md) |
+| What exactly is verified before the next training run? | [Pre-training readiness](pretraining-readiness.md) |
 | Why was a decision made? | [Decision ledger](decisions-and-open-questions.md) |
 | What is a prior experiment or audit? | Use the [historical reports](#historical-and-supporting-records), not current-state claims. |
 
@@ -97,6 +99,7 @@ then [repository and implementation map](repository-and-implementation-map.md),
 - [Public dataset catalog](dataset-catalog.md)
 - [Artifact registry](artifact-registry.md)
 - [Efficient training strategy and Luna TODO](efficient-training-strategy.md)
+- [Pre-training readiness handoff](pretraining-readiness.md)
 
 ### Runtime and delivery
 

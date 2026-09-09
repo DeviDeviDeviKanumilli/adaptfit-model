@@ -27,6 +27,7 @@ from .src.data.schema import PHASE_NAMES
 from .src.evaluation import aggregate_sequence_predictions, audit_sequence_identities
 from .src.metrics import compute_metrics
 from .src.models import build_model
+from .src.provenance import model_artifact_manifest
 from .src.reporting import RUN_METRICS_SCHEMA_VERSION, atomic_json_write, json_safe
 from .src.runner import collect_predictions, create_loaders, resolve_device
 
@@ -241,8 +242,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--num-workers", default=None, type=int, help="Optional DataLoader worker override")
     args = parser.parse_args(argv)
 
-    config = load_config(args.config)
-    project_root = resolve_project_root(args.config, args.project_root)
+    config_path = args.config.expanduser().resolve()
+    config = load_config(config_path)
+    project_root = resolve_project_root(config_path, args.project_root)
     device_name = args.device if args.device != "auto" else config["training"].get("device", "auto")
     device = resolve_device(device_name)
     checkpoint_path = args.checkpoint if args.checkpoint.is_absolute() else project_root / args.checkpoint
@@ -290,6 +292,8 @@ def main(argv: list[str] | None = None) -> int:
         "checkpoint": str(checkpoint_path),
         "model_name": model_name,
         "device": str(device),
+        "evaluation_split": "test",
+        "evaluation_config": config,
         "checkpoint_config": checkpoint.get("config", {}),
         "evaluation_scope": {
             "window_level_metrics": True,
@@ -398,6 +402,48 @@ def main(argv: list[str] | None = None) -> int:
         "sequence_predictions": str(sequence_predictions_path),
         "sequence_metadata": str(sequence_metadata_path),
     }
+    parent_artifact_root = config["project"].get("parent_artifact_root")
+    contract_root = artifacts_root
+    if parent_artifact_root:
+        candidate = project_root / str(parent_artifact_root)
+        if candidate.exists():
+            contract_root = candidate
+    feature_schema_path = contract_root / "feature_schema.json"
+    normalization_path = contract_root / "normalization_stats.npz"
+    manifest = model_artifact_manifest(
+        project_root=project_root,
+        model_id=f"movement-{model_name}-v1",
+        model_version="v1",
+        checkpoint_path=checkpoint_path,
+        config=config,
+        config_path=config_path,
+        normalization_version=str(
+            config["data"].get("normalization_version", f"normalization.{artifacts_root.name}")
+        ),
+        decoder_version=str(config["project"].get("decoder_version", "decoder.pending-v1")),
+        status="evaluated",
+        metrics={
+            "split": "test",
+            "logical_sequence_count": identity_audit["logical_sequence_count"],
+            "identity_collision_count": identity_audit["identity_collision_count"],
+            "sequence_level": sequence_metrics,
+            "quality_label_coverage": overall_metrics["quality_label_coverage"],
+        },
+        known_limitations=[
+            "public-data benchmark only",
+            "no target-population validation",
+            "no native/mobile parity",
+            "quality-head coverage is zero",
+            "decoder calibration is validation-only and not a release gate",
+        ],
+        feature_schema_path=feature_schema_path,
+        normalization_path=normalization_path,
+        prepared_index_path=processed_root / "index.json",
+        parent_checkpoint=None,
+    )
+    manifest_path = artifacts_root / "manifests" / f"{model_name}_model_artifact_manifest.json"
+    atomic_json_write(manifest_path, manifest)
+    report["artifact_manifest"] = str(manifest_path)
     # Rewrite the model-specific report after adding artifact paths, then
     # merge the final version into the combined comparison report.
     atomic_json_write(metrics_root / f"{model_name}_evaluation.json", report)
