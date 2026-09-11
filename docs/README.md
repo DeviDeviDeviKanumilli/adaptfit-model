@@ -75,6 +75,8 @@ then [repository and implementation map](repository-and-implementation-map.md),
 | What is the dependency-ordered delivery plan? | [Project forward plan](project-forward-plan.md) |
 | What is the training execution state and checkpoint inventory? | [Training execution log](training-execution-log.md) |
 | What exactly is verified before the next training run? | [Pre-training readiness](pretraining-readiness.md) |
+| What is the complete dependency-ordered finish plan? | [Production completion plan](production-completion-plan.md) |
+| How should Gemini assist with manual event labeling? | [Gemini manual-labeling handoff](gemini-manual-labeling-handoff.md) |
 | Why was a decision made? | [Decision ledger](decisions-and-open-questions.md) |
 | What is a prior experiment or audit? | Use the [historical reports](#historical-and-supporting-records), not current-state claims. |
 
@@ -100,6 +102,8 @@ then [repository and implementation map](repository-and-implementation-map.md),
 - [Artifact registry](artifact-registry.md)
 - [Efficient training strategy and Luna TODO](efficient-training-strategy.md)
 - [Pre-training readiness handoff](pretraining-readiness.md)
+- [Production completion plan](production-completion-plan.md)
+- [Gemini manual-labeling handoff](gemini-manual-labeling-handoff.md)
 
 ### Runtime and delivery
 

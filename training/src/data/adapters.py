@@ -8,7 +8,7 @@ session, and source file.
 from __future__ import annotations
 
 from collections import defaultdict
-from io import BytesIO
+from io import BytesIO, StringIO
 import csv
 import json
 import logging
@@ -380,12 +380,32 @@ def _make_sequence(
     expert_quality_mask: bool = False,
     capability_states: dict[str, str] | None = None,
 ) -> CanonicalSequence:
+    """Build one canonical sequence without manufacturing unavailable labels.
+
+    Callers must provide boundary labels explicitly when the source supplies
+    them.  ``CanonicalSequence`` turns an omitted boundary array into an
+    all-masked target, which is the correct default for sources without
+    frame-level repetition segmentation.
+    """
+
     frames = len(joints)
     metadata = dict(metadata)
     metadata.setdefault("label_provenance", label_provenance)
     metadata.setdefault("phase_label_source", phase_label_source)
     metadata.setdefault("boundary_label_source", boundary_label_source)
     metadata.setdefault("quality_label_source", quality_label_source)
+    # Some public sources intentionally expose only a partial canonical pose
+    # (for example, UCO records three joints for a unilateral leg exercise).
+    # Preserve that structural observability contract so the tracking target
+    # does not treat unlisted joints as failed camera observations.
+    metadata.setdefault(
+        "tracking_expected_joint_names",
+        [
+            name
+            for name, index in CANONICAL_INDEX.items()
+            if bool(np.any(observed[:, index]))
+        ],
+    )
     return CanonicalSequence(
         joints=joints,
         pose_confidence=confidence,
@@ -401,7 +421,7 @@ def _make_sequence(
         source_dataset=source_dataset,
         family=family,
         phase=derive_phase_labels(joints) if phase is None else phase,
-        rep_boundary=rep_boundary if rep_boundary is not None else rep_boundary_labels(frames),
+        rep_boundary=rep_boundary,
         quality=quality,
         quality_mask=quality_mask,
         expert_quality=expert_quality,
@@ -490,6 +510,7 @@ def load_rehab24_6(root: str | Path) -> list[CanonicalSequence]:
                             "labels_are_weak_phase": True,
                             "labels_are_weak_boundary": False,
                         },
+                        rep_boundary=rep_boundary_labels(len(joints)),
                     )
                 )
     return sequences
@@ -907,11 +928,70 @@ def _ulred_metadata_from_member(member: str) -> tuple[str, int, str] | None:
     return exercise, repetitions, subject
 
 
+_ULRED_BOUNDARY_KEYS = (
+    "r1start",
+    "r1end",
+    "r2start",
+    "r2end",
+    "r3start",
+    "r3end",
+)
+
+
+def _read_ulred_boundary_rows(raw) -> dict[str, dict[str, int]]:
+    """Read explicit markerless three-repetition spans from a UL-RED CSV."""
+
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8-sig", errors="replace")
+    rows: dict[str, dict[str, int]] = {}
+    for row in csv.DictReader(StringIO(str(raw))):
+        name = str(row.get("name", "")).strip()
+        if not name:
+            continue
+        try:
+            values = {key: int(row[key]) for key in _ULRED_BOUNDARY_KEYS}
+        except (KeyError, TypeError, ValueError):
+            LOGGER.warning("Skipping malformed UL-RED boundary row %r", row)
+            continue
+        if any(value < 0 for value in values.values()):
+            LOGGER.warning("Skipping negative UL-RED boundary row %r", row)
+            continue
+        if any(values[start] > values[end] for start, end in (("r1start", "r1end"), ("r2start", "r2end"), ("r3start", "r3end"))):
+            LOGGER.warning("Skipping reversed UL-RED boundary row %r", row)
+            continue
+        rows[name] = values
+    return rows
+
+
+def _ulred_boundary_labels(
+    frame_ids: np.ndarray,
+    row: dict[str, int] | None,
+) -> np.ndarray | None:
+    """Convert zero-based UL-RED markerless spans to AMC frame labels."""
+
+    if row is None:
+        return None
+    frame_to_index = {int(frame_id): index for index, frame_id in enumerate(frame_ids)}
+    labels = np.zeros((len(frame_ids), 2), dtype=np.float32)
+    for column, keys in ((0, ("r1start", "r2start", "r3start")), (1, ("r1end", "r2end", "r3end"))):
+        for key in keys:
+            # UL-RED's 3Rep CSV uses zero-based exported-frame indices while
+            # the positional AMC parser exposes one-based frame IDs.
+            frame_id = int(row[key]) + 1
+            index = frame_to_index.get(frame_id)
+            if index is None:
+                return None
+            labels[index, column] = 1.0
+    return labels
+
+
 def _make_ulred_sequence(
     *,
     member: str,
     payload,
     source_archive: str | None = None,
+    boundary_row: dict[str, int] | None = None,
+    boundary_source_member: str | None = None,
 ) -> CanonicalSequence | None:
     parsed = _ulred_metadata_from_member(member)
     if parsed is None:
@@ -931,6 +1011,8 @@ def _make_ulred_sequence(
     is_multi_repetition = recording_repetitions > 1
     phase = np.full(len(joints), -1, dtype=np.int64) if is_multi_repetition else None
     effective_phase_source = "unlabeled" if is_multi_repetition else "weak_displacement"
+    boundaries = _ulred_boundary_labels(frame_ids, boundary_row)
+    has_explicit_boundaries = boundaries is not None
     return _make_sequence(
         joints=joints,
         confidence=confidence,
@@ -944,7 +1026,7 @@ def _make_ulred_sequence(
         quality_mask=quality_mask,
         label_provenance="weak",
         phase_label_source=effective_phase_source,
-        boundary_label_source="unknown",
+        boundary_label_source="strong" if has_explicit_boundaries else "unknown",
         quality_label_source="unlabeled",
         metadata={
             "exercise_name": exercise,
@@ -955,6 +1037,16 @@ def _make_ulred_sequence(
             "source_frame_rate": 30.0,
             "source_member": member,
             "source_archive": source_archive,
+            "boundary_source_member": boundary_source_member,
+            "labels_are_explicit_boundaries": has_explicit_boundaries,
+            "boundary_label_status": (
+                "explicit_markerless_three_repetition_spans"
+                if has_explicit_boundaries
+                else "unavailable"
+            ),
+            "boundary_frame_indexing": "zero_based_csv_to_one_based_amc"
+            if has_explicit_boundaries
+            else None,
             "labels_are_weak_phase": not is_multi_repetition,
             "labels_are_recording_level": True,
             "phase_label_status": (
@@ -968,6 +1060,7 @@ def _make_ulred_sequence(
         },
         timestamps=timestamps,
         phase=phase,
+        rep_boundary=boundaries,
     )
 
 
@@ -989,6 +1082,20 @@ def load_ul_red(root: str | Path) -> list[CanonicalSequence]:
     for archive_path in archives:
         try:
             with ZipFile(archive_path) as zipped:
+                names = zipped.namelist()
+                boundary_member = next(
+                    (
+                        name
+                        for name in names
+                        if re.search(r"/marker-less/3Rep_.*\.csv$", name, re.IGNORECASE)
+                    ),
+                    None,
+                )
+                boundary_rows = (
+                    _read_ulred_boundary_rows(zipped.read(boundary_member))
+                    if boundary_member is not None
+                    else {}
+                )
                 for member in _ulred_amc_members(zipped.namelist()):
                     try:
                         with zipped.open(member) as payload:
@@ -996,6 +1103,8 @@ def load_ul_red(root: str | Path) -> list[CanonicalSequence]:
                                 member=member,
                                 payload=payload,
                                 source_archive=archive_path.name,
+                                boundary_row=boundary_rows.get(Path(member).stem),
+                                boundary_source_member=boundary_member,
                             )
                     except (OSError, ValueError) as error:
                         LOGGER.warning("Skipping UL-RED member %s: %s", member, error)
@@ -1016,9 +1125,23 @@ def load_ul_red(root: str | Path) -> list[CanonicalSequence]:
             continue
         if any(sequence.metadata.get("source_member") == str(member_path) for sequence in sequences):
             continue
+        boundary_root = member_path.parent.parent
+        subject_root = boundary_root.parent
+        boundary_path = boundary_root / f"3Rep_{subject_root.name}.csv"
+        boundary_rows = {}
+        if boundary_path.exists():
+            try:
+                boundary_rows = _read_ulred_boundary_rows(boundary_path.read_bytes())
+            except OSError as error:
+                LOGGER.warning("Unable to read UL-RED boundary file %s: %s", boundary_path, error)
         try:
             with member_path.open("rb") as payload:
-                sequence = _make_ulred_sequence(member=str(member_path), payload=payload)
+                sequence = _make_ulred_sequence(
+                    member=str(member_path),
+                    payload=payload,
+                    boundary_row=boundary_rows.get(member_path.stem),
+                    boundary_source_member=str(boundary_path) if boundary_path.exists() else None,
+                )
         except (OSError, ValueError) as error:
             LOGGER.warning("Skipping UL-RED file %s: %s", member_path, error)
             continue

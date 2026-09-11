@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 
+import numpy as np
 import torch
 
 from training.src.config import load_config
@@ -13,6 +14,7 @@ from training.src.losses import (
     positive_weight_from_binary,
 )
 from training.src.models.heads import MultiTaskHeads
+from training.src.runner import _class_weights
 from training.tests.support import CONFIG_PATH
 from training.src.models import build_model, parameter_count
 
@@ -162,6 +164,19 @@ class ModelTests(unittest.TestCase):
             torch.ones(4, dtype=torch.bool),
         )
         self.assertEqual(float(all_positive), 1.0)
+        capped = positive_weight_from_binary(
+            torch.tensor([0.0] * 100 + [1.0]),
+            torch.ones(101, dtype=torch.bool),
+            max_weight=32.0,
+        )
+        self.assertEqual(float(capped), 32.0)
+
+    def test_class_weights_ignore_absent_classes(self) -> None:
+        weights = _class_weights(np.asarray([1, 1, 2, 2, 2]), classes=4)
+
+        self.assertEqual(float(weights[0]), 0.0)
+        self.assertGreater(float(weights[1]), float(weights[2]))
+        self.assertGreater(float(weights[1]), 0.25)
 
     def test_zero_label_weights_skip_valid_targets(self) -> None:
         model = build_model("gru", self.config)

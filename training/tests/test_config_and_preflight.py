@@ -59,6 +59,11 @@ class ConfigAndPreflightTests(unittest.TestCase):
         with self.assertRaises(ConfigError):
             validate_config(config)
 
+        config = deepcopy(load_config(CONFIG_PATH))
+        config["training"]["boundary_positive_weight_cap"] = 0.5
+        with self.assertRaisesRegex(ConfigError, "boundary_positive_weight_cap"):
+            validate_config(config)
+
     def test_checkpoint_compatibility_rejects_feature_and_architecture_drift(self) -> None:
         config = load_config(CONFIG_PATH)
         checkpoint = {
@@ -76,6 +81,23 @@ class ConfigAndPreflightTests(unittest.TestCase):
         changed["model"]["tcn"]["channels"] += 1
         with self.assertRaisesRegex(ValueError, "model.tcn.channels"):
             validate_checkpoint_compatibility(checkpoint, changed)
+
+    def test_checkpoint_compatibility_requires_explicit_normalization_transfer(self) -> None:
+        config = load_config(CONFIG_PATH)
+        checkpoint = {
+            "model_name": "tcn",
+            "config": deepcopy(config),
+        }
+        checkpoint["config"]["data"]["normalization_version"] = "normalization.original"
+        changed = deepcopy(config)
+        changed["data"]["normalization_version"] = "normalization.new-prepared-root"
+        with self.assertRaisesRegex(ValueError, "data.normalization_version"):
+            validate_checkpoint_compatibility(checkpoint, changed)
+        validate_checkpoint_compatibility(
+            checkpoint,
+            changed,
+            allow_normalization_mismatch=True,
+        )
 
     def test_checkpoint_compatibility_requires_effective_config(self) -> None:
         with self.assertRaisesRegex(ValueError, "effective training config"):

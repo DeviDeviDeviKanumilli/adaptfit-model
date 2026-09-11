@@ -204,10 +204,20 @@ def compute_loss(
     return total, values
 
 
-def positive_weight_from_binary(values: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+def positive_weight_from_binary(
+    values: torch.Tensor,
+    mask: torch.Tensor,
+    max_weight: float = 10.0,
+) -> torch.Tensor:
+    if not torch.isfinite(torch.as_tensor(max_weight)) or max_weight < 1.0:
+        raise ValueError("max_weight must be finite and at least 1")
     selected = values[mask & (values >= 0)]
     if selected.numel() == 0:
         return values.new_tensor(1.0)
     positives = (selected > 0.5).sum().float()
     negatives = (selected <= 0.5).sum().float()
-    return torch.clamp(negatives / torch.clamp(positives, min=1.0), min=1.0, max=10.0)
+    return torch.clamp(
+        negatives / torch.clamp(positives, min=1.0),
+        min=1.0,
+        max=float(max_weight),
+    )

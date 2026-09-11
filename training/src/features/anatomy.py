@@ -125,11 +125,23 @@ def tracking_confidence_target(sequence: CanonicalSequence) -> np.ndarray:
 
     This is a camera/landmark signal, not a movement-quality or disability
     label. Expected-but-absent limbs are excluded using the onboarding profile
-    so a known missing limb does not lower tracking confidence by itself.
+    so a known missing limb does not lower tracking confidence by itself. A
+    partial-pose source may additionally declare the canonical joints it
+    structurally represents; unlisted canonical joints are unavailable rather
+    than failed observations and must not dilute the target denominator.
     """
 
     capability = _capability_mask(sequence)
+    configured_expected = sequence.metadata.get("tracking_expected_joint_names")
     expected = capability > 0.0
+    if isinstance(configured_expected, (list, tuple)):
+        source_expected = np.zeros(len(CANONICAL_INDEX), dtype=bool)
+        for name in configured_expected:
+            index = CANONICAL_INDEX.get(str(name))
+            if index is not None:
+                source_expected[index] = True
+        if source_expected.any():
+            expected &= source_expected
     observed = sequence.observed_mask & np.isfinite(sequence.joints).all(axis=-1)
     confidence = np.clip(sequence.pose_confidence, 0.0, 1.0)
     valid_count = int(expected.sum())

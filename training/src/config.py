@@ -131,8 +131,10 @@ class TrainingConfig(TypedDict, total=False):
     float32: bool
     head_learning_rate: float
     backbone_learning_rate: float
+    boundary_positive_weight_cap: float
     init_checkpoint: str
     resume_checkpoint: str
+    allow_parent_normalization_transfer: bool
     freeze_backbone: bool
     unfreeze_last_blocks: int
     trainable_patterns: list[str]
@@ -255,7 +257,16 @@ def validate_config(config: Mapping[str, Any]) -> Config:
             value = float(training[name])
             if not math.isfinite(value) or value <= 0.0:
                 raise ConfigError(f"training.{name} must be finite and positive")
-    for name in ("freeze_backbone", "evaluate_test_after_training", "save_latest"):
+    if "boundary_positive_weight_cap" in training:
+        boundary_cap = float(training["boundary_positive_weight_cap"])
+        if not math.isfinite(boundary_cap) or boundary_cap < 1.0:
+            raise ConfigError("training.boundary_positive_weight_cap must be finite and at least 1")
+    for name in (
+        "freeze_backbone",
+        "evaluate_test_after_training",
+        "save_latest",
+        "allow_parent_normalization_transfer",
+    ):
         if name in training and not isinstance(training[name], bool):
             raise ConfigError(f"training.{name} must be boolean")
     if "unfreeze_last_blocks" in training:
@@ -323,6 +334,8 @@ def load_config(path: str | Path) -> Config:
 def validate_checkpoint_compatibility(
     checkpoint: Mapping[str, Any],
     config: Config,
+    *,
+    allow_normalization_mismatch: bool = False,
 ) -> None:
     """Reject evaluation with a checkpoint built for a different model schema."""
 
@@ -359,7 +372,11 @@ def validate_checkpoint_compatibility(
     # checkpoint cannot silently claim compatibility with two declared values.
     saved_normalization = saved_config.get("data", {}).get("normalization_version")
     current_normalization = config["data"].get("normalization_version")
-    if saved_normalization is not None and current_normalization is not None:
+    if (
+        saved_normalization is not None
+        and current_normalization is not None
+        and not allow_normalization_mismatch
+    ):
         compare("data.normalization_version", saved_normalization, current_normalization)
     saved_decoder = saved_project.get("decoder_version")
     current_decoder = config["project"].get("decoder_version")

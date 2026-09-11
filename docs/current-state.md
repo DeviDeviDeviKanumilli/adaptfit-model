@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** source code, versioned configuration, filesystem artifacts, and verified reports
-> - **Last verified:** 2026-09-09
-> - **Source commit:** `d7848e2` (R1 full-run evidence; smoke and pre-training gate history)
+> - **Last verified:** 2026-09-11
+> - **Source commit:** `b3926d8` (R1 calibration and phase-weight correction training)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supersedes scattered “current status” statements in run reports; supports the contracts, training, evaluation, and deployment documents
 > - **Review trigger:** any code/config/schema change, new checkpoint, completed evaluation, adapter change, or deployment conversion
@@ -27,11 +27,11 @@ current-state snapshot.
 | Item | Current value | Evidence or limit |
 |---|---|---|
 | Active repository | `/Users/devk/AdaptFit` | The empty `/Users/devk/Documents/ChatGPT/AdaptFit` checkout is not the model source of truth. |
-| Repository revision at last verification | `d7848e2b12322e40e83758abd5e12ae6c7727e80` | Commit used for the R1 full run; run `git rev-parse HEAD` before reproducing a run. |
-| Code baseline | `d7848e2` with the pre-training gate changes committed | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, and isolated configs are committed alongside the documentation. |
+| Repository revision at last verification | `b3926d864c1d976504c2d7131db8d4992cf2ef45` | Current checkout used for the R1 decoder calibration; the R1 training artifact records `d7848e2b12322e40e83758abd5e12ae6c7727e80`. |
+| Code baseline | `b3926d8` plus the current follow-up working tree | The corrected-v1 model remains unchanged; decoder, provenance, runner controls, label-mask fixes, class-weight fix, regression tests, and isolated configs are present in the current checkout. |
 | Documentation revision baseline | `613ff12` | Latest pushed documentation revision audited before this repair; this is a provenance anchor, not a mutable HEAD claim. |
 | Working-tree state | Must be checked | Run `git status --short`; this snapshot never treats an unverified tree as clean. |
-| Test suite | 132 tests passed in the last verified run (`python3 -m pytest -q`) | Documentation validator and full test suite pass at the pre-training gate commit. |
+| Test suite | 138 tests passed (`python3 -m pytest -q`) | Documentation validator and full test suite pass after the UL-RED markerless 3Rep boundary-source correction and extracted-path regression; `git diff --check` is clean. |
 | Runtime scope | Python training and streaming runtime | No production mobile bridge is present. |
 
 ## Implemented model contract
@@ -77,6 +77,10 @@ Current label facts:
 - There is no real amputee, limb-difference, or wheelchair-user validation
   cohort. Public seated metadata and synthetic limb masking are engineering
   aids, not target-population evidence.
+- UL-RED `marker-less/3Rep_Sxx.csv` supplies explicit zero-based three-
+  repetition spans for 219 of 219 available R3 recordings. The adapter maps
+  these to one-based AMC frame IDs; the spans are boundary-only and do not
+  supply per-frame hold/apex labels.
 
 ## Artifact state
 
@@ -86,7 +90,16 @@ Current label facts:
 | `artifacts/v2-quality/` | Prepared data only | Preparation and manifests exist; no completed model comparison. |
 | `artifacts/v2-quality-fixed/` | Partial (TCN evaluated; GRU interrupted) | TCN training completed through 72 epochs (best epoch 42) and has been evaluated on the test split with sequence and window metrics; the GRU checkpoint is an interrupted intermediate run at epoch 52. It is not a complete TCN/GRU comparison. |
 | `artifacts/r0-baseline/` | Local evaluation-only audit (ignored by Git) | Fresh corrected-v1 test reports, model manifests, and validation-only decoder calibration; regenerate if absent. It contains no trained model. |
-| `artifacts/r1-tcn-boundary/` | Local full-training artifact (ignored by Git) | 27-epoch MPS heads-only warm-start from corrected-v1; best epoch 12; validation-only metrics and complete checkpoint provenance; no test evaluation. |
+| `artifacts/r1-tcn-boundary/` | Local full-training artifact (ignored by Git) | 27-epoch MPS heads-only warm-start from corrected-v1; best epoch 12; validation-only decoder report is present but blocked; no test evaluation. |
+| `artifacts/r1-tcn-boundary-mask-correction/` | Training complete; validation decoder gate blocked (ignored by Git) | Unavailable-boundary masking corrected; isolated prepared split regenerated; heads-only TCN completed through epoch 68 with best epoch 53; validation-only decoder calibration has end F1 `0.0`; failure analysis is recorded; test evaluation remains locked. |
+| `artifacts/r1-tcn-phase-weight-correction/` | Training complete; validation-only decoder gate blocked; test locked (ignored by Git) | Absent-class phase-weight normalization corrected; verified corrected-mask prepared root reused unchanged; heads-only TCN completed through epoch 24 with best epoch 9 and validation sequence score `0.6679357`; calibration end F1 `0.153846`, false events on empty sequences `15`; no test evaluation. |
+| `artifacts/r1-tcn-last-block-event-support/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | Final-block fine-tune from the phase-weight checkpoint; best epoch 8; validation sequence score `0.6791891`; decoder end F1 `0.094862`, count MAE `0.271205`, and 8 empty-target false events; no test evaluation. |
+| `artifacts/r1-tcn-last-two-blocks-event-support/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | Final-two-block fine-tune from the last-block checkpoint; best epoch 42 of 57; validation sequence score `0.7040537`; decoder end F1 `0.299674`, count MAE `0.333705`, and 63 empty-target false events; no test evaluation. |
+| `artifacts/r1-tcn-full-finetune-event-support-pilot/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | Full-TCN pilot from the final-two-block best checkpoint; all 307,410 parameters trainable; best epoch 6 of 8; validation sequence score `0.7176679`; decoder end F1 `0.296053`, count MAE `0.330357`, and 60 empty-target false events; failure analysis recorded; no test evaluation. |
+| `artifacts/r1-tcn-uco-boundary-support/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | UCO exact-boundary support run; best checkpoint SHA-256 `9c69b9aa8173da7f10140779ec70f87c012ae151519e3f2375e61b0dd09327a0`; later used as the parent for the UCO follow-ups; no test evaluation. |
+| `artifacts/r1-tcn-uco-tracking-target-correction/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | Corrected partial-pose tracking denominator; best epoch 2 of 5; validation sequence score `0.6176060`; decoder end F1 `0.070130`, count MAE `0.584`, and 7 empty-target false events; UCO supplied `0/507` nearby starts and `0/507` apex-qualified targets; no test evaluation. |
+| `artifacts/r1-tcn-uco-boundary-positive-weight/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | Boundary positive-weight cap `64.0` intervention; best epoch 1 of 4; validation sequence score `0.5252875` (worse than `0.6176060`); decoder end F1 `0.142322`, count MAE `0.5864`, and 24 empty-target false events; cap rejected; no test evaluation. |
+| `artifacts/r1-tcn-ulred-boundary-support/` | Training complete; validation decoder gate blocked; test locked (ignored by Git) | Local UL-RED `marker-less/3Rep` boundary-source correction in an isolated prepared root; best epoch 2 of 5; validation sequence score `0.6013545`; decoder end F1 `0.070718`, count MAE `0.684`, and 8 empty-target false events; failure analysis recorded; no test evaluation. |
 
 Checkpoint-level status at this verification:
 
@@ -100,8 +113,70 @@ Checkpoint-level status at this verification:
   See [training-execution-log.md](training-execution-log.md) for full metrics.
 - R1: `artifacts/r1-tcn-boundary/checkpoints/tcn_best.pt` is the epoch-12
   checkpoint from the completed heads-only full run. It has validation-only
-  metrics and no test metrics; decoder calibration is still pending. See
+  metrics and a blocked decoder calibration report; it has no test metrics. See
   [training-execution-log.md](training-execution-log.md).
+- Corrected mask follow-up: `artifacts/r1-tcn-boundary-mask-correction/checkpoints/tcn_best.pt`
+  is the epoch-53 checkpoint from the completed heads-only run. Its
+  validation-only decoder report is blocked (`end_f1=0.0`); it has no test
+  metrics. See [training-execution-log.md](training-execution-log.md).
+- Phase-weight correction: `artifacts/r1-tcn-phase-weight-correction/checkpoints/tcn_best.pt`
+  is the epoch-9 checkpoint from the completed heads-only run. It has
+  training-time validation metrics and a blocked validation-only decoder
+  calibration; it has no test metrics. See
+  [training-execution-log.md](training-execution-log.md).
+- Last-block event-support intervention: the config is
+  `training/configs/experiments/r1_tcn_last_block_event_support.yaml`; its
+  best checkpoint is epoch 8 after early stopping at epoch 23. Its
+  validation-only decoder gate is blocked (end F1 `0.094862`; 8 empty-target
+  false events), and it has no test metrics. Its failure analysis shows
+  `21/240` apex-qualified intervals, `219/219` segmentation starts below the
+  selected tracking floor, and `92/240` target ends with a nearby end signal.
+- Last-two-block event-support intervention: the config is
+  `training/configs/experiments/r1_tcn_last_two_blocks_event_support.yaml`; it
+  points to the last-block best checkpoint and completed with best epoch 42 of
+  57. Its validation-only decoder gate is blocked (end F1 `0.299674`; 63
+  empty-target false events), and its failure analysis finds `49/240`
+  apex-qualified intervals, `219/219` segmentation starts below the tracking
+  floor, and `91/240` target ends with a nearby end signal. Test evaluation
+  remains disabled and locked.
+- Full-TCN event-support pilot: the config is
+  `training/configs/experiments/r1_tcn_full_finetune_event_support_pilot.yaml`;
+  it points to the final-two-block best checkpoint and has completed the
+  bounded 8-epoch run after passing preflight/runtime checks. Its isolated
+  artifact root is `artifacts/r1-tcn-full-finetune-event-support-pilot/`; all
+  `307,410` parameters are trainable. Validation-only calibration is blocked
+  (end F1 `0.296053`; 60 empty-target false events), and test evaluation remains
+  disabled and locked. Failure analysis finds `219/219` segmentation starts
+  below the tracking floor and only `101/240` target ends with nearby end
+  signal.
+- UCO boundary-support run: `artifacts/r1-tcn-uco-boundary-support/` contains
+  the exact-boundary parent checkpoint used by the UCO follow-ups; its decoder
+  gate is blocked and it has no test metrics.
+- UCO tracking-target correction: the config is
+  `training/configs/experiments/r1_tcn_uco_tracking_target_correction.yaml`;
+  its best checkpoint is epoch 2 at
+  `artifacts/r1-tcn-uco-tracking-target-correction/checkpoints/tcn_best.pt`.
+  The correction removes partial-pose tracking dilution, but calibration is
+  blocked (end F1 `0.070130`; count MAE `0.584`; 7 empty-target false events).
+  UCO strong boundaries still have no learned start/end/apex signal and no
+  per-frame hold/apex labels.
+- UCO boundary-positive-weight intervention: the config is
+  `training/configs/experiments/r1_tcn_uco_boundary_positive_weight.yaml` and
+  its best checkpoint is at
+  `artifacts/r1-tcn-uco-boundary-positive-weight/checkpoints/tcn_best.pt`.
+  Raising the cap to `64.0` reduced the validation sequence score to
+  `0.5252875` and increased empty-target false events to `24`; the intervention
+  is rejected. Do not repeat it.
+- UL-RED boundary-source correction: the config is
+  `training/configs/experiments/r1_tcn_ulred_boundary_support.yaml`; its
+  isolated prepared root is `data/processed-r1-ulred-boundary-support/` and
+  its best checkpoint is
+  `artifacts/r1-tcn-ulred-boundary-support/checkpoints/tcn_best.pt` (epoch 2,
+  SHA-256 `7ed351765ad1c943d525721c03fdcec65c1fdd06df2966c59971ca934b5d4ce1`).
+  The overlay records 219 explicit UL-RED R3 boundary sources. Calibration is
+  blocked (end F1 `0.070718`; count MAE `0.684`; 8 empty-target false events),
+  because the source spans do not provide hold/apex labels. Test evaluation
+  remains disabled and locked.
 
 Corrected-v1 evidence includes 617 logical test sequences and 7,592 windows
 with zero identity collisions. The fresh R0 report, using the current masked
@@ -137,9 +212,14 @@ metric provenance.
 3. The runner now exposes warm-start, exact-resume, frozen-backbone,
    partial-block, separate-learning-rate, isolated-root, and test-lock controls.
    The R1 smoke and full run exercised warm-start and frozen-backbone behavior;
-   exact interruption/resume remains unverified.
+   the corrected mask follow-up verified exact interruption/resume from the
+   epoch-10 checkpoint; the phase-weight follow-up exercised the corrected
+   absent-class weighting behavior.
 4. Repetition-end performance is materially weaker than repetition-start
-   performance and needs boundary/decoder review before product use.
+   performance and needs reviewed boundary/phase supervision before product
+   use. The UCO tracking-target correction removed the tracking-floor artifact,
+   and the UL-RED 3Rep audit recovered valid boundary spans, but neither source
+   supplies the reviewed hold/apex supervision needed by the decoder gate.
 5. A production model bundle and native runtime contract do not exist.
 6. No document may claim medical, clinical, force, muscle-activation, joint-load,
    or safety certification from the current evidence.
@@ -157,20 +237,29 @@ metric provenance.
 
 ## Next validated actions
 
-1. Run validation-only decoder calibration on the R1 epoch-12 checkpoint.
-2. If the decoder gate passes, freeze the candidate and decoder, then evaluate
-   the locked test split once and compare R1 with corrected-v1 under the same
-   protocol.
-3. If calibration is blocked, inspect boundary labels and decoded failures and
-   run one isolated targeted boundary experiment; do not launch broad training.
-4. Obtain reviewed quality labels and consented target-population recordings.
-5. Define and test the model bundle, Python/native golden fixtures, and mobile
+1. Request reviewed UCO, UL-RED, and/or REHAB24-6 start, hold/apex, and end
+   labels, or additional representative seated unilateral recordings carrying
+   those labels. The UCO tracking correction, sparse-boundary-weight
+   intervention, and UL-RED boundary-source correction are complete; all
+   decoder gates remain blocked.
+   Use the [reviewed-event supervision intake](reviewed-event-supervision-request.md)
+   for the exact row schema and acceptance checks.
+2. Keep `data/processed-r1-uco-tracking-target-correction/` and
+   `data/processed-r1-ulred-boundary-support/` unchanged until external
+   supervision is audited and regenerated into a new isolated prepared root.
+3. After new supervision exists, rerun preflight, validation-only calibration,
+   and failure analysis in a new artifact root. Only if the decoder gate passes
+   should a second-seed confirmation precede one locked test evaluation.
+4. Keep corrected-v1 and the locked test split unchanged; do not promote any
+   blocked R1 candidate.
+5. Obtain reviewed quality labels and consented target-population recordings.
+6. Define and test the model bundle, Python/native golden fixtures, and mobile
    release gates before describing deployment as available.
-6. Treat the [Motion-JEPA plan](motion-jepa-world-model-plan.md) as a gated
+7. Treat the [Motion-JEPA plan](motion-jepa-world-model-plan.md) as a gated
    research backlog. Do not start it until decoder calibration and the
    supervised comparison establish a measured need and a valid pretraining
    manifest.
-7. Build the recommendation path in order: reviewed recipe metadata, hard
+8. Build the recommendation path in order: reviewed recipe metadata, hard
    feasibility mask, content/rules baseline, feedback logging, then a neural
    ranker only after user/time-held-out evaluation data exists.
 

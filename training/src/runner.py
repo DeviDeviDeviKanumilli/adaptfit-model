@@ -116,11 +116,21 @@ def _class_weights(
     valid = values >= 0
     selected = values[valid].astype(np.int64)
     weights = sample_weights[valid] if sample_weights is not None else None
-    counts = np.bincount(selected, minlength=classes, weights=weights).astype(np.float32)
-    counts = np.maximum(counts, 1.0)
-    weights = counts.sum() / (len(counts) * counts)
-    weights /= max(weights.mean(), 1e-6)
-    return torch.from_numpy(np.clip(weights, 0.25, 4.0))
+    counts = np.bincount(selected, minlength=classes).astype(np.float32)
+    if weights is not None:
+        counts = np.bincount(selected, minlength=classes, weights=weights).astype(np.float32)
+    present = counts > 0.0
+    class_weights = np.zeros(classes, dtype=np.float32)
+    if present.any():
+        class_weights[present] = counts[present].sum() / (
+            float(present.sum()) * counts[present]
+        )
+        class_weights[present] /= max(float(class_weights[present].mean()), 1e-6)
+        class_weights[present] = np.clip(class_weights[present], 0.25, 4.0)
+    # An absent class must not dominate normalization or contribute loss.
+    # This matters for phase.v1, where ``unknown`` can be absent while hold is
+    # rare but valid; treating the absent class as one sample suppresses hold.
+    return torch.from_numpy(class_weights)
 
 
 def _loss_support(dataset: PreparedWindowDataset, config: Config, device: torch.device) -> dict[str, torch.Tensor]:
@@ -134,6 +144,7 @@ def _loss_support(dataset: PreparedWindowDataset, config: Config, device: torch.
     boundary_positive = positive_weight_from_binary(
         boundary_positive_values,
         torch.ones_like(boundary_positive_values, dtype=torch.bool),
+        max_weight=float(config["training"].get("boundary_positive_weight_cap", 10.0)),
     ).to(device)
     # Label arrays may be read-only memmaps; copy these small arrays before
     # converting them to tensors. Feature rows are copied in __getitem__.
@@ -306,6 +317,13 @@ def _restore_rng_state(checkpoint: dict[str, Any]) -> None:
 
     torch_state = checkpoint.get("rng_state_torch")
     if torch_state is not None:
+        # Checkpoints loaded with ``map_location=mps`` carry the CPU RNG byte
+        # tensor onto MPS. ``torch.set_rng_state`` only accepts a CPU byte
+        # tensor, so normalize the device and dtype before restoring it.
+        if isinstance(torch_state, torch.Tensor):
+            torch_state = torch_state.detach().to(device="cpu", dtype=torch.uint8)
+        else:
+            torch_state = torch.as_tensor(torch_state, dtype=torch.uint8, device="cpu")
         torch.set_rng_state(torch_state)
     numpy_state = checkpoint.get("rng_state_numpy")
     if numpy_state is not None:
@@ -328,13 +346,18 @@ def _load_model_checkpoint(
     config: Config,
     device: torch.device,
     expected_model_name: str | None = None,
+    allow_normalization_mismatch: bool = False,
 ) -> dict[str, Any]:
     from .config import validate_checkpoint_compatibility
 
     if not path.exists():
         raise FileNotFoundError(f"checkpoint does not exist: {path}")
     checkpoint = torch.load(path, map_location=device, weights_only=False)
-    validate_checkpoint_compatibility(checkpoint, config)
+    validate_checkpoint_compatibility(
+        checkpoint,
+        config,
+        allow_normalization_mismatch=allow_normalization_mismatch,
+    )
     if checkpoint.get("model_name") not in {"tcn", "gru"}:
         raise ValueError("checkpoint model_name is unsupported")
     if expected_model_name is not None and checkpoint.get("model_name") != expected_model_name:
@@ -361,6 +384,9 @@ def _checkpoint_payload(
     optimizer: torch.optim.Optimizer,
     trainable_layers: list[str],
     parent_checkpoint: str | None,
+    parent_checkpoint_hash: str | None,
+    parent_checkpoint_normalization_version: str | None,
+    parent_normalization_transfer: bool,
     train_seconds_total: float,
     validation_seconds_total: float,
     project_root: Path,
@@ -383,6 +409,9 @@ def _checkpoint_payload(
         "history": history,
         "trainable_layers": trainable_layers,
         "parent_checkpoint": parent_checkpoint,
+        "parent_checkpoint_hash": parent_checkpoint_hash,
+        "parent_checkpoint_normalization_version": parent_checkpoint_normalization_version,
+        "parent_normalization_transfer": parent_normalization_transfer,
         "rng_state_torch": torch.get_rng_state(),
         "rng_state_numpy": np.random.get_state(),
         "rng_state_python": random.getstate(),
@@ -497,10 +526,30 @@ def train_model(
     init_path = _resolve_checkpoint_path(training_config.get("init_checkpoint"), project_root)
     resume_path = _resolve_checkpoint_path(training_config.get("resume_checkpoint"), project_root)
     parent_checkpoint: str | None = None
+    parent_checkpoint_hash: str | None = None
+    parent_checkpoint_normalization_version: str | None = None
+    parent_normalization_transfer = False
     resumed_checkpoint: dict[str, Any] | None = None
     if init_path is not None:
-        _load_model_checkpoint(init_path, model, config, device, expected_model_name=model_name)
+        parent_payload = _load_model_checkpoint(
+            init_path,
+            model,
+            config,
+            device,
+            expected_model_name=model_name,
+            allow_normalization_mismatch=bool(
+                training_config.get("allow_parent_normalization_transfer", False)
+            ),
+        )
         parent_checkpoint = str(init_path)
+        parent_checkpoint_hash = sha256_file(init_path)
+        parent_checkpoint_normalization_version = parent_payload.get("config", {}).get(
+            "data", {}
+        ).get("normalization_version")
+        parent_normalization_transfer = (
+            parent_checkpoint_normalization_version
+            != config["data"].get("normalization_version")
+        )
     if resume_path is not None:
         resumed_checkpoint = _load_model_checkpoint(
             resume_path,
@@ -517,6 +566,14 @@ def train_model(
         if saved_layers is not None and list(saved_layers) != trainable_layers:
             raise ValueError("resume checkpoint trainable layers do not match the requested configuration")
         parent_checkpoint = str(resume_path)
+        parent_checkpoint_hash = sha256_file(resume_path)
+        parent_checkpoint_normalization_version = resumed_checkpoint.get(
+            "parent_checkpoint_normalization_version",
+            resumed_checkpoint.get("config", {}).get("data", {}).get("normalization_version"),
+        )
+        parent_normalization_transfer = bool(
+            resumed_checkpoint.get("parent_normalization_transfer", False)
+        )
         _restore_rng_state(resumed_checkpoint)
         saved_sampler_epoch = resumed_checkpoint.get("sampler_epoch")
         if saved_sampler_epoch is not None and hasattr(train_loader.batch_sampler, "set_epoch"):
@@ -578,6 +635,9 @@ def train_model(
                 optimizer=optimizer,
                 trainable_layers=trainable_layers,
                 parent_checkpoint=parent_checkpoint,
+                parent_checkpoint_hash=parent_checkpoint_hash,
+                parent_checkpoint_normalization_version=parent_checkpoint_normalization_version,
+                parent_normalization_transfer=parent_normalization_transfer,
                 train_seconds_total=train_seconds_total,
                 validation_seconds_total=validation_seconds_total,
                 project_root=project_root,
@@ -698,6 +758,9 @@ def train_model(
                 optimizer=optimizer,
                 trainable_layers=trainable_layers,
                 parent_checkpoint=parent_checkpoint,
+                parent_checkpoint_hash=parent_checkpoint_hash,
+                parent_checkpoint_normalization_version=parent_checkpoint_normalization_version,
+                parent_normalization_transfer=parent_normalization_transfer,
                 train_seconds_total=train_seconds_total,
                 validation_seconds_total=validation_seconds_total,
                 project_root=project_root,
@@ -746,6 +809,9 @@ def train_model(
         "phase_policy_reasons": dict(train_dataset.phase_policy_reasons),
         "trainable_layers": trainable_layers,
         "parent_checkpoint": parent_checkpoint,
+        "parent_checkpoint_hash": parent_checkpoint_hash,
+        "parent_checkpoint_normalization_version": parent_checkpoint_normalization_version,
+        "parent_normalization_transfer": parent_normalization_transfer,
         "latest_checkpoint": str(latest_checkpoint_path) if latest_checkpoint_path.exists() else None,
         "test_evaluation_performed": test_metrics is not None,
         "config_hash": sha256_value(config),

@@ -157,6 +157,13 @@ class DataContractTests(unittest.TestCase):
         self.assertEqual(sequence.metadata["quality_label_source"], "unlabeled")
         self.assertEqual(sequence.metadata["phase_label_source"], "weak_displacement")
         self.assertEqual(sequence.metadata["boundary_label_source"], "segmentation")
+        np.testing.assert_array_equal(
+            sequence.rep_boundary,
+            np.asarray(
+                [[1.0, 0.0]] + [[0.0, 0.0]] * (frames - 2) + [[0.0, 1.0]],
+                dtype=np.float32,
+            ),
+        )
 
     def test_public_intelli_adapter_emits_wheelchair_metadata(self) -> None:
         rows = []
@@ -277,6 +284,7 @@ class DataContractTests(unittest.TestCase):
         self.assertEqual(arm_raise.position, "standing")
         self.assertEqual(arm_raise.metadata["recording_repetitions"], 1)
         self.assertEqual(arm_raise.metadata["pace_protocol"], "normal")
+        self.assertTrue(np.all(arm_raise.rep_boundary == -1.0))
         self.assertFalse(arm_raise.observed_mask[:, CANONICAL_INDEX["left_index"]].any())
         self.assertEqual(seated_march.position, "seated")
         self.assertEqual(seated_march.family, FAMILY_TO_ID["hip_flexion"])
@@ -287,6 +295,7 @@ class DataContractTests(unittest.TestCase):
             seated_march.metadata["phase_label_status"],
             "unavailable_multi_repetition_recording",
         )
+        self.assertTrue(np.all(seated_march.rep_boundary == -1.0))
         self.assertTrue(np.all(np.diff(seated_march.timestamps) > 0.0))
 
     def test_ul_red_archives_keep_subject_ids_separate(self) -> None:
@@ -309,6 +318,78 @@ class DataContractTests(unittest.TestCase):
             sequences = load_ul_red(root)
 
         self.assertEqual({sequence.participant_id for sequence in sequences}, {"S01", "S02"})
+
+    def test_ul_red_markerless_three_rep_spans_become_explicit_boundaries(self) -> None:
+        payload = (
+            ":FULLY-SPECIFIED\n:DEGREES\n"
+            + "\n".join(
+                f"{frame}\n" + "\n".join(
+                    f"{joint}\t{100 + index + frame * 0.1:.3f}\t"
+                    f"{200 + index + frame * 0.2:.3f}\t"
+                    f"{300 + index + frame * 0.3:.3f}"
+                    for index, joint in enumerate(ULRED_SOURCE_NAMES)
+                )
+                for frame in range(1, 7)
+            )
+            + "\n"
+        )
+        boundary_csv = (
+            "name,r1start,r1end,r2start,r2end,r3start,r3end\n"
+            "SeatedHipMarchR3S01,0,2,2,4,4,5\n"
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with ZipFile(root / "S01.zip", "w") as archive:
+                archive.writestr("S01/marker-less/clean/SeatedHipMarchR3S01.amc", payload)
+                archive.writestr("S01/marker-less/3Rep_S01.csv", boundary_csv)
+            sequences = load_ul_red(root)
+
+        self.assertEqual(len(sequences), 1)
+        sequence = sequences[0]
+        self.assertEqual(sequence.metadata["boundary_label_source"], "strong")
+        self.assertEqual(
+            sequence.metadata["boundary_label_status"],
+            "explicit_markerless_three_repetition_spans",
+        )
+        np.testing.assert_array_equal(np.flatnonzero(sequence.rep_boundary[:, 0]), [0, 2, 4])
+        np.testing.assert_array_equal(np.flatnonzero(sequence.rep_boundary[:, 1]), [2, 4, 5])
+        self.assertFalse(np.any(sequence.phase >= 0))
+
+    def test_ul_red_extracted_markerless_three_rep_spans_are_loaded(self) -> None:
+        payload = (
+            ":FULLY-SPECIFIED\n:DEGREES\n"
+            + "\n".join(
+                f"{frame}\n" + "\n".join(
+                    f"{joint}\t{100 + index + frame * 0.1:.3f}\t"
+                    f"{200 + index + frame * 0.2:.3f}\t"
+                    f"{300 + index + frame * 0.3:.3f}"
+                    for index, joint in enumerate(ULRED_SOURCE_NAMES)
+                )
+                for frame in range(1, 7)
+            )
+            + "\n"
+        )
+        boundary_csv = (
+            "name,r1start,r1end,r2start,r2end,r3start,r3end\n"
+            "SeatedHipMarchR3S01,0,2,2,4,4,5\n"
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "S01"
+            clean = root / "marker-less" / "clean"
+            clean.mkdir(parents=True)
+            (root / "marker-less" / "3Rep_S01.csv").write_text(
+                boundary_csv, encoding="utf-8"
+            )
+            (clean / "SeatedHipMarchR3S01.amc").write_text(payload, encoding="utf-8")
+            sequences = load_ul_red(root.parent)
+
+        self.assertEqual(len(sequences), 1)
+        sequence = sequences[0]
+        self.assertEqual(sequence.metadata["boundary_label_source"], "strong")
+        np.testing.assert_array_equal(np.flatnonzero(sequence.rep_boundary[:, 0]), [0, 2, 4])
+        np.testing.assert_array_equal(np.flatnonzero(sequence.rep_boundary[:, 1]), [2, 4, 5])
 
     def test_augmentations_mark_occlusions_and_absent_capabilities(self) -> None:
         sequence = next(

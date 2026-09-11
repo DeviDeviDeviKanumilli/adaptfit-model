@@ -129,6 +129,10 @@ class V2QualityPipelineTests(unittest.TestCase):
         self.assertEqual(recording.rep_boundary[3, 1], 1.0)
         self.assertEqual(recording.rep_boundary[4, 0], 1.0)
         self.assertEqual(recording.rep_boundary[7, 1], 1.0)
+        self.assertEqual(
+            recording.metadata["tracking_expected_joint_names"],
+            ["left_hip", "left_knee", "left_ankle"],
+        )
         self.assertEqual(recording.capability_states["left_leg"], "available")
         self.assertTrue(np.isnan(recording.quality).all())
         self.assertFalse(recording.quality_mask.any())

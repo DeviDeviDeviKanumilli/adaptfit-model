@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from training.src.data.procedural import make_procedural_sequences
-from training.src.data.schema import CANONICAL_INDEX
+from training.src.data.schema import CANONICAL_INDEX, CanonicalSequence
 from training.src.features.anatomy import (
     FEATURE_DIM,
     LIMB_JOINTS,
@@ -200,6 +200,25 @@ class FeatureTests(unittest.TestCase):
         # The profile removes limb joints from the expected set, but the
         # camera may still observe the head and trunk.
         np.testing.assert_allclose(tracking_confidence_target(all_absent), 1.0, atol=1e-6)
+
+    def test_tracking_target_ignores_unlisted_partial_pose_joints(self) -> None:
+        joints = np.full((5, 33, 2), np.nan, dtype=np.float32)
+        confidence = np.zeros((5, 33), dtype=np.float32)
+        observed = np.zeros((5, 33), dtype=bool)
+        expected_names = ("left_hip", "left_knee", "left_ankle")
+        expected_indices = [CANONICAL_INDEX[name] for name in expected_names]
+        joints[:, expected_indices] = 1.0
+        confidence[:, expected_indices] = 1.0
+        observed[:, expected_indices] = True
+        sequence = CanonicalSequence(
+            joints=joints,
+            pose_confidence=confidence,
+            observed_mask=observed,
+            timestamps=np.arange(5, dtype=np.float32) / 30.0,
+            capability_states={"left_leg": "available"},
+            metadata={"tracking_expected_joint_names": list(expected_names)},
+        )
+        np.testing.assert_allclose(tracking_confidence_target(sequence), 1.0, atol=1e-6)
 
     def test_dropped_landmarks_keep_features_finite_and_lower_observability(self) -> None:
         config = load_config(CONFIG_PATH)

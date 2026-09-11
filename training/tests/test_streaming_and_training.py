@@ -18,7 +18,7 @@ from training.src.data.prepare import prepare_dataset
 from training.src.losses import LossWeights, compute_loss
 from training.src.metrics import composite_score, compute_metrics
 from training.src.models import build_model, parameter_count
-from training.src.runner import collect_predictions, train_model
+from training.src.runner import _restore_rng_state, collect_predictions, train_model
 from training.tests.support import CONFIG_PATH
 
 
@@ -378,6 +378,18 @@ class StreamingAndTrainingTests(unittest.TestCase):
 
         for key in expected:
             torch.testing.assert_close(expected[key], actual[key])
+
+    def test_resume_restores_rng_state_loaded_on_accelerator(self) -> None:
+        torch.manual_seed(19)
+        saved_state = torch.get_rng_state()
+        expected = torch.rand(4)
+        torch.set_rng_state(saved_state)
+        mapped_state = saved_state.to("mps") if torch.backends.mps.is_available() else saved_state
+
+        _restore_rng_state({"rng_state_torch": mapped_state})
+        actual = torch.rand(4)
+
+        torch.testing.assert_close(actual, expected)
 
     def test_one_epoch_training_saves_and_reloads_gru_baseline(self) -> None:
         config = load_config(CONFIG_PATH)

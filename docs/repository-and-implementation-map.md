@@ -3,8 +3,8 @@
 > **Documentation metadata**
 > - **Status:** canonical-active
 > - **Authority:** repository entrypoints, source/config/test ownership, and artifact handoff map
-> - **Last verified:** 2026-09-09
-> - **Source commit:** `847fd5d` (code and pre-training gate baseline) / `613ff12` (documentation revision base)
+> - **Last verified:** 2026-09-11
+> - **Source commit:** `b3926d8` (R1 calibration and phase-weight correction training)
 > - **Owner:** AdaptFit engineering
 > - **Supersedes or supports:** supports `system-context-and-dataflow.md`, `current-state.md`, and the training/deployment runbooks
 > - **Review trigger:** repository layout, entrypoint, config, test, or artifact ownership change
@@ -20,17 +20,18 @@ is not evidence that a component exists.
 | Data contracts | `training/src/data/schema.py` | `training/configs/*.yaml` | prepared sequence records and manifests | `training/tests/test_data_contracts.py` | Data engineering / active |
 | Dataset adapters | `training/src/data/adapters.py` | `data/manifests/sources.yaml` | canonical source records | `training/tests/test_pipeline.py` | Data engineering / adapter-specific |
 | Identity and splits | `training/src/data/identity.py` and `provenance.py` | dataset manifest split fields | participant/source split metadata | `test_data_contracts.py`, `test_integrity_and_artifacts.py` | Evaluation / active |
-| Feature construction | `training/src/features/anatomy.py` | feature section in config | 283-feature tensors and schema JSON | `training/tests/test_features.py` | ML engineering / active |
+| Feature construction | `training/src/features/anatomy.py` | feature section in config | 283-feature tensors and schema JSON; partial-pose tracking-target denominator | `training/tests/test_features.py` | ML engineering / active |
 | Diagnostic features | `training/src/features/diagnostics.py` | `training/configs/v2_diagnostics.yaml` | 378-feature diagnostic tensors | `training/tests/test_features.py` | Research / separate variant |
 | Model construction | `training/src/models/build.py`, `tcn.py`, `gru.py`, `heads.py` | model section in config | TCN/GRU modules and parameter counts | `training/tests/test_models.py` | ML engineering / active |
-| Training | `training/train.py`, `training/src/runner.py` | `training/configs/*.yaml` | checkpoints, histories, model card | `training/tests/test_streaming_and_training.py` | Training engineering / active |
+| Training | `training/train.py`, `training/src/runner.py` | `training/configs/*.yaml` | checkpoints, histories, model card | `training/tests/test_streaming_and_training.py`, `training/tests/test_models.py` | Training engineering / active |
 | Preparation | `training/prepare_data.py`, `training/src/data/prepare.py` | config and manifest | processed data, normalization, audit | `training/tests/test_pipeline.py` | Data engineering / active |
 | Evaluation | `training/evaluate.py`, `training/src/evaluation.py` | checkpoint plus split manifest | metrics, predictions, reports, model artifact manifest | `training/tests/test_corrected_benchmark.py`, `test_v2_quality_pipeline.py` | Evaluation / active |
 | Streaming | `training/src/models/streaming.py` | feature/model schema | rolling predictions and runtime state | `training/tests/test_streaming_runtime.py` | Runtime engineering / Python only |
 | Decoder | `training/src/decoder.py` | `training/configs/decoder_v1.yaml` | deterministic `WorkoutEventV1` events, pause/reset/abstention reasons | `training/tests/test_decoder.py` | Runtime engineering / Python reference active; native unavailable |
-| Decoder calibration | `training/calibrate_decoder.py` | R0 config + decoder config | validation-only threshold report and gate status | `training/tests/test_decoder.py` plus report inspection | Evaluation / active audit tool |
+| Decoder calibration | `training/calibrate_decoder.py` | R0/R1 config + decoder config | validation-only threshold report and gate status | `training/tests/test_decoder.py` plus report inspection | Evaluation / active audit tool |
+| Decoder failure analysis | `training/analyze_decoder_failures.py` | checkpoint + calibration report | validation-only source and signal diagnosis with representative cases | report replay consistency and docs validation | Evaluation / active audit tool; test split locked |
 | Provenance | `training/src/provenance.py` | effective config and artifact paths | hashes, environment summary, model manifest | `training/tests/test_integrity_and_artifacts.py` | Training/release / active |
-| Staged training controls | `training/src/runner.py`, `training/train.py` | `training/configs/experiments/*.yaml` | isolated warm-start/resume checkpoints and experiment record | `training/tests/test_staged_training.py`, `test_streaming_and_training.py` | Training / active controls; R1 full run complete, decoder evaluation pending |
+| Staged training controls | `training/src/runner.py`, `training/train.py` | `training/configs/experiments/*.yaml` | isolated warm-start/resume checkpoints and experiment record | `training/tests/test_staged_training.py`, `test_streaming_and_training.py`, `test_models.py` | Training / active controls; UCO tracking-target correction and bounded boundary-positive-weight cap are recorded; decoder gates remain blocked |
 | Recipe feasibility | `docs/exercise-and-capability-schema.md` | recipe catalog/hash | eligible candidate set | planned recommendation fixtures | Product/safety / planned |
 | Recommendation | `docs/recommendation-model-plan.md` | planned request/config | ranked workout recommendation | planned recommendation fixtures | Product/ML / planned |
 | Mobile bundle | `docs/on-device-deployment.md` | planned artifact manifest | native model bundle | no native tests | Release engineering / unavailable |
